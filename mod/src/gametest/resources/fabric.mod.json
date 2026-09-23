@@ -5,7 +5,10 @@
   "name": "Realistic Markets GameTests",
   "environment": "*",
   "entrypoints": {
-    "fabric-gametest": ["com.realisticmarkets.mod.test.MarketGameTests"]
+    "fabric-gametest": [
+      "com.realisticmarkets.mod.test.MarketGameTests",
+      "com.realisticmarkets.mod.test.DealerGameTests"
+    ]
   },
   "depends": {
     "realisticmarkets": "*"

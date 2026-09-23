@@ -1,55 +1,85 @@
 # Realistic Markets
 
-A Minecraft (Fabric 26.1.x) mod with a realistic securities market. Players trade items, and later
-fictional companies and derivatives, on a **frequent batch auction** exchange: orders collect for one
-second, then cross at a single uniform price.
+A Minecraft (Fabric 26.1.x) mod that teaches how financial markets work. Players start in plain
+survival, sell goods to a Dealer for physical dollars, and buy their way up a tree of financial
+tools: banking, exchanges, stocks, bonds, futures, options. The full design is in the
+"Realistic Markets — Game Design Document" in the RealisticMarkets project.
 
 ## Layout
 
 ```
-exchange-core/   pure-Java exchange: order book, batch auction, escrow ledger (+ tests)
-sim/             headless simulation runner, writes CSV price paths
-mod/             Fabric mod: /mkt commands, 1-second auction tick, GameTests
+exchange-core/   pure Java: money, the Dealer, batch-auction exchange (+ tests). No Minecraft.
+sim/             headless simulations (farm income, auction) writing build/sim/*.csv
+mod/             Fabric mod: currency items, Basic Exchange block, /mkt commands, GameTests
 scripts/dev.sh   one entry point for every dev loop (see CLAUDE.md)
-scripts/rcon.py  stdlib RCON client for driving the dev server from scripts/agents
+scripts/rcon.py  RCON client for driving a dev server from scripts or Claude Code
 ```
 
-## Setup (one time)
+## One-time setup
 
-1. **JDK 25.** For hotswapping, use the JetBrains Runtime 25 (IntelliJ: *Project Structure → SDK →
-   Download JDK → JetBrains Runtime*). The included Gradle wrapper (9.4.0) downloads itself on
-   first run.
-2. **Check versions.** Open https://fabricmc.net/develop, pick Minecraft 26.1.2, and update the four
-   values in `gradle.properties` if newer ones are listed.
-3. **Verify the fast loop works (no Minecraft needed):**
-   ```bash
-   ./scripts/dev.sh test
-   ./scripts/dev.sh sim 1000 7
-   ```
-4. **Build the mod and run the GameTests:**
-   ```bash
-   ./scripts/dev.sh build
-   ./scripts/dev.sh gametest
-   ```
-   If Loom names the GameTest task differently in your version, find it with
-   `./gradlew :mod:tasks --all | grep -i gametest` and update `dev.sh`.
-5. **Play it:** open the project in IntelliJ, run the *Minecraft Client* config in **Debug** with VM
-   option `-XX:+AllowEnhancedClassRedefinition`, create a world with cheats on, then:
-   ```
-   /mkt dev fund 10000
-   /mkt dev give DIAMOND 50
-   /mkt sell DIAMOND 10 100
-   /mkt buy DIAMOND 5 110
-   /mkt dev auction          (or wait up to 1 second)
-   /mkt account
-   /mkt book DIAMOND
-   ```
-   Buying and selling from one account is fine for a smoke test; open a LAN world with a second
-   client (or use a GameTest) to see two parties trade.
+1. **Install JDK 25.** Easiest: IntelliJ IDEA (2025.3+) → *File → Project Structure → SDK → Download JDK*
+   → vendor **JetBrains Runtime**, version 25. JBR gives you enhanced hotswap. Point `JAVA_HOME` at it
+   for the terminal too.
+2. **Check versions.** Open <https://fabricmc.net/develop>, choose Minecraft 26.1.2, and copy the
+   Loader, Fabric API and Loom versions into `gradle.properties` if they differ.
+3. **Open the folder in IntelliJ** as a Gradle project and let it sync. Loom generates the
+   *Minecraft Client* and *Minecraft Server* run configurations.
+4. **Enable hotswap.** Edit the *Minecraft Client* run config → *VM options* → add
+   `-XX:+AllowEnhancedClassRedefinition`.
+
+## First build (expect a few fixes)
+
+```bash
+./scripts/dev.sh test          # exchange-core unit tests: should pass immediately
+./scripts/dev.sh sim farm      # prints wheat income by farm size; best ≈ $21/day at 128/day
+./scripts/dev.sh build         # compiles the mod against Minecraft 26.1.2
+./scripts/dev.sh gametest      # runs server GameTests headlessly
+```
+
+The mod module was written without access to the 26.1 jars, so `build` may fail on a few API
+names. `CLAUDE.md` lists every assumption. Fastest fix: run Claude Code in the repo and ask it to
+"make `./scripts/dev.sh build` and `./scripts/dev.sh gametest` pass." If Loom names the GameTest
+task differently, find it with `./gradlew :mod:tasks --all | grep -i gametest`.
+
+## Play-testing M1
+
+Run *Minecraft Client* in **Debug**, create a Creative or Survival world with cheats on, then:
+
+```
+/give @s realisticmarkets:basic_exchange        (or craft it: gold, paper, gold / planks, crafting table, planks / planks, iron, planks)
+/give @s minecraft:wheat 256
+```
+
+- Place the Basic Exchange. Hold wheat and **right-click**: the action bar shows the quote.
+- **Sneak + right-click twice** within 3 seconds to sell. 64 wheat should pay **$25.40**
+  (two $10s, five $1s, four dimes).
+- Sell another 64 and watch the price fall. Then `/mkt dealer timeshift 2` and quote again to see
+  it recover.
+- `/mkt dealer quote wheat 64` and `/mkt dealer state` print JSON; `/mkt dealer buy wheat 10`
+  buys with your bills; `/mkt dealer cash 100` gives you money (dev only).
+
+## Tuning without restarting
+
+On first start the game copies the defaults to `mod/run/config/realisticmarkets/`:
+
+- `dealer_catalog.csv`: every tradeable item's fair value, depth and group, plus compressed forms.
+- `dealer_params.properties`: spread, price-impact steepness, recovery time, fair-value drift.
+
+Edit either file while the game runs, then `/mkt dealer reload`. When you like the numbers, copy
+them into `exchange-core/src/main/resources/realisticmarkets/` and update `DealerTest`.
+
+## Fast iteration loops
+
+| You changed | Do this | Time |
+|---|---|---|
+| Pricing math or money logic | `./scripts/dev.sh test` (or run `DealerTest` in IntelliJ) | seconds |
+| Balance numbers | Edit config CSV/properties → `/mkt dealer reload` | seconds |
+| Mod code inside methods | Build (Ctrl/Cmd+F9) while debugging → hotswaps into the running game | ~5 s |
+| New items, blocks, textures, recipes | Textures: rebuild + F3+T. Recipes/loot: rebuild + `/reload`. New registrations: restart | 5–60 s |
+| Anything before calling it done | `./scripts/dev.sh check` | ~1 min |
 
 ## Status
 
-- `exchange-core`: working and tested (uniform-price clearing, price/time priority, IOC/GTC,
-  escrow, cancel, randomized conservation invariants).
-- `mod`: command + tick wiring written against Fabric 26.1 / Mojang names; positions are virtual
-  and in-memory for now. Next up: real item custody and persistence (see roadmap in CLAUDE.md).
+- `exchange-core`: exchange, money and Dealer implemented; 33 tests passing.
+- `mod`: M1 wiring written (currency, Basic Exchange with quote and quick-sell, Dealer commands,
+  config reload, GameTests). Dealer state resets on restart until M1b adds persistence.

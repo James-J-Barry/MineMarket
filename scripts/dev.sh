@@ -2,7 +2,7 @@
 # One entry point for humans and AI agents. Every verb is non-interactive and exits non-zero on failure.
 #
 #   ./scripts/dev.sh test                 exchange-core unit tests (seconds, no Minecraft)
-#   ./scripts/dev.sh sim [steps] [seed]   headless market simulation -> build/sim/diamond.csv
+#   ./scripts/dev.sh sim [farm [item] [days] | auction [steps] [seed]]   headless simulations -> build/sim/*.csv
 #   ./scripts/dev.sh build                build everything, including the mod jar
 #   ./scripts/dev.sh gametest             server GameTests in a headless Minecraft server
 #   ./scripts/dev.sh check                test + gametest (run before calling a change done)
@@ -44,7 +44,7 @@ case "$cmd" in
   test)
     "$GRADLE" :exchange-core:test --console=plain -q ;;
   sim)
-    "$GRADLE" :sim:run --console=plain -q --args="${1:-500} ${2:-42} build/sim/diamond.csv" ;;
+    "$GRADLE" :sim:run --console=plain -q --args="${*:-farm}" ;;
   build)
     "$GRADLE" build --console=plain ;;
   gametest)
