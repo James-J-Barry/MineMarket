@@ -17,10 +17,8 @@ scripts/rcon.py  stdlib RCON client for driving the dev server from scripts/agen
 ## Setup (one time)
 
 1. **JDK 25.** For hotswapping, use the JetBrains Runtime 25 (IntelliJ: *Project Structure → SDK →
-   Download JDK → JetBrains Runtime*). Gradle needs 9.x for Java 25; generate the wrapper once:
-   ```bash
-   gradle wrapper --gradle-version 9.4.0
-   ```
+   Download JDK → JetBrains Runtime*). The included Gradle wrapper (9.4.0) downloads itself on
+   first run.
 2. **Check versions.** Open https://fabricmc.net/develop, pick Minecraft 26.1.2, and update the four
    values in `gradle.properties` if newer ones are listed.
 3. **Verify the fast loop works (no Minecraft needed):**
