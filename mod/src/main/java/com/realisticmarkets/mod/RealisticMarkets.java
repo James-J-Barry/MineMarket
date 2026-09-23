@@ -4,6 +4,7 @@ import com.realisticmarkets.mod.dealer.DealerCommands;
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.registry.ModBlocks;
 import com.realisticmarkets.mod.registry.ModItems;
+import com.realisticmarkets.mod.registry.ModMenus;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -30,6 +31,7 @@ public final class RealisticMarkets implements ModInitializer {
     public void onInitialize() {
         ModItems.init();
         ModBlocks.init();
+        ModMenus.init();
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             MarketCommands.register(dispatcher);

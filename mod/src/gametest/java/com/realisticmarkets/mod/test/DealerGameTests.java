@@ -2,11 +2,14 @@ package com.realisticmarkets.mod.test;
 
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.dealer.Wallet;
+import com.realisticmarkets.mod.menu.BasicExchangeMenu;
 import com.realisticmarkets.mod.registry.ModItems;
 import com.realisticmarkets.money.Denomination;
 import java.util.List;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -51,6 +54,38 @@ public class DealerGameTests {
         }
         check(ModItems.denominationOf(new ItemStack(Items.EMERALD)) == null, "emeralds are not money");
         helper.succeed();
+    }
+
+
+    @GameTest
+    public void exchangeScreenSellsIntoDenominationSlots(GameTestHelper helper) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        BasicExchangeMenu menu = new BasicExchangeMenu(1, player.getInventory(), ContainerLevelAccess.NULL,
+                DealerService.forTest(1234L));
+
+        menu.getSlot(BasicExchangeMenu.INPUT).set(new ItemStack(Items.WHEAT, 64));
+        menu.broadcastChanges(); // server recomputes and syncs the quote
+        check(menu.status() == BasicExchangeMenu.STATUS_OK, "expected OK status, got " + menu.status());
+        check(menu.quoteCents() == 2540, "expected a $25.40 quote, got " + menu.quoteCents());
+
+        check(menu.clickMenuButton(player, BasicExchangeMenu.BUTTON_SELL), "Sell should succeed");
+        check(menu.getSlot(BasicExchangeMenu.INPUT).getItem().isEmpty(), "input should be consumed");
+        check(countIn(menu, 0, Denomination.DIME) == 4, "expected 4 dimes in the first payout slot");
+        check(countIn(menu, 1, Denomination.ONE) == 5, "expected five $1 bills in the second payout slot");
+        check(countIn(menu, 2, Denomination.TEN) == 2, "expected two $10 bills in the third payout slot");
+        check(menu.getSlot(BasicExchangeMenu.OUTPUT_START + 3).getItem().isEmpty(), "no $100 bills expected");
+
+        // Currency can't be sold back, and the Sell button does nothing on an empty table
+        menu.getSlot(BasicExchangeMenu.INPUT).set(new ItemStack(ModItems.CURRENCY.get(Denomination.ONE), 3));
+        menu.broadcastChanges();
+        check(menu.status() == BasicExchangeMenu.STATUS_MONEY, "money should be refused");
+        check(!menu.clickMenuButton(player, BasicExchangeMenu.BUTTON_SELL), "selling money must fail");
+        helper.succeed();
+    }
+
+    private static int countIn(BasicExchangeMenu menu, int outputIndex, Denomination d) {
+        ItemStack s = menu.getSlot(BasicExchangeMenu.OUTPUT_START + outputIndex).getItem();
+        return ModItems.denominationOf(s) == d ? s.getCount() : 0;
     }
 
     private static long countOf(List<ItemStack> stacks, Denomination d) {

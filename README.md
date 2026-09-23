@@ -50,11 +50,12 @@ Run *Minecraft Client* in **Debug**, create a Creative or Survival world with ch
 /give @s minecraft:wheat 256
 ```
 
-- Place the Basic Exchange. Hold wheat and **right-click**: the action bar shows the quote.
-- **Sneak + right-click twice** within 3 seconds to sell. 64 wheat should pay **$25.40**
-  (two $10s, five $1s, four dimes).
-- Sell another 64 and watch the price fall. Then `/mkt dealer timeshift 2` and quote again to see
-  it recover.
+- Place the Basic Exchange and **right-click** it to open its screen.
+- Put wheat in the **left slot**: the screen shows what the Dealer will pay. Click **Sell**.
+  64 wheat pays **$25.40**, which appears in the payout slots on the right
+  (4 dimes, five $1s, two $10s). Shift-click or drag the money into your inventory.
+- Sell another 64 and watch the quote fall. Then `/mkt dealer timeshift 2` and the quote
+  recovers while the screen is open.
 - `/mkt dealer quote wheat 64` and `/mkt dealer state` print JSON; `/mkt dealer buy wheat 10`
   buys with your bills; `/mkt dealer cash 100` gives you money (dev only).
 
@@ -81,5 +82,5 @@ them into `exchange-core/src/main/resources/realisticmarkets/` and update `Deale
 ## Status
 
 - `exchange-core`: exchange, money and Dealer implemented; 33 tests passing.
-- `mod`: M1 wiring written (currency, Basic Exchange with quote and quick-sell, Dealer commands,
-  config reload, GameTests). Dealer state resets on restart until M1b adds persistence.
+- `mod`: currency, Basic Exchange screen (input slot, live quote, Sell, payout slots), Dealer commands,
+  config reload, GameTests. Dealer state resets on restart until M1b adds persistence.

@@ -22,6 +22,14 @@ LOG_FILE="$ROOT/build/dev-server.log"
 RCON_PASSWORD="${RCON_PASSWORD:-dev}"
 RCON_PORT="${RCON_PORT:-25575}"
 
+summarize_tests() {
+  local dir="$ROOT/exchange-core/build/test-results/test"
+  local total failed
+  total=$(cat "$dir"/*.xml 2>/dev/null | grep -o '<testcase ' | wc -l | tr -d ' ')
+  failed=$(cat "$dir"/*.xml 2>/dev/null | grep -Eo '<(failure|error) ' | wc -l | tr -d ' ')
+  echo "exchange-core: $total tests, $failed failed"
+}
+
 prepare_server_dir() {
   mkdir -p "$RUN_DIR" "$ROOT/build"
   echo "eula=true" > "$RUN_DIR/eula.txt"
@@ -42,7 +50,8 @@ EOF
 cmd="${1:-help}"; shift || true
 case "$cmd" in
   test)
-    "$GRADLE" :exchange-core:test --console=plain -q ;;
+    "$GRADLE" :exchange-core:test --console=plain -q
+    summarize_tests ;;
   sim)
     "$GRADLE" :sim:run --console=plain -q --args="${*:-farm}" ;;
   build)

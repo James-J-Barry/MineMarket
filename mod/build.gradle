@@ -21,6 +21,13 @@ dependencies {
     include project(":exchange-core")   // jar-in-jar so players install one file
 }
 
+loom {
+    // Loom only generates IDE run configs for the root project by default; the mod is a subproject.
+    runConfigs.configureEach {
+        ideConfigGenerated = true
+    }
+}
+
 fabricApi {
     configureTests {
         createSourceSet = true

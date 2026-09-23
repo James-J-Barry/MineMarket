@@ -55,15 +55,16 @@ RealisticMarkets project). Numbers in `DealerTest` are pinned to it; change both
 Done when:
 - [x] `exchange-core` `money` + `dealer` packages; `DealerTest` pins the doc's numbers ($25.48 / $72.82 / $113.09, $115.20 ceiling)
 - [x] `./scripts/dev.sh sim farm` shows wheat income peaking near $21/day at ~128 units/day
-- [ ] `./scripts/dev.sh gametest` passes `DealerGameTests` (64 Wheat -> $25.40 as 2x$10, 5x$1, 4 dimes)
-- [ ] In game: craft a Basic Exchange, quote, quick-sell, receive bills
-- [ ] M1b: Basic Exchange container screen (Sell + Buy tabs) replacing `/mkt dealer buy`
+- [x] `./scripts/dev.sh gametest` passes `DealerGameTests` (64 Wheat -> $25.40 as 2x$10, 5x$1, 4 dimes)
+- [ ] In game: craft a Basic Exchange, open it, sell wheat, collect bills
+- [x] M1b: Basic Exchange screen: input slot, live quote, Sell button, denomination payout slots
+- [ ] M1b: Buy side for the Basic Exchange (replaces the dev-only `/mkt dealer buy`)
 - [ ] M1b: persist Dealer state with SavedData (`Dealer.snapshot()` / `restore()`)
 
 ## Minecraft 26.1 API assumptions to verify first
 
-The mod module was written without compiling against 26.1. If the build fails, these are the
-likely spots (all use Mojang names; fix to whatever 26.1 actually has):
+Verified 2026-09-23: the mod compiles against 26.1.2 / Fabric API 0.150.0 and all 5 GameTests pass.
+These are the API choices it relies on, useful when porting to 26.2+:
 
 | Where | Assumption |
 |---|---|
@@ -83,3 +84,9 @@ likely spots (all use Mojang names; fix to whatever 26.1 actually has):
 3. M3: Tier 1 content (Bill Clip, Price Board, Merchant License, Trade Route Crate).
 4. M4: Banking and item collateral (Bank Vault, Passbook, CD, Loan Note, margin calls).
 5. M5+: Trading Floor on the existing batch auction, equities, bonds, futures, options, modern finance, multiplayer.
+
+## GUI notes (Minecraft 26.1)
+
+Screen drawing was renamed in 26.1: `GuiGraphics` -> `GuiGraphicsExtractor`, `render`/`renderBg`/`renderLabels`
+-> `extractRenderState`/`extractBackground`/`extractLabels`, `drawString` -> `text`. Text colors need an
+opaque alpha (`0xFF404040`). See `client/BasicExchangeScreen.java`.

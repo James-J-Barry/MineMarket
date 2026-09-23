@@ -3,27 +3,18 @@ package com.realisticmarkets.mod.dealer;
 import com.realisticmarkets.dealer.Dealer;
 import com.realisticmarkets.dealer.DealerCatalog;
 import com.realisticmarkets.dealer.DealerParams;
-import com.realisticmarkets.exchange.RejectedException;
 import com.realisticmarkets.mod.RealisticMarkets;
-import com.realisticmarkets.mod.registry.ModItems;
-import com.realisticmarkets.money.Money;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -38,16 +29,12 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class DealerService {
     public static final long TICKS_PER_DAY = 24_000L;
-    private static final long QUICK_SELL_WINDOW_TICKS = 60; // 3 seconds
 
     private static DealerService instance;
 
     private final Dealer dealer;
     private final Path configDir;
-    private final Map<UUID, PendingSale> pending = new HashMap<>();
     private double dayOffset; // dev time-shift for testing recovery without waiting
-
-    private record PendingSale(BlockPos pos, String itemId, int count, long gameTime) {}
 
     private DealerService(Dealer dealer, Path configDir) {
         this.dealer = dealer;
@@ -146,54 +133,5 @@ public final class DealerService {
         Dealer.Quote q = dealer.sell(itemId(stack), stack.getCount(), day, licensed);
         stack.setCount(0);
         return q.cents();
-    }
-
-    /** Right-click on a Basic Exchange with an item: quote, or arm/confirm a quick sale. */
-    public void onUseWithItem(ServerPlayer player, ItemStack stack, BlockPos pos, long gameTime) {
-        if (ModItems.denominationOf(stack) != null) {
-            player.sendOverlayMessage(Component.literal("That's already money."));
-            return;
-        }
-        String id = itemId(stack);
-        String name = stack.getHoverName().getString();
-        int count = stack.getCount();
-        double day = day(gameTime);
-        boolean licensed = false; // Merchant License arrives in Tier 1
-
-        Dealer.Quote quote;
-        try {
-            quote = dealer.quoteSell(id, count, day, licensed);
-        } catch (RejectedException e) {
-            player.sendOverlayMessage(Component.literal(e.getMessage()));
-            return;
-        }
-
-        if (!player.isShiftKeyDown()) {
-            pending.remove(player.getUUID());
-            player.sendOverlayMessage(Component.literal(String.format(Locale.ROOT,
-                    "Dealer pays %s for %d %s  (%.2f each now, %.2f after)  Sneak-click twice to sell",
-                    Money.format(quote.cents()), count, name, quote.unitPriceBefore(), quote.unitPriceAfter())));
-            return;
-        }
-
-        PendingSale p = pending.get(player.getUUID());
-        boolean confirmed = p != null && p.pos().equals(pos) && p.itemId().equals(id)
-                && p.count() == count && gameTime - p.gameTime() <= QUICK_SELL_WINDOW_TICKS;
-        if (!confirmed) {
-            pending.put(player.getUUID(), new PendingSale(pos, id, count, gameTime));
-            player.sendOverlayMessage(Component.literal(String.format(Locale.ROOT,
-                    "Sneak-click again to sell %d %s for %s", count, name, Money.format(quote.cents()))));
-            return;
-        }
-
-        pending.remove(player.getUUID());
-        try {
-            long cents = sellStack(stack, day, licensed);
-            Wallet.give(player, cents);
-            player.sendSystemMessage(Component.literal(String.format(Locale.ROOT,
-                    "Sold %d %s for %s", count, name, Money.format(cents))));
-        } catch (RejectedException e) {
-            player.sendOverlayMessage(Component.literal(e.getMessage()));
-        }
     }
 }
