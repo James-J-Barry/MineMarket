@@ -1,0 +1,16 @@
+// Shared settings for the pure-Java modules. The mod module configures itself (Loom, Java 25).
+subprojects {
+    group = rootProject.maven_group
+    version = rootProject.mod_version
+
+    if (name != "mod") {
+        apply plugin: "java"
+
+        repositories { mavenCentral() }
+
+        tasks.withType(JavaCompile).configureEach {
+            options.release = 21   // core runs anywhere; the mod bumps to 25
+            options.encoding = "UTF-8"
+        }
+    }
+}

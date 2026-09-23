@@ -1,0 +1,51 @@
+plugins {
+    // Minecraft 26.1+ is unobfuscated: no mappings line, and plain implementation() instead of
+    // modImplementation(). See https://docs.fabricmc.net/develop/porting/
+    id "net.fabricmc.fabric-loom"
+}
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    // Fabric's maven is added by Loom.
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+    implementation project(":exchange-core")
+    include project(":exchange-core")   // jar-in-jar so players install one file
+}
+
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = "realisticmarkets-test"
+        enableGameTests = true
+        enableClientGameTests = false   // turn on once there is a GUI worth screenshotting
+        eula = true
+    }
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 25
+    options.encoding = "UTF-8"
+}

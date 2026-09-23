@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "realisticmarkets-test",
+  "version": "0.0.0",
+  "name": "Realistic Markets GameTests",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-gametest": [
+      "com.realisticmarkets.mod.test.MarketGameTests",
+      "com.realisticmarkets.mod.test.DealerGameTests"
+    ]
+  },
+  "depends": {
+    "realisticmarkets": "*"
+  }
+}

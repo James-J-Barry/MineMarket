@@ -1,0 +1,15 @@
+plugins {
+    id "application"
+}
+
+dependencies {
+    implementation project(":exchange-core")
+}
+
+application {
+    mainClass = "com.realisticmarkets.sim.SimMain"
+}
+
+run {
+    workingDir = rootProject.projectDir
+}

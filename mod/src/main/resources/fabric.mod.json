@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "realisticmarkets",
+  "version": "${version}",
+  "name": "Realistic Markets",
+  "description": "A realistic securities market for Minecraft: batch-auction exchange for items and fictional companies.",
+  "authors": ["James"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.realisticmarkets.mod.RealisticMarkets"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": "~26.1",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

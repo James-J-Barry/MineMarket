@@ -1,0 +1,32 @@
+# Realistic Markets: Dealer catalog.
+# Base markets set fair_value (dollars per item) and depth (units, L in the design doc).
+# Linked markets leave those blank and trade as base_units of base_item's pool.
+# Edit the copy in config/realisticmarkets/ and run /mkt dealer reload to apply without restarting.
+item,fair_value,depth,group,base_item,base_units
+minecraft:diamond,100.00,32,mining,,
+minecraft:emerald,40.00,48,mining,,
+minecraft:gold_ingot,15.00,96,mining,,
+minecraft:ender_pearl,12.00,48,mobs,,
+minecraft:iron_ingot,8.00,192,mining,,
+minecraft:lapis_lazuli,3.00,192,mining,,
+minecraft:gunpowder,3.00,128,mobs,,
+minecraft:coal,2.00,256,mining,,
+minecraft:leather,2.00,128,farm,,
+minecraft:copper_ingot,2.00,256,mining,,
+minecraft:oak_log,1.00,256,wood_and_stone,,
+minecraft:string,0.80,192,mobs,,
+minecraft:wheat,0.50,256,farm,,
+minecraft:carrot,0.40,256,farm,,
+minecraft:bone,0.50,192,mobs,,
+minecraft:rotten_flesh,0.10,256,mobs,,
+minecraft:cobblestone,0.10,512,wood_and_stone,,
+# Compressed forms share their base pool
+minecraft:diamond_block,,,mining,minecraft:diamond,9
+minecraft:emerald_block,,,mining,minecraft:emerald,9
+minecraft:gold_block,,,mining,minecraft:gold_ingot,9
+minecraft:iron_block,,,mining,minecraft:iron_ingot,9
+minecraft:lapis_block,,,mining,minecraft:lapis_lazuli,9
+minecraft:coal_block,,,mining,minecraft:coal,9
+minecraft:copper_block,,,mining,minecraft:copper_ingot,9
+minecraft:hay_block,,,farm,minecraft:wheat,9
+minecraft:bone_block,,,mobs,minecraft:bone,3

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "realisticmarkets:block/basic_exchange_top",
+    "bottom": "minecraft:block/oak_planks",
+    "side": "realisticmarkets:block/basic_exchange_side"
+  }
+}
