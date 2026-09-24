@@ -168,7 +168,7 @@ The Almanac Lectern is the progression hub: a lectern holding the Market Almanac
 ### Unlock rules
 
 - A node needs its parent node(s) and its dollar cost. Some nodes also need a quest, so players meet the idea before paying for the tool (for example, “Meet the spread” before the Merchant License).
-- Buying a node grants the recipe in the vanilla recipe book, or delivers the item directly for licenses and documents.
+- Buying a node is permanent and belongs to the player's account. Blocks and tools become blueprints at the Drafting Table (see Crafting below); licenses and perks apply to the account directly. No unlock is ever a single item that can be lost.
 - Costs are data-driven JSON in a datapack, so balancing never needs a recompile. `/reload` applies changes.
 - Tier gate: a tier's first node requires buying at least half of the previous tier's nodes, which keeps players from skipping concepts.
 
@@ -217,14 +217,54 @@ Unlocking this node grants two recipes. It requires a Bank Vault and a Safe Depo
 
 **Risk Report Module (Tier 7, $60,000):** an upgrade item placed in the terminal's module slot. It adds a Risk tab with collateral coverage per contract, how far each position is from a margin call, total delta and vega, and a stress test (“what if Wheat falls 20%?”).
 
+## Crafting: the Drafting Table and components
+
+Unlocks are permanent and per player; the things they unlock are crafted at a Drafting Table from ordinary materials plus **components** that can only be bought, never mined, farmed or crafted. Losing an item costs its materials, not the unlock, and every upgrade becomes a small supply chain.
+
+### Rules
+
+- **No vanilla recipes for mod items**, except the three Tier 0 blocks: Basic Exchange, Almanac Lectern and Drafting Table. A vanilla crafting table cannot make anything else from the mod.
+- **Drafting Table** (Tier 0, recipe: Crafting Table + 3 Paper + Iron Ingot, shapeless). A stonecutter-style list screen: every blueprint the player has unlocked, locked ones greyed out with “Unlock at the Almanac”. Selecting one shows its materials with have/need counts; **Craft ×1** and **Craft max** consume materials from the player's inventory.
+- **Licenses and perks are account-based**, not items. The Merchant License sets the 12% spread for that player permanently. A physical copy of a license or document can be reissued at the Almanac Lectern for a small fee, for flavor or trading.
+- **Paid copies** (buying an unlocked item outright at a markup) are held back as an optional money sink, to add only if balancing shows the economy needs one.
+
+### Components
+
+Components are sold by the Dealer under a **Components** group in the Basic Exchange's Buy tab, and only once the player has unlocked a blueprint that uses them. They have **shallow depth**, so buying many at once pushes the price up (a supply shortage), and a **wide spread** (about 40%), so selling spare parts back loses money (illiquid inventory). The catalog gets an optional per-item `spread` column for this.
+
+| Component | First needed | Fair value (placeholder) | Depth (units) | Used in |
+| --- | --- | --- | --- | --- |
+| Ledger Paper | Tier 1 | $4 | 64 | Passbook, Order Slips, license reissues |
+| Ink Bottle | Tier 1 | $6 | 48 | Price Board, Passbook, printed papers |
+| Brass Fittings | Tier 1 | $10 | 32 | Bill Clip, Price Board, Trade Route Crate |
+| Lock Mechanism | Tier 2 | $60 | 16 | Bank Vault, Safe Deposit Box |
+| Security Paper | Tier 2 | $15 | 48 | CDs, Loan Notes, share certificates, bonds |
+| Clockwork Gear | Tier 3 | $40 | 24 | Ticker Tape, Trading Floor |
+| Engraved Plate | Tier 4 | $120 | 8 | Stock Exchange, Bond Desk |
+| Display Screen | Tier 5 | $250 | 8 | Records Terminal, ATM, Volatility Board |
+| Circuit Board | Tier 5 | $400 | 8 | Records Terminal, Risk Report Module |
+| Computer Chip | Tier 8 | $1,500 | 4 | ATM, Bank Card, Brokerage Terminal |
+
+Example blueprints (placeholders):
+
+| Item | Materials |
+| --- | --- |
+| Bill Clip | 2 Leather + 1 Brass Fittings |
+| Price Board | 4 Oak Planks + 1 Glass Pane + 2 Brass Fittings + 1 Ink Bottle |
+| Trade Route Crate | 6 Planks + 2 Iron Ingots + 2 Brass Fittings + 1 Ledger Paper |
+| Bank Vault | 8 Iron Blocks + 1 Lock Mechanism + 1 Ledger Paper |
+
+Concepts this teaches: input costs and margins (a Price Board's parts cost more than it looks), make-vs-buy, supply shortages from your own demand, and why inventory you can't resell is a cost.
+
 ## Item and block catalog
 
-The mod adds 41 items and blocks across nine tiers. Costs are the Almanac price to unlock the recipe (or receive the item); after unlocking, the thing itself is crafted from ordinary materials unless noted. All costs are tuning placeholders to be set with the sim.
+The mod adds 42 items and blocks plus 10 components (see Crafting) across nine tiers. Costs are the Almanac price to unlock the blueprint, license or perk; after unlocking, blocks and tools are crafted at the Drafting Table from ordinary materials plus bought components. All costs are tuning placeholders to be set with the sim.
 
 | Tier | Name | Kind | Unlock cost | What it does | Concept |
 | --- | --- | --- | --- | --- | --- |
 | 0 | Basic Exchange | Block | Crafted | Sell to and buy from the Dealer at a 20% spread | Medium of exchange, spread |
 | 0 | Almanac Lectern | Block | Crafted | Buy upgrades, read guides, track quests | — |
+| 0 | Drafting Table | Block | Crafted | Crafts every unlocked blueprint from materials plus bought components | Input costs, make vs buy |
 | 0 | Dime, $1, $10, $100 | Items | From exchanges only | Physical currency | Denominations, change |
 | 1 | Bill Clip | Item | $40 | Wallet holding up to 9 stacks of currency; exchanges pay from it automatically | Cash management |
 | 1 | Price Board | Wall block | $75 | Shows live bid/ask for up to 4 items placed in its frame | Quotes |
@@ -495,7 +535,7 @@ Build in tier order, and make each milestone a complete, playable loop before st
 | # | Milestone | Scope | Done when |
 | --- | --- | --- | --- |
 | M1 | Dollars and the Dealer | Four currency items, Basic Exchange block and screen, `dealer` and `money` packages, 17 reference items | Unit tests prove the proceeds ceiling and recovery; a GameTest sells 64 Wheat and receives $25.40 in the right bills; sim shows a wheat farm capped near $21 per day |
-| M2 | Almanac Lectern | Block and three-tab screen, `progression` package, Tier 1 nodes, quests 1–8, first 5 guides, per-player persistence | A fresh world can reach Tier 1 in a scripted sim run in about 2 hours of game time; progress survives restart |
+| M2 | Almanac Lectern | Drafting Table with per-player blueprints; Tier 1 components in the Buy tab; Block and three-tab screen, `progression` package, Tier 1 nodes, quests 1–8, first 5 guides, per-player persistence | A fresh world can reach Tier 1 in a scripted sim run in about 2 hours of game time; progress survives restart |
 | M3 | Tier 1 content | Bill Clip, Price Board, Merchant License, Trade Route Crate and Capital dealer | Quest 7 (arbitrage) completable in play |
 | M4 | Banking and collateral | Bank Vault, Passbook, CD, Loan Note; `collateral` and `registry` packages; margin calls and liquidation | The worked loan example matches the table; a margin call liquidates correctly in a GameTest |
 | M5 | Trading Floor | Order Slips, receipts, NPC trader population on the existing batch auction, Ticker Tape and Price Chart | Books stay liquid with no player; prices track fair value in sim |

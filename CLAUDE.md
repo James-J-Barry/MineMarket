@@ -6,7 +6,7 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 
 - **Design doc (source of truth for gameplay):** `docs/design.md`, exported from the "Realistic Markets —
   Game Design Document" Claude Doc. If a request conflicts with it, ask before building.
-- **Current milestone:** M2, the Almanac Lectern. Spec in `docs/milestones/M2.md`.
+- **Current milestone:** M2, the Almanac Lectern and Drafting Table. Spec in `docs/milestones/M2.md`.
 - **Owner:** James. He play-tests in the IntelliJ dev client; keep him in the loop on anything that
   changes gameplay feel.
 
@@ -55,6 +55,13 @@ docs/            design.md, milestones/
   through explicit sinks. Settlement conserves totals (`ExchangeInvariantsTest`).
 - **Dollars are never craftable**, never in loot tables, never sold by villagers. Creative tab is the only
   other source.
+- **No vanilla recipes for mod items** except the three Tier 0 blocks (Basic Exchange, Almanac Lectern,
+  Drafting Table). Everything else is a per-player blueprint crafted at the Drafting Table.
+- **Components** (Ledger Paper, Brass Fittings, … Computer Chip) are buy-only from the Dealer: no recipes,
+  no loot, no villager trades. Shallow depth, ~40% spread. Shown in the Buy tab only after the player unlocks
+  a blueprint that uses them.
+- **Unlocks are never items.** Buying a node is permanent and keyed by account: blueprints for blocks/tools,
+  perks for licenses. Losing a crafted item costs materials, never the unlock.
 - All amounts are `long` cents (prices synced to the client in mills = 1/1000 $). No `double` in balances.
 - Payouts round down to the dime, purchases round up (Dealer's favor).
 - Every counterparty reacts to volume; nothing prints unlimited money. Check with `sim farm`.
@@ -122,7 +129,8 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
 
 - [x] **M1: Dollars and the Dealer.** Currency, Basic Exchange (Sell + Buy tabs, grouped buy grid),
   Dealer pricing + persistence, 40-item catalog, creative tab. 35 unit tests, 8 GameTests.
-- [ ] **M2: Almanac Lectern.** Upgrades tree, Guides, Quests; per-player unlocks. → `docs/milestones/M2.md`
+- [ ] **M2: Almanac Lectern + Drafting Table.** Upgrades tree, Guides, Quests; per-player blueprints and perks;
+  Tier 1 components in the Buy tab. → `docs/milestones/M2.md`
 - [ ] M3: Tier 1 content (Bill Clip, Price Board, Merchant License, Trade Route Crate + Capital dealer)
 - [ ] M4: Banking and item collateral (Bank Vault, Passbook, CD, Loan Note, margin calls)
 - [ ] M5: Trading Floor on the batch auction (order slips, NPC traders, Ticker Tape)
