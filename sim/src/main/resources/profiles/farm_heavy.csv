@@ -1,0 +1,17 @@
+# A player who built out farms after Tier 1: most income from crops and animals, a little mining.
+# Same format as early_survival.csv. ASSUMPTIONS, not measurements.
+item,per_day,from_day,ramp
+minecraft:wheat,160,1,0
+minecraft:carrot,96,1,0
+minecraft:potato,96,1,0
+minecraft:beetroot,64,1,0
+minecraft:sugar_cane,64,1,0
+minecraft:pumpkin,16,1,0
+minecraft:leather,6,1,0
+minecraft:beef,12,1,0
+minecraft:cobblestone,64,1,0
+minecraft:coal,8,1,0
+minecraft:iron_ingot,4,1,0
+minecraft:oak_log,24,1,0
+minecraft:bone,8,1,0
+minecraft:string,4,1,0

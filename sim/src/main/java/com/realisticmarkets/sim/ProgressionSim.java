@@ -1,8 +1,10 @@
 package com.realisticmarkets.sim;
 
+import com.realisticmarkets.dealer.Capital;
 import com.realisticmarkets.dealer.Dealer;
 import com.realisticmarkets.dealer.DealerCatalog;
 import com.realisticmarkets.dealer.DealerParams;
+import com.realisticmarkets.dealer.ShipmentBook;
 import com.realisticmarkets.exchange.RejectedException;
 import com.realisticmarkets.money.Money;
 import com.realisticmarkets.progression.Blueprint;
@@ -33,7 +35,8 @@ import java.util.Set;
 /**
  * M2 balance check: a scripted player gathers a mix of goods (a production profile), sells to the Dealer once
  * per in-game day, chases quests 1-6, buys Tier 1 nodes and the components to craft one of each blueprint.
- * Reports play time until all of Tier 1 is owned and crafted. Design target: about 2 hours.
+ * Reports play time until all of Tier 1 is owned and crafted (design target: about 2 hours), then how much the
+ * Trade Route Crate lifts steady income afterwards (M3 target: +30-50% for a farm-heavy player).
  *
  * <p>Strategy (a player who has read the guides): sell everything once a day, except hold an item whose market
  * price is under 90% of normal; stockpile cobblestone to dump 256 at once for Flooding the Market; while
@@ -85,6 +88,83 @@ public final class ProgressionSim {
                     r.componentShare() * 100);
         }
         System.out.printf(Locale.ROOT, "Target: about 2 hours; components noticeable but under ~25%%. CSV: %s%n", out.toAbsolutePath());
+
+        System.out.println();
+        System.out.printf(Locale.ROOT, "After Tier 1: income with vs without the Trade Route Crate (licensed, %d days, steady = last half)%n",
+                CRATE_DAYS);
+        System.out.printf(Locale.ROOT, "%-16s  %12s  %12s  %8s  %s%n", "profile", "local $/day", "crate $/day", "uplift", "shipped share");
+        for (String name : new LinkedHashSet<>(List.of(profile, "farm_heavy"))) {
+            List<Source> src = loadProfile(name);
+            CrateResult local = runCrate(src, false);
+            CrateResult crate = runCrate(src, true);
+            System.out.printf(Locale.ROOT, "%-16s  %12s  %12s  %7.0f%%  %12.0f%%%n", name,
+                    Money.format(local.centsPerDay()), Money.format(crate.centsPerDay()),
+                    (crate.centsPerDay() / (double) local.centsPerDay() - 1) * 100, crate.shippedShare() * 100);
+        }
+        System.out.println("Target (M3): the crate lifts a farm-heavy player's income by roughly 30-50%, not multiplies it.");
+    }
+
+    static final int CRATE_DAYS = 30;
+    static final int CRATE_STACKS = 9;
+
+    record CrateResult(long centsPerDay, double shippedShare) {}
+
+    /**
+     * Steady-state daily income after Tier 1, selling every day's output. With the crate, each item goes wherever
+     * it pays more (all local, all Capital, or half each, judged on today's quotes), up to 9 stacks a day; a
+     * shipment is priced when it arrives the next day. Both runs hold the Merchant License.
+     */
+    static CrateResult runCrate(List<Source> sources, boolean useCrate) {
+        DealerCatalog catalog = DealerCatalog.loadDefault();
+        Dealer local = new Dealer(catalog, DealerParams.defaults(), 7L);
+        Capital.Config cfg = Capital.loadDefault();
+        Dealer capital = Capital.dealer(catalog, DealerParams.defaults(), cfg, 11L);
+        ShipmentBook book = new ShipmentBook();
+        long steadyCents = 0, steadyShipped = 0;
+        int steadyDays = 0;
+        for (int day = 1; day <= CRATE_DAYS; day++) {
+            long income = 0, shippedIncome = 0;
+            for (ShipmentBook.Settlement st : book.settleDue(capital, day, cfg.freight())) {
+                income += st.payoutCents();
+                shippedIncome += st.payoutCents();
+            }
+            Map<String, Integer> shipment = new LinkedHashMap<>();
+            int stacksLeft = useCrate ? CRATE_STACKS : 0;
+            for (Source s : sources) {
+                int qty = (int) Math.floor(s.output(day));
+                if (qty <= 0) continue;
+                int toCapital = 0;
+                if (stacksLeft > 0 && capital.catalog().trades(s.item())) {
+                    int max = Math.min(qty, stacksLeft * 64);
+                    long allLocal = quote(local, s.item(), qty, day, true);
+                    long allShip = ShipmentBook.estimate(capital, Map.of(s.item(), max), day, cfg.freight())
+                            + quote(local, s.item(), qty - max, day, true);
+                    int half = Math.min(max, qty / 2);
+                    long split = ShipmentBook.estimate(capital, Map.of(s.item(), half), day, cfg.freight())
+                            + quote(local, s.item(), qty - half, day, true);
+                    if (allShip > allLocal && allShip >= split) toCapital = max;
+                    else if (split > allLocal) toCapital = half;
+                }
+                if (toCapital > 0) {
+                    shipment.put(s.item(), toCapital);
+                    stacksLeft -= (toCapital + 63) / 64;
+                }
+                if (qty - toCapital > 0) {
+                    try {
+                        income += local.sell(s.item(), qty - toCapital, day, true).cents();
+                    } catch (RejectedException collapsed) {
+                        // sold for nothing
+                    }
+                }
+            }
+            if (!shipment.isEmpty()) book.ship("sim", "crate", shipment, 0, day, capital, cfg.transitDays());
+            if (day > CRATE_DAYS / 2) {
+                steadyCents += income;
+                steadyShipped += shippedIncome;
+                steadyDays++;
+            }
+        }
+        return new CrateResult(steadyCents / steadyDays, steadyCents == 0 ? 0 : steadyShipped / (double) steadyCents);
     }
 
     static void print(Result r) {

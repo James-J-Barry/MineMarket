@@ -431,6 +431,15 @@ A second Dealer, reached only by Trade Route Crate. It trades the same items as 
 
 The Capital's spread is 15%, and the Merchant License does not apply there. A shipment is priced when it arrives, one in-game day after shipping, and pays out minus a 5% freight fee. Buying at the Capital is not possible yet. Multipliers are placeholders to tune with `sim progression`.
 
+With these values `sim progression` (licensed player, selling each day's output, shipping whatever pays more, 9 stacks a day) gives:
+
+| Profile | Local only | With crate | Uplift | Share of income shipped |
+| --- | --- | --- | --- | --- |
+| Early survival mix | $170/day | $189/day | +11% | 35% |
+| Farm-heavy | $188/day | $255/day | +35% | 45% |
+
+The crate pays off for farmers and barely matters for miners, which is the intended lesson: arbitrage only works where the price gap beats freight and spreads.
+
 NPC traders are shown in the world as villager merchants standing around the Trading Floor and Stock Exchange; the busier the market, the more of them appear. They are cosmetic, and the simulation runs whether or not they are loaded.
 
 ### Fictional companies

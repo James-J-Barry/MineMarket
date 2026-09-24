@@ -6,8 +6,8 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 
 - **Design doc (source of truth for gameplay):** `docs/design.md`, exported from the "Realistic Markets —
   Game Design Document" Claude Doc. If a request conflicts with it, ask before building.
-- **Current milestone:** M3, Tier 1 content. M2 (Almanac Lectern and Drafting Table) is done; spec in
-  `docs/milestones/M2.md`. M3 spec: `docs/milestones/M3.md` (decisions answered).
+- **Current milestone:** M4, banking and item collateral (no spec file yet). Done: M2 (`docs/milestones/M2.md`),
+  M3 (`docs/milestones/M3.md`).
 - **Owner:** James. He play-tests in the IntelliJ dev client; keep him in the loop on anything that
   changes gameplay feel.
 
@@ -17,7 +17,7 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 |---|---|---|
 | `test` | exchange-core unit tests, prints `N tests, M failed` | ~5 s |
 | `sim farm [item] [days]` | Dealer balance: income vs farm size → `build/sim/*.csv` | ~5 s |
-| `sim progression [profile]` | Play time to own and craft all of Tier 1, from a gathering profile in `sim/src/main/resources/profiles/` | ~5 s |
+| `sim progression [profile]` | Tier 1 play time, then Trade Route Crate income uplift, from gathering profiles in `sim/src/main/resources/profiles/` | ~5 s |
 | `build` | compile everything **and run the GameTests** (Loom's `check` includes them) | ~15 s |
 | `gametest` | server GameTests only, in a headless Minecraft server | ~10 s |
 | `check` | `test` + `gametest`. **A change is not done until this passes.** | ~20 s |
@@ -136,8 +136,8 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   Dealer pricing + persistence, 40-item catalog, creative tab. 35 unit tests, 8 GameTests.
 - [x] **M2: Almanac Lectern + Drafting Table.** Upgrades tree, Guides, Quests; per-player blueprints and perks;
   Tier 1 components in the Buy tab. 68 unit tests, 19 GameTests, `sim progression` = 2.0 h. → `docs/milestones/M2.md`
-- [ ] **M3: Tier 1 content** (Bill Clip, Price Board, Trade Route Crate + the Capital, Tier 1 guides).
-  → `docs/milestones/M3.md`
+- [x] **M3: Tier 1 content.** Bill Clip, Price Board, Trade Route Crate + the Capital, four Tier 1 guides.
+  86 unit tests, 30 GameTests; crate lifts farm-heavy income +35%. → `docs/milestones/M3.md`
 - [ ] M4: Banking and item collateral (Bank Vault, Passbook, CD, Loan Note, margin calls)
 - [ ] M5: Trading Floor on the batch auction (order slips, NPC traders, Ticker Tape)
 - [ ] M6–M10: equities, bonds, futures, options, modern finance (ATM, Brokerage)

@@ -8,7 +8,7 @@ import java.util.Arrays;
  * <pre>
  *   ./scripts/dev.sh sim farm [item] [days]        farm income vs daily sale size (Dealer balance)
  *   ./scripts/dev.sh sim auction [steps] [seed]    batch-auction price discovery demo
- *   ./scripts/dev.sh sim progression [profile]     play time to own and craft all of Tier 1
+ *   ./scripts/dev.sh sim progression [profile]     Tier 1 play time, then Trade Route Crate income uplift
  * </pre>
  */
 public final class SimMain {
