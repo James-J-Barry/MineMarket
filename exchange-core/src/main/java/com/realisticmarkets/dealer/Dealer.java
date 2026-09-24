@@ -42,9 +42,10 @@ public final class Dealer {
                         double unitPriceBefore, double unitPriceAfter) {}
 
     /** Persistable per-pool state. */
-    public record PoolState(double inventory, double lastDay, long driftDay, double logDeviation, double trend) {
+    public record PoolState(double inventory, double lastDay, long driftDay, double logDeviation, double trend,
+                            double yesterdayLog) {
         public PoolState(double inventory, double lastDay, long driftDay, double logDeviation) {
-            this(inventory, lastDay, driftDay, logDeviation, 0);
+            this(inventory, lastDay, driftDay, logDeviation, 0, logDeviation);
         }
     }
 
@@ -62,6 +63,7 @@ public final class Dealer {
         double lastDay = Double.NaN;
         long driftDay;
         double logDev;
+        double yesterdayLog; // the level at yesterday's close: yesterday's moves and trades, none of today's
         double trend;
     }
 
@@ -132,6 +134,20 @@ public final class Dealer {
         return mid(base, advance(base, day), day) * spec.baseUnits();
     }
 
+    /**
+     * "Normal" as the Basic Exchange and Price Board show it: the Dealer's published fair value as of yesterday's
+     * close. It lags the true value by today's step, trades and news, so reading it is a judgment call rather than
+     * a free signal. (The true value drives prices and the Floor's NPCs.)
+     */
+    public double normalValue(String itemId, double day) {
+        MarketSpec spec = catalog.spec(itemId);
+        MarketSpec base = catalog.pool(itemId);
+        Pool p = advance(base, day);
+        double close = Math.floor(day) - 1e-6; // the last moment of yesterday
+        double t = shocks == null ? 0 : shocks.fading(base.itemId(), close);
+        return base.fairValue() * Math.exp(p.yesterdayLog + t) * spec.baseUnits();
+    }
+
     public double fairValue(String itemId, double day) {
         MarketSpec spec = catalog.spec(itemId);
         MarketSpec base = catalog.pool(itemId);
@@ -147,7 +163,7 @@ public final class Dealer {
 
     public Map<String, PoolState> snapshot() {
         Map<String, PoolState> out = new LinkedHashMap<>();
-        pools.forEach((id, p) -> out.put(id, new PoolState(p.inventory, p.lastDay, p.driftDay, p.logDev, p.trend)));
+        pools.forEach((id, p) -> out.put(id, new PoolState(p.inventory, p.lastDay, p.driftDay, p.logDev, p.trend, p.yesterdayLog)));
         return out;
     }
 
@@ -161,6 +177,7 @@ public final class Dealer {
             p.driftDay = s.driftDay();
             p.logDev = s.logDeviation();
             p.trend = s.trend();
+            p.yesterdayLog = s.yesterdayLog();
             pools.put(id, p);
         });
     }
@@ -259,6 +276,7 @@ public final class Dealer {
             while (p.driftDay < target) {
                 p.driftDay++;
                 SplittableRandom r = rng(base.itemId(), p.driftDay);
+                p.yesterdayLog = p.logDev; // after the loop: the level at the end of yesterday
                 p.trend = persist * p.trend + params.trendSigma() * r.nextGaussian();
                 p.logDev = anchor * p.logDev + p.trend + params.driftSigma() * r.nextGaussian();
                 if (shocks != null) p.logDev += shocks.permanent(base.itemId(), p.driftDay);

@@ -14,14 +14,14 @@ import java.util.Map;
  * <pre>
  * # Realistic Markets dealer state v2
  * @day_offset	0.0
- * minecraft:wheat	256.0	12.5	12	-0.013	0.0021
+ * minecraft:wheat	256.0	12.5	12	-0.013	0.0021	-0.011
  * </pre>
- * Columns: base item, inventory (base units), last day seen, last drift day, log fair-value level, trend.
- * v1 saves (no trend column) load with a zero trend.
+ * Columns: base item, inventory (base units), last day seen, last drift day, log fair-value level, trend, the level
+ * at yesterday's dawn (for the published Normal). Older saves load with a zero trend and yesterday = today.
  * Doubles are written with {@link Double#toString} so they round-trip exactly.
  */
 public final class DealerStateIO {
-    public static final String HEADER = "# Realistic Markets dealer state v2";
+    public static final String HEADER = "# Realistic Markets dealer state v3";
 
     private DealerStateIO() {}
 
@@ -33,7 +33,8 @@ public final class DealerStateIO {
         w.write("@day_offset\t" + saved.dayOffset() + "\n");
         for (Map.Entry<String, Dealer.PoolState> e : saved.pools().entrySet()) {
             Dealer.PoolState p = e.getValue();
-            w.write(e.getKey() + "\t" + p.inventory() + "\t" + p.lastDay() + "\t" + p.driftDay() + "\t" + p.logDeviation() + "\t" + p.trend() + "\n");
+            w.write(e.getKey() + "\t" + p.inventory() + "\t" + p.lastDay() + "\t" + p.driftDay() + "\t" + p.logDeviation() + "\t" + p.trend()
+                    + "\t" + p.yesterdayLog() + "\n");
         }
         w.flush();
     }
@@ -52,11 +53,13 @@ public final class DealerStateIO {
             try {
                 if (c[0].equals("@day_offset")) {
                     offset = Double.parseDouble(c[1]);
-                } else if (c.length == 5 || c.length == 6) {
+                } else if (c.length >= 5 && c.length <= 7) {
+                    double level = Double.parseDouble(c[4]);
                     pools.put(c[0], new Dealer.PoolState(Double.parseDouble(c[1]), Double.parseDouble(c[2]),
-                            Long.parseLong(c[3]), Double.parseDouble(c[4]), c.length == 6 ? Double.parseDouble(c[5]) : 0));
+                            Long.parseLong(c[3]), level, c.length >= 6 ? Double.parseDouble(c[5]) : 0,
+                            c.length == 7 ? Double.parseDouble(c[6]) : level));
                 } else {
-                    throw new IllegalArgumentException("expected 5 or 6 columns");
+                    throw new IllegalArgumentException("expected 5 to 7 columns");
                 }
             } catch (RuntimeException e) {
                 throw new IllegalArgumentException("dealer state line " + n + " is malformed: '" + t + "'", e);

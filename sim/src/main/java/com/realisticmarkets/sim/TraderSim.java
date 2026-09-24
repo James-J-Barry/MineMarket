@@ -213,11 +213,14 @@ public final class TraderSim {
         };
     }
 
-    /** Buy 3% under the Dealer's Normal price, sell 1% over it (the Basic Exchange shows Normal). */
+    /**
+     * Buy 3% under the Dealer's Normal price, sell 1% over it. Normal is what the Basic Exchange shows: yesterday's
+     * close, so it lags the true value.
+     */
     static Strategy value() {
         return (w, me, dawn) -> {
             for (FloorCatalog.Book b : w.floor.catalog().all()) {
-                long fair = w.fair(b.item());
+                long fair = Math.max(1, Math.round(w.dealer.normalValue(b.item(), w.day) * 100));
                 long bid = Math.max(1, Math.round(fair * 0.97)), ask = Math.round(fair * 1.01);
                 long room = Math.max(0, CAP_PER_BOOK / bid - me.have(b.item()));
                 w.order(me, b.item(), Side.BUY, Math.min(size(b), room), bid);

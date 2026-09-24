@@ -284,7 +284,7 @@ public final class ProgressionSim {
                     if (qty < 256) continue;
                     qty = 256;
                     dumped = true;
-                } else if (dealer.mid(item, day) / dealer.fairValue(item, day) < HOLD_BELOW) {
+                } else if (dealer.mid(item, day) / dealer.normalValue(item, day) < HOLD_BELOW) {
                     continue;
                 }
                 toSell.put(item, qty);
@@ -387,7 +387,7 @@ public final class ProgressionSim {
     }
 
     private static ProgressionEvent.Sale sell(Dealer d, String item, int qty, int day, boolean licensed, long[] cash) {
-        double before = d.mid(item, day) / d.fairValue(item, day);
+        double before = d.mid(item, day) / d.normalValue(item, day);
         long cents;
         try {
             cents = d.sell(item, qty, day, licensed).cents();
@@ -395,7 +395,7 @@ public final class ProgressionSim {
             return null;
         }
         cash[0] += cents;
-        double after = d.mid(item, day) / d.fairValue(item, day);
+        double after = d.mid(item, day) / d.normalValue(item, day);
         return new ProgressionEvent.Sale(item, d.catalog().spec(item).group(), qty, cents, before, after, day);
     }
 

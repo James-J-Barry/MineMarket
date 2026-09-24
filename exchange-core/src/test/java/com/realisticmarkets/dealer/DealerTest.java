@@ -173,6 +173,24 @@ class DealerTest {
     }
 
     @Test
+    void normalIsYesterdaysClose() {
+        Dealer d = new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), 21L);
+        Dealer probe = new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), 21L);
+        double close = probe.fairValue(WHEAT, 9.999999);
+        d.fairValue(WHEAT, 9.5);
+        assertEquals(close, d.normalValue(WHEAT, 10.3), close * 1e-4, "Normal on day 10 = the value at the end of day 9");
+        assertTrue(Math.abs(d.fairValue(WHEAT, 10.3) / d.normalValue(WHEAT, 10.3) - 1) > 1e-4, "and the true value has moved on");
+        d.sell(WHEAT, 256, 10.4, false);
+        assertEquals(close, d.normalValue(WHEAT, 10.5), close * 1e-4, "today's trades show in Normal tomorrow");
+        assertTrue(d.normalValue(WHEAT, 11.2) < probe.fairValue(WHEAT, 10.999999), "there they are");
+        int lagging = 0;
+        for (int day = 1; day < 200; day++) {
+            if (Math.abs(d.fairValue(WHEAT, day + 0.5) / d.normalValue(WHEAT, day + 0.5) - 1) > 0.02) lagging++;
+        }
+        assertTrue(lagging > 40, "Normal is off by over 2% on many days: " + lagging + " of 199");
+    }
+
+    @Test
     void sellingLowersFairValueForGood() {
         Dealer d = new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), 5L);
         Dealer quiet = new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), 5L);
@@ -237,6 +255,9 @@ class DealerTest {
         Dealer copy = new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), 77L);
         copy.restore(DealerStateIO.read(new StringReader(out.toString())).pools());
         assertEquals(live.fairValue(WHEAT, 40), copy.fairValue(WHEAT, 40), 0.0, "trend and level carry over");
+        Dealer again = new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), 77L);
+        again.restore(DealerStateIO.read(new StringReader(out.toString())).pools());
+        assertEquals(live.normalValue(WHEAT, 40.5), again.normalValue(WHEAT, 40.5), 0.0, "so does yesterday's close");
 
         var v1 = DealerStateIO.read(new StringReader("# Realistic Markets dealer state v1\nminecraft:wheat\t256.0\t12.5\t12\t-0.013\n"));
         assertEquals(-0.013, v1.pools().get(WHEAT).logDeviation(), 0.0);

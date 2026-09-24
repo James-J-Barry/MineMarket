@@ -8,11 +8,11 @@ Every Basic Exchange in this world trades with the same Dealer. The Dealer buys 
 
 Dollars are real items. You can't craft them, mobs don't drop them, and if you die carrying them they fall to the ground like anything else. Keep what you don't need in a chest.
 
-The Sell tab shows three prices per item. Normal is the item's fair value: what it's worth today. Market is where the Dealer's price sits right now. Pays is what you get for the next item. Your first sale went through close to Normal because the Dealer had none of that item in stock.
+The Sell tab shows three prices per item. Normal is the Dealer's published fair value, as of yesterday's close. Market is where the Dealer's price sits right now. Pays is what you get for the next item. Your first sale went through close to Normal because the Dealer had none of that item in stock.
 
 If the Dealer won't buy something, no market exists for it yet. More markets open as you unlock new tools here at the Almanac.
 
-Fair values move every day, even when nobody trades. They wander, follow trends that can last a week or two, and jump on news, and nothing pulls them back where they started except very slowly. Yesterday's price is a guide, not a promise.
+Fair values move every day, even when nobody trades. They wander, follow trends that can last a week or two, and jump on news, and nothing pulls them back where they started except very slowly. So Normal is a day old by the time you read it: a guide, not a promise.
 
 Real world: money exists so you don't have to find someone who wants your wheat and also happens to have the pickaxe you need. Economists call that the double coincidence of wants.
 

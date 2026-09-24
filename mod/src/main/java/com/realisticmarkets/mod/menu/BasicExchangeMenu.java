@@ -36,7 +36,7 @@ import net.minecraft.world.item.Items;
  *
  * <p>Every price shown is per item:
  * <ul>
- *   <li><b>Normal</b>: the Dealer's fair value, what the price recovers to once it clears its stock.</li>
+ *   <li><b>Normal</b>: the Dealer's published fair value as of yesterday's close (it lags the true value).</li>
  *   <li><b>Market</b>: the Dealer's current mid price.</li>
  *   <li><b>Pays</b> (Sell tab) / <b>Sells</b> (Buy tab): what actually changes hands.</li>
  * </ul>
@@ -258,7 +258,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
             String id = buyList.get(i);
             int base = D_ITEMS + i * ITEM_STRIDE;
             setPair(base, BuiltInRegistries.ITEM.getId(itemFor(id)));
-            setPair(base + 2, mills(d.fairValue(id, day)));
+            setPair(base + 2, mills(d.normalValue(id, day)));
             setPair(base + 4, mills(d.mid(id, day)));
             setPair(base + 6, mills(d.ask(id, day, licensed)));
             data.set(base + 8, groupIndex(d.catalog().spec(id).group()));
@@ -289,7 +289,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
             status = STATUS_NOT_TRADED;
         } else {
             String id = DealerService.itemId(stack);
-            normal = mills(d.fairValue(id, day));
+            normal = mills(d.normalValue(id, day));
             market = mills(d.mid(id, day));
             pays = mills(d.bid(id, day, licensed));
             try {
@@ -339,7 +339,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         long cents;
         double before;
         try {
-            before = d.mid(id, day) / d.fairValue(id, day);
+            before = d.mid(id, day) / d.normalValue(id, day);
             cents = dealer.sellStack(stack, day, licensed());
         } catch (RejectedException e) {
             return false;
@@ -347,7 +347,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         input.setItem(0, ItemStack.EMPTY);
         payIntoDrawer(p, cents);
         if (progression != null) {
-            double after = d.mid(id, day) / d.fairValue(id, day);
+            double after = d.mid(id, day) / d.normalValue(id, day);
             String group = d.catalog().spec(id).group();
             progression.emit(p, new ProgressionEvent.Sale(id, group, qty, cents, before, after, (long) Math.floor(day)));
             progression.emitNetWorth(p, dealer, day, drawerCents());

@@ -41,6 +41,9 @@ value"). `docs/design.md` is updated with this milestone.
 5. **Cheaper trading.** One Ledger Paper makes **32 Order Slips** (was 8), about $0.14 each. An open order can be
    **repriced** without a new slip (the Floor screen's reprice button moves it to the price you've entered).
    Day orders still expire at dawn.
+7. **Normal is a day old (James, 2026-09-24).** The Basic Exchange and Price Board show Normal as the Dealer's
+   fair value at yesterday's close. The live value still drives prices and the Floor's NPCs. Before this, buying
+   under Normal on the Floor never had a losing week, because Normal was exact and public.
 6. **More books** so everyday gatherers benefit: potato, beef, copper ingot, bone (14 books). Not cobblestone: at
    10 cents a whole-cent quote can't be tighter than 9/11 cents, a 20% spread.
 
@@ -69,20 +72,20 @@ value"). `docs/design.md` is updated with this milestone.
       | strategy | $/day | worst world | worst week | orders/day |
       | --- | --- | --- | --- | --- |
       | quote inside the market maker | +$6.42 | +$0.70 | -$66 | 65 |
-      | buy under Normal, sell over it | +$12.58 | +$8.82 | +$0.53 | 69 |
+      | buy under Normal, sell over it (Normal a day old) | +$9.31 | -$4.48 | -$234 | 61 |
       | trade the Newsstand's news | +$8.23 | +$1.23 | -$27 | 1.3 |
       | iron block vs ingots (Two Books) | +$13.77 | +$7.25 | -$108 | 2.4 |
       | buy and hold (benchmark) | -$1.72 | -$4.10 | -$99 | 0.4 |
 
       Gatherers: Floor-first lifts income +20% (early survival) and +61% (farm-heavy); payback 90 and 28 days.
       Before M5c the same traders lost $15-18 a day. Misses to note: the market-making strategy earns 2x the vault
-      rather than 3-5x; buying under Normal almost never has a losing week (Normal is public and the Floor's noise
-      reverts to it within hours).
+      rather than 3-5x. (Before decision 7, buying under Normal made $12.58/day and never had a losing week.)
       `sim farm`: wheat now peaks at about $19.50/day (was $21) since sales lower V for good.
       `sim progression`: Tier 1 2.0 h, Tier 2 10 h (unchanged), Tier 3 with the Newsstand 19-20 h (was 16); crate
       uplift +16% / +41%.
       Guides: Money & the Dealer, Recovery (part of a drop never comes back; waiting has a cost vs the vault),
       Diversification, Reading a Quote, Limit and Market Orders (repricing) updated.
 - [x] Newsstand and Newspaper (core timing + edition, block, item, guide News and Markets, GameTest).
+- [x] Normal shown as yesterday's close (Dealer.normalValue, save v3, Basic Exchange, Price Board, Patience Pays).
 - [ ] James's in-game check: the Newsstand's paper and its head start, repricing, prices that move.
 - [ ] `./scripts/dev.sh check` green.

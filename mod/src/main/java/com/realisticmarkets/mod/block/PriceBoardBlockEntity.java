@@ -99,7 +99,7 @@ public class PriceBoardBlockEntity extends BlockEntity {
                     bid = mills(dealer.bid(id, day, false));
                     ask = mills(dealer.ask(id, day, false));
                     mid = mills(dealer.mid(id, day));
-                    fair = mills(dealer.fairValue(id, day));
+                    fair = mills(dealer.normalValue(id, day));
                 } catch (RejectedException e) {
                     // leave zeros
                 }
