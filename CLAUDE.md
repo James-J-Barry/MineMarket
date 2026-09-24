@@ -6,7 +6,7 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 
 - **Design doc (source of truth for gameplay):** `docs/design.md`, exported from the "Realistic Markets —
   Game Design Document" Claude Doc. If a request conflicts with it, ask before building.
-- **Current milestone:** M6 (equities), not yet specced. M5 (Trading Floor, M5a/M5b/M5c) is done:
+- **Current milestone:** M6, equities. Spec `docs/milestones/M6.md` (decisions answered; M6a first, then M6b). M5 (Trading Floor, M5a/M5b/M5c) is done:
   `docs/milestones/M5.md`, `docs/milestones/M5c.md`. M4 (banking and collateral) is done. Spec `docs/milestones/M4.md`
   (decisions answered). Done: M2 (`docs/milestones/M2.md`),
   M3 (`docs/milestones/M3.md`).
@@ -154,7 +154,9 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   the market hears, cheaper slips, repricing, 14 books. → `docs/milestones/M5c.md`
 - [x] **M5b: Ticker Tape.** Live 7-day chart (quarter-day points, volume) on the block's screen; Reading a Chart guide,
   Read the Tape quest. 166 unit tests, 46 GameTests. → `docs/milestones/M5.md`
-- [ ] M6–M10: equities, bonds, futures, options, modern finance (ATM, Brokerage)
+- [ ] **M6a: Companies and the Stock Exchange.** → `docs/milestones/M6.md`
+- [ ] **M6b: Electronic Newsfeed, Portfolio Binder, Safe Deposit Box.** → `docs/milestones/M6.md`
+- [ ] M7–M10: bonds, futures, options, modern finance (ATM, Brokerage)
 - [ ] M11: multiplayer
 
 ## Known gaps / ideas parked

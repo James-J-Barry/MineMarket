@@ -211,7 +211,7 @@ What the player can see about markets and their own money is itself a progressio
 | 2 | Passbook | A handwritten-style record of the player's bank balance, deposits, withdrawals and interest; the only place the balance is shown |
 | 3 | Newsstand | The market news as it breaks (droughts, harvests, strikes, gluts) and which goods to expect up or down, before most of the market has heard |
 | 3 | Ticker Tape | A live 7-day chart of any Trading Floor book on the block's screen: four points a day (close over each quarter's high-low), traded volume, the week's change and range |
-| 4 | Portfolio Binder, Safe Deposit Box | Total value of the papers in one binder; safe storage for papers and bills, with no summary of its own |
+| 4 | Portfolio Binder, Safe Deposit Box | Total value, at live prices, of the papers in one binder (papers themselves show no value); safe storage for papers and bills, with no summary of its own |
 | 5 | Digital Record Keeping | A Records Terminal showing net worth, every holding, income by source, and upcoming payments across all linked blocks |
 | 7 | Risk Report Module | Terminal add-on: collateral coverage, distance to margin calls, portfolio Greeks, simple stress tests |
 | 8 | ATM, Brokerage Terminal | Remote access to money and securities, and trading every market from one block |
@@ -294,8 +294,8 @@ The mod adds 42 items and blocks plus 10 components (see Crafting) across nine t
 | 3 | Newsstand | Block | $1,000 | Opens the Overworld Gazette: the last three days' market stories, each with the goods it should push up or down. News breaks here at dawn, before most of the market has heard | Information, being early |
 | 3 | Ticker Tape | Block | $1,500 | Its screen charts any Trading Floor book over the last 7 days, four points a day with high-low bars and volume, updating live. Free to read | Price history, reading charts |
 | 4 | Stock Exchange | Block | $10,000 | Buy and sell shares of fictional companies; claim dividends | Equity ownership |
-| 4 | Share Certificate | Item | Bought at Stock Exchange | Bearer certificate for 1, 10 or 100 shares of one company | Ownership, dividends |
-| 4 | Annual Report | Item | Free each earnings period per holding | Book with the company's revenue, costs, earnings and outlook | Fundamental analysis |
+| 4 | Share Certificate | Item | Bought at Stock Exchange | Bearer certificate for 1, 10 or 100 shares of one company; stacks like currency (no serial); records the last quarter its dividends were paid through | Ownership, dividends |
+| 4 | Company Report | Stock Exchange tab | Free | Each company's last 4 quarters of revenue, costs, earnings and dividend, with price/earnings and dividend yield (M6: a screen, not an item) | Fundamental analysis |
 | 4 | Electronic Newsfeed | Block | $2,000 | Company news: earnings, dividends and corporate headlines that move share prices, as they happen (the Tier 3 Newsstand covers commodity news) | Information, efficient markets |
 | 4 | Portfolio Binder | Item | $5,000 | Holds up to 27 security items and shows their total value | Portfolio management |
 | 4 | Safe Deposit Box | Block | $4,000 | 54-slot blast-proof storage that accepts only securities and currency; shows no totals by itself | Custody, safekeeping |
@@ -462,18 +462,18 @@ NPC traders shown in the world as villager merchants around the Trading Floor an
 
 ### Fictional companies
 
-Company earnings are linked to the same commodity prices the player trades, so the player's own actions feed into stock prices: flooding the iron market lowers Deepslate Mining's next earnings. Earnings are reported every 7 in-game days (one quarter) in an Annual Report and on the Electronic Newsfeed.
+Company earnings are linked to the same commodity prices the player trades, so the player's own actions feed into stock prices: flooding the iron market lowers Deepslate Mining's next earnings. Earnings are reported every 7 in-game days (one quarter) on the Stock Exchange's Report tab and on the Electronic Newsfeed.
 
 | Ticker | Company | Earnings driven by | Profile |
 | --- | --- | --- | --- |
 | DSMC | Deepslate Mining Co. | Iron, gold and diamond prices | Cyclical, pays dividends |
 | GHF | Golden Harvest Farms | Wheat and carrot prices; rain events raise output | Steady, weather shocks |
-| NRP | Nether Rail & Portal | Trade Route Crate volume; iron is its main cost | Growth, moderate risk |
-| ENCH | Enchanted Arms | Demand spikes during raid and siege events | Event-driven, volatile |
+| NRP | Nether Rail & Portal | Shipping volume to the Capital (everyone's, including the player's crates); iron is its main cost | Growth, moderate risk |
+| ENCH | Enchanted Arms | Iron and emerald prices; demand spikes during raid events | Event-driven, volatile |
 | RSD | Redstone Dynamics | Long-run growth story; no dividend | High volatility, high expected return |
 | OWL | Overworld Utility & Light | Stable fees; highly regulated | Bond-like, high dividend |
 
-Each company has shares outstanding, a payout ratio and a growth rate. Fundamentalist traders estimate fair value from earnings and growth; noise and momentum traders pull the price around it. Corporate Bonds from a company default when its earnings stay negative for two quarters, paying back a recovery fraction of face value.
+Each company has shares outstanding, a payout ratio and a growth rate. Quarterly revenue is output times the quarter's average commodity prices; fixed and input costs make earnings swing more than revenue; dividends are payout × earnings. Fundamentalist traders estimate fair value by discounting expected dividends at a required return a little above the vault's rate, so shares earn more than the vault on average but can lose; there is no short selling in Tier 4; noise and momentum traders pull the price around it. Corporate Bonds from a company default when its earnings stay negative for two quarters, paying back a recovery fraction of face value.
 
 ## Economy balance
 
@@ -587,7 +587,7 @@ Build in tier order, and make each milestone a complete, playable loop before st
 | M4b | Collateral and loans | Loan Note, escrow, `collateral` package, margin calls and liquidation; Leverage quest | The worked loan example matches the table; a margin call liquidates correctly in a GameTest |
 | M5a | Trading Floor | Order Slips, receipts, custody at the Floor, NPC trader population on the existing batch auction, `agents` package, three guides and three quests | Books stay liquid with no player; prices track fair value in sim |
 | M5b | Ticker Tape | Ticker Tape (chart on its screen), Reading a Chart guide, Read the Tape quest | A chart holds the last 7 days of a book |
-| M6 | Equities | Stock Exchange, certificates, six companies, Annual Reports, Electronic Newsfeed, Portfolio Binder, Safe Deposit Box | Dividends pay on presentation; earnings react to commodity prices |
+| M6 | Equities | Stock Exchange, certificates, six companies, Report tab, Electronic Newsfeed, Portfolio Binder, Safe Deposit Box | Dividends pay on presentation; earnings react to commodity prices |
 | M7 | Bonds | Bond Desk, Treasury and Corporate Bonds, central-rate events, defaults; Digital Record Keeping (Records Terminal, Record Link) | Bond prices fall when the rate rises; the Records Terminal's net worth equals the sum of linked holdings in a GameTest |
 | M8 | Forwards and futures | Forward Contract, Clearing House, daily mark-to-market | A wheat hedge offsets a price drop in sim |
 | M9 | Options | Options Desk, calls and puts, Greeks in book view, Volatility Board | Covered call pays full premium; naked call pays less with weak collateral |
@@ -597,7 +597,7 @@ Build in tier order, and make each milestone a complete, playable loop before st
 ## Open questions
 
 - [ ] **Time scale:** one in-game day is 20 real minutes, so a 7-day bond lasts 2h 20m. Is that fast enough to feel rewarding without making interest trivial? A “market day = N game days” setting may be needed.
-- [ ] **Live values on papers:** should a security's tooltip always show its live value, or only the value from the last time it was marked at an exchange or Price Board? Live is friendlier; last-marked is more grounded.
+- [x] **Live values on papers:** (M6: papers show no value; the Portfolio Binder shows the live total.) should a security's tooltip always show its live value, or only the value from the last time it was marked at an exchange or Price Board? Live is friendlier; last-marked is more grounded.
 - [ ] **Delivery vs cash settlement:** should futures and forwards require physical delivery of the items (more grounded, more logistics) or allow cash settlement at a fee?
 - [ ] **Modded items:** should the Dealer eventually price items from other mods, for example by inferring value from their recipes, or stay vanilla-only?
 - [ ] **Death penalty:** do dropped dollars and papers feel like a good lesson or just frustrating? A config toggle may be the answer.
