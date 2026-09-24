@@ -6,7 +6,7 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 
 - **Design doc (source of truth for gameplay):** `docs/design.md`, exported from the "Realistic Markets —
   Game Design Document" Claude Doc. If a request conflicts with it, ask before building.
-- **Current milestone:** M7 (bonds), not yet specced. M6 (equities) is done: `docs/milestones/M6.md`. M5 (Trading Floor, M5a/M5b/M5c) is done:
+- **Current milestone:** M7 (bonds), spec drafted `docs/milestones/M7.md` (decisions pending). M6 (equities) is done: `docs/milestones/M6.md`. M5 (Trading Floor, M5a/M5b/M5c) is done:
   `docs/milestones/M5.md`, `docs/milestones/M5c.md`. M4 (banking and collateral) is done. Spec `docs/milestones/M4.md`
   (decisions answered). Done: M2 (`docs/milestones/M2.md`),
   M3 (`docs/milestones/M3.md`).
