@@ -158,3 +158,19 @@ So match the term to your plans. Money you'll need for the next upgrade belongs 
 A CD is also a paper you carry. Whoever holds it can cash it, so losing it means losing the money, and each certificate can only be redeemed once.
 
 Real world: banks pay more on term deposits than on savings accounts because they can lend that money out for longer. Tying money up is a cost, and the higher rate is your payment for it.
+
+@leverage_and_collateral Leverage and Collateral
+The bank will lend against your goods, but not at their market value. Here is what each pile can borrow:
+
+15 diamonds (market $1,500): $775.90 at 0.75% a day
+256 iron (market $2,048): $651.50 at 1.00% a day
+64 gold (market $960): $454.00 at 0.81% a day
+1,500 oak logs (market $1,500): $110.20 at 1.31% a day
+
+The bank asks what it would get if it had to dump everything on the Dealer today, then takes a safety cut: 10% for gems and gold, 20% for other metals, 40% for crops and logs. You can borrow 80% of what's left. Cheap, bulky goods crash the price as they're sold, so a mountain of logs backs almost nothing, and the rate is higher too.
+
+Borrowing lets you do more with what you own. That's leverage: gains grow, and so do losses.
+
+Every dawn the bank re-values your collateral. It must cover at least 110% of what you owe. Borrow $700 against those diamonds and a fall of about a fifth in the diamond price triggers a margin call. You then have one day to add collateral or repay. After that the bank sells your goods itself, cheapest first, at whatever the Dealer pays that morning.
+
+Real world: lenders value collateral at fire-sale prices, not market prices, and margin calls force sales at the worst moment. Leverage wiped out many traders in 1929.

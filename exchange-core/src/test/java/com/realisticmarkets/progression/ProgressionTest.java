@@ -55,6 +55,7 @@ class ProgressionTest {
         assertTrue(tree.node("trade_route_crate").grants().contains("guide:two_markets"));
         assertTrue(tree.node("bank_vault").grants().contains("guide:interest_and_compounding"));
         assertTrue(tree.node("certificate_of_deposit").grants().contains("guide:term_and_liquidity"));
+        assertTrue(tree.node("loan_note").grants().contains("guide:leverage_and_collateral"));
     }
 
     @Test

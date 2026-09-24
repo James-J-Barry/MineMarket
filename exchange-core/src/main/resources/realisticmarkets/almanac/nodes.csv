@@ -9,4 +9,4 @@ merchant_license,1,15000,,meet_the_spread,perk:merchant_license;guide:transactio
 trade_route_crate,1,25000,,,blueprint:realisticmarkets:trade_route_crate;guide:two_markets,Trade Route Crate
 bank_vault,2,50000,,,blueprint:realisticmarkets:bank_vault;guide:interest_and_compounding,Bank Vault
 certificate_of_deposit,2,120000,bank_vault,,perk:certificate_of_deposit;component:realisticmarkets:security_paper;guide:term_and_liquidity,Certificate of Deposit
-loan_note,2,200000,bank_vault,,perk:loans;component:realisticmarkets:security_paper,Loan Note
+loan_note,2,200000,bank_vault,,perk:loans;component:realisticmarkets:security_paper;guide:leverage_and_collateral,Loan Note

@@ -17,7 +17,7 @@ class GuidesTest {
     void guidesOfTheRightLength() {
         assertEquals(List.of("money_and_dealer", "spread", "price_impact", "recovery", "diversification",
                         "cash_on_hand", "reading_a_quote", "transaction_costs", "two_markets",
-                        "interest_and_compounding", "term_and_liquidity"),
+                        "interest_and_compounding", "term_and_liquidity", "leverage_and_collateral"),
                 guides.all().stream().map(Guides.Guide::id).toList());
         for (Guides.Guide g : guides.all()) {
             int words = g.wordCount();
@@ -170,6 +170,29 @@ class GuidesTest {
         assertTrue(t.contains("it pays " + usd(cd7)));
         assertTrue(t.contains("becomes " + usd(cd21) + ", against " + usd(vault(100_000, 21)) + " in the vault"));
         assertTrue(cd7 > vault(50_000, 7) && cd21 > vault(100_000, 21), "CDs beat the vault over their term");
+    }
+
+    @Test
+    void leverageGuideTableMatchesTheValuer() {
+        String t = text("leverage_and_collateral");
+        Object[][] rows = {{"minecraft:diamond", 15, "15 diamonds"}, {"minecraft:iron_ingot", 256, "256 iron"},
+                {"minecraft:gold_ingot", 64, "64 gold"}, {"minecraft:oak_log", 1_500, "1,500 oak logs"}};
+        for (Object[] r : rows) {
+            Dealer d = new Dealer(DealerCatalog.loadDefault(), DealerParams.noDrift(), 1L);
+            var v = com.realisticmarkets.collateral.CollateralValuer.value(java.util.Map.of((String) r[0], (Integer) r[1]), 0, d, 0);
+            String line = String.format(java.util.Locale.ROOT, "%s (market $%,d): %s at %.2f%% a day", r[2],
+                    Math.round(v.marketCents() / 100.0), usd(v.maxLoanCents()), v.dailyRate() * 100);
+            assertTrue(t.contains(line), "guide should read: " + line);
+        }
+    }
+
+    @Test
+    void leverageGuideMarginCallThreshold() {
+        Dealer d = new Dealer(DealerCatalog.loadDefault(), DealerParams.noDrift(), 1L);
+        var v = com.realisticmarkets.collateral.CollateralValuer.value(java.util.Map.of("minecraft:diamond", 15), 0, d, 0);
+        double fall = 1 - 1.10 * 70_000 / v.valueCents(); // C falls in proportion to the diamond price
+        assertEquals(0.2, fall, 0.02, "about a fifth");
+        assertTrue(text("leverage_and_collateral").contains("Borrow $700 against those diamonds and a fall of about a fifth"));
     }
 
     @Test

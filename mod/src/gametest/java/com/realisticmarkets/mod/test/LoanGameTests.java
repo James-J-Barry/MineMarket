@@ -60,6 +60,7 @@ public class LoanGameTests {
     public void borrowAgainstDiamondsThenRepayAndGetThemBack(GameTestHelper helper) {
         ServerPlayer p = helper.makeMockServerPlayerInLevel();
         Desk d = desk(helper, p);
+        check(d.prog().progress(p).hasGuide("leverage_and_collateral"), "the Loan Note grants its guide");
         post(d, new ItemStack(Items.DIAMOND, 15));
         d.menu().clickMenuButton(p, BankVaultMenu.BUTTON_TAB_LOANS);
         long expected = com.realisticmarkets.collateral.CollateralValuer.value(
