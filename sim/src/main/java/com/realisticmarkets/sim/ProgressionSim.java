@@ -1,5 +1,7 @@
 package com.realisticmarkets.sim;
 
+import com.realisticmarkets.contracts.BankAccount;
+import com.realisticmarkets.contracts.BankParams;
 import com.realisticmarkets.dealer.Capital;
 import com.realisticmarkets.dealer.Dealer;
 import com.realisticmarkets.dealer.DealerCatalog;
@@ -49,6 +51,9 @@ public final class ProgressionSim {
     static final String DUMP_ITEM = "minecraft:cobblestone";
     static final double HOLD_BELOW = 0.90;
     static final long GROUP_TARGET_CENTS = 2050;
+    static final String BANK_VAULT = "realisticmarkets:bank_vault";
+    static final int AFTER_DAYS = 10;
+    static final BankParams BANK = BankParams.loadDefault();
 
     record Source(String item, double perDay, int fromDay, int ramp) {
         double output(int day) {
@@ -59,7 +64,8 @@ public final class ProgressionSim {
     }
 
     record Result(double scale, int day, long nodeCents, long componentCents, long questCents,
-                  Map<String, Integer> questDay, long cashEnd, boolean done) {
+                  Map<String, Integer> questDay, long cashEnd, boolean done, long interestCents,
+                  long recentIncomePerDay, long recentInterestPerDay) {
         double hours() { return day * MINUTES_PER_DAY / 60.0; }
         double componentShare() { return componentCents / (double) (nodeCents + componentCents); }
     }
@@ -75,14 +81,14 @@ public final class ProgressionSim {
         Result base;
         try (PrintWriter w = new PrintWriter(Files.newBufferedWriter(out))) {
             w.println("day,cash_cents,sold_cents,nodes,crafted,quests");
-            base = run(sources, 1.0, w);
+            base = run(sources, 1.0, w, 1);
         }
         print(base);
         System.out.println();
         System.out.println("Sensitivity (all gathering rates scaled):");
         System.out.printf(Locale.ROOT, "%8s  %8s  %8s  %10s%n", "rates", "days", "hours", "comp share");
         for (double s : new double[] {0.25, 0.5, 0.75, 1.0, 1.5}) {
-            Result r = run(sources, s, null);
+            Result r = run(sources, s, null, 1);
             System.out.printf(Locale.ROOT, "%7.0f%%  %8s  %8s  %9.0f%%%n", s * 100,
                     r.done() ? String.valueOf(r.day()) : ">" + MAX_DAYS, r.done() ? String.format(Locale.ROOT, "%.1f", r.hours()) : "-",
                     r.componentShare() * 100);
@@ -102,6 +108,20 @@ public final class ProgressionSim {
                     (crate.centsPerDay() / (double) local.centsPerDay() - 1) * 100, crate.shippedShare() * 100);
         }
         System.out.println("Target (M3): the crate lifts a farm-heavy player's income by roughly 30-50%, not multiplies it.");
+
+        System.out.println();
+        System.out.printf(Locale.ROOT, "Tier 2 so far (every Tier 2 node in the tree owned, Bank Vault built; cumulative play time;%n"
+                + "  interest and income measured over the %d days after, all savings in the vault):%n", AFTER_DAYS);
+        System.out.printf(Locale.ROOT, "%-16s  %6s  %7s  %12s  %14s  %16s%n", "profile", "days", "hours", "Tier 2 spend",
+                "interest total", "income vs interest/day");
+        for (String name : new LinkedHashSet<>(List.of(profile, "farm_heavy"))) {
+            Result r = run(loadProfile(name), 1.0, null, 2);
+            System.out.printf(Locale.ROOT, "%-16s  %6s  %7s  %12s  %14s  %9s vs %s%n", name,
+                    r.done() ? String.valueOf(r.day()) : ">" + MAX_DAYS, r.done() ? String.format(Locale.ROOT, "%.1f", r.hours()) : "-",
+                    Money.format(r.nodeCents() + r.componentCents()), Money.format(r.interestCents()),
+                    Money.format(r.recentIncomePerDay()), Money.format(r.recentInterestPerDay()));
+        }
+        System.out.println("Target: all of Tier 2 by about 5 h. M4a has Bank Vault + CD; the Loan Note ($2,000) comes in M4b.");
     }
 
     static final int CRATE_DAYS = 30;
@@ -180,7 +200,8 @@ public final class ProgressionSim {
         r.questDay().forEach((q, d) -> System.out.printf(Locale.ROOT, "  quest %-20s day %d%n", q, d));
     }
 
-    static Result run(List<Source> sources, double scale, PrintWriter csv) {
+    /** Plays until every node of tier {@code <= maxTier} is owned and each of their blueprints crafted once. */
+    static Result run(List<Source> sources, double scale, PrintWriter csv, int maxTier) {
         DealerCatalog catalog = DealerCatalog.loadDefault();
         Dealer dealer = new Dealer(catalog, DealerParams.defaults(), 7L);
         UnlockTree tree = UnlockTree.loadDefault();
@@ -196,6 +217,15 @@ public final class ProgressionSim {
         long[] questCents = {0};
         boolean dumped = false;
         boolean spreadDone = false;
+        List<UnlockNode> targetNodes = new ArrayList<>();
+        for (UnlockNode n : tree.all()) if (n.tier() <= maxTier) targetNodes.add(n);
+        Set<String> targetBlueprints = new LinkedHashSet<>();
+        for (Blueprint bp : blueprints.all()) if (tree.node(bp.node()).tier() <= maxTier) targetBlueprints.add(bp.result());
+        BankAccount vault = null; // exists once the Bank Vault is built; all spare cash sits in it
+        long interestCents = 0;
+        List<Long> incomeLog = new ArrayList<>();
+        List<Long> interestLog = new ArrayList<>();
+        int doneDay = -1;
 
         for (int day = 1; day <= MAX_DAYS; day++) {
             final int today = day;
@@ -208,6 +238,13 @@ public final class ProgressionSim {
                 }
             };
             emit.accept(new ProgressionEvent.DayRollover(day));
+            long interestToday = 0;
+            if (vault != null) {
+                interestToday = vault.accrueTo(day, BANK.interestRate());
+                cash[0] += interestToday;
+                interestCents += interestToday;
+                if (interestToday > 0) emit.accept(new ProgressionEvent.Interest(interestToday, vault.interestTotalCents(), day));
+            }
 
             // Quest 2, once affordable: buy one wheat and sell it straight back.
             if (!spreadDone && cash[0] >= 100) {
@@ -251,16 +288,17 @@ public final class ProgressionSim {
             emit.accept(new ProgressionEvent.NetWorth(cash[0], cash[0] + stockValue(dealer, stock, day, licensed), day));
 
             // Spend: cheapest affordable node first, then components to craft each unlocked blueprint once.
-            List<UnlockNode> nodes = new ArrayList<>(tree.tier(1));
-            nodes.sort(Comparator.comparingLong(UnlockNode::costCents));
+            List<UnlockNode> nodes = new ArrayList<>(targetNodes);
+            nodes.sort(Comparator.comparingInt(UnlockNode::tier).thenComparingLong(p::costOf));
             for (UnlockNode n : nodes) {
                 if (p.canBuy(n, tree, cash[0])) {
-                    cash[0] -= p.buy(n, tree, cash[0]);
-                    nodeCents += n.costCents();
+                    long cost = p.buy(n, tree, cash[0]);
+                    cash[0] -= cost;
+                    nodeCents += cost;
                 }
             }
             for (Blueprint bp : blueprints.all()) {
-                if (!p.hasBlueprint(bp.result()) || crafted.contains(bp.result())) continue;
+                if (!p.hasBlueprint(bp.result()) || crafted.contains(bp.result()) || !targetBlueprints.contains(bp.result())) continue;
                 long need = 0;
                 for (Blueprint.Material m : bp.materials()) {
                     if (catalog.trades(m.item()) && "components".equals(catalog.spec(m.item()).group())) {
@@ -281,17 +319,44 @@ public final class ProgressionSim {
                 }
                 crafted.add(bp.result());
                 emit.accept(new ProgressionEvent.Craft(bp.result(), 1, day));
+                if (bp.result().equals(BANK_VAULT)) vault = new BankAccount(day);
             }
+            if (vault != null) { // end of day: whatever cash is left goes into the vault overnight
+                long diff = cash[0] - vault.balanceCents();
+                if (diff > 0) vault.deposit(diff, day, BankAccount.Kind.DEPOSIT);
+                else if (diff < 0) vault.withdraw(-diff, day, BankAccount.Kind.WITHDRAW);
+            }
+            incomeLog.add(soldToday);
+            interestLog.add(interestToday);
 
             if (csv != null) {
                 csv.printf(Locale.ROOT, "%d,%d,%d,%d,%d,%d%n", day, cash[0], soldToday, p.nodes().size(), crafted.size(),
                         p.completedQuests().size());
             }
-            if (p.nodes().size() == tree.tier(1).size() && crafted.size() == blueprints.all().size()) {
-                return new Result(scale, day, nodeCents, componentCents, questCents[0], questDay, cash[0], true);
+            boolean allNodes = targetNodes.stream().allMatch(n -> p.hasNode(n.id()));
+            if (doneDay < 0 && allNodes && crafted.containsAll(targetBlueprints)) {
+                doneDay = day;
+                if (vault == null) {
+                    return new Result(scale, day, nodeCents, componentCents, questCents[0], questDay, cash[0], true,
+                            interestCents, recent(incomeLog), 0);
+                }
+            }
+            // With a vault, keep playing AFTER_DAYS more (buying nothing) to see savings earn next to income.
+            if (doneDay > 0 && day == doneDay + AFTER_DAYS) {
+                return new Result(scale, doneDay, nodeCents, componentCents, questCents[0], questDay, cash[0], true,
+                        interestCents, recent(incomeLog), recent(interestLog));
             }
         }
-        return new Result(scale, MAX_DAYS, nodeCents, componentCents, questCents[0], questDay, cash[0], false);
+        return new Result(scale, MAX_DAYS, nodeCents, componentCents, questCents[0], questDay, cash[0], false,
+                interestCents, recent(incomeLog), recent(interestLog));
+    }
+
+    /** Average of the last three days. */
+    private static long recent(List<Long> log) {
+        int n = Math.min(3, log.size());
+        long sum = 0;
+        for (int i = log.size() - n; i < log.size(); i++) sum += log.get(i);
+        return n == 0 ? 0 : sum / n;
     }
 
     private static ProgressionEvent.Sale sell(Dealer d, String item, int qty, int day, boolean licensed, long[] cash) {
@@ -345,12 +410,15 @@ public final class ProgressionSim {
         return true;
     }
 
-    /** Planks come from oak logs (1 log = 4 planks); everything else is itself. */
+    /** Planks come from oak logs (1 log = 4 planks), iron blocks from ingots (9 each); everything else is itself. */
     private static String vanillaSource(String material) {
-        return material.equals("minecraft:oak_planks") || material.equals("#minecraft:planks") ? "minecraft:oak_log" : material;
+        if (material.equals("minecraft:oak_planks") || material.equals("#minecraft:planks")) return "minecraft:oak_log";
+        if (material.equals("minecraft:iron_block")) return "minecraft:iron_ingot";
+        return material;
     }
 
     private static double vanillaUnits(String material, int count) {
+        if (material.equals("minecraft:iron_block")) return count * 9.0;
         return vanillaSource(material).equals(material) ? count : count / 4.0;
     }
 
