@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "realisticmarkets:block/safe_deposit_box"
+    }
+  }
+}

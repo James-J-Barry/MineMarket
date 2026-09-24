@@ -32,6 +32,8 @@ public final class ModMenus {
     public static MenuType<TickerTapeMenu> TICKER_TAPE;
     public static MenuType<StockExchangeMenu> STOCK_EXCHANGE;
     public static MenuType<com.realisticmarkets.mod.menu.NewsfeedMenu> NEWSFEED;
+    public static MenuType<com.realisticmarkets.mod.menu.PortfolioBinderMenu> PORTFOLIO_BINDER;
+    public static MenuType<com.realisticmarkets.mod.menu.SafeDepositBoxMenu> SAFE_DEPOSIT_BOX;
 
     public static void init() {
         ResourceKey<MenuType<?>> key = ResourceKey.create(Registries.MENU, RealisticMarkets.id("basic_exchange"));
@@ -67,5 +69,11 @@ public final class ModMenus {
         NEWSFEED = Registry.register(BuiltInRegistries.MENU,
                 ResourceKey.create(Registries.MENU, RealisticMarkets.id("electronic_newsfeed")),
                 new MenuType<>(com.realisticmarkets.mod.menu.NewsfeedMenu::new, FeatureFlags.VANILLA_SET));
+        PORTFOLIO_BINDER = Registry.register(BuiltInRegistries.MENU,
+                ResourceKey.create(Registries.MENU, RealisticMarkets.id("portfolio_binder")),
+                new MenuType<>(com.realisticmarkets.mod.menu.PortfolioBinderMenu::new, FeatureFlags.VANILLA_SET));
+        SAFE_DEPOSIT_BOX = Registry.register(BuiltInRegistries.MENU,
+                ResourceKey.create(Registries.MENU, RealisticMarkets.id("safe_deposit_box")),
+                new MenuType<>(com.realisticmarkets.mod.menu.SafeDepositBoxMenu::new, FeatureFlags.VANILLA_SET));
     }
 }

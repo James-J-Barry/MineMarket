@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     "realisticmarkets:bank_vault",
-    "realisticmarkets:electronic_newsfeed"
+    "realisticmarkets:electronic_newsfeed",
+    "realisticmarkets:safe_deposit_box"
   ]
 }

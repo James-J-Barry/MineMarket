@@ -11,3 +11,5 @@ realisticmarkets:newsstand,newsstand,#minecraft:planks*6,realisticmarkets:ledger
 realisticmarkets:ticker_tape,ticker_tape,realisticmarkets:clockwork_gear*1,minecraft:iron_ingot*4,realisticmarkets:ink_bottle*1
 realisticmarkets:stock_exchange,stock_exchange,realisticmarkets:engraved_plate*2,minecraft:gold_ingot*4,realisticmarkets:ledger_paper*1,#minecraft:planks*8
 realisticmarkets:electronic_newsfeed,electronic_newsfeed,realisticmarkets:clockwork_gear*1,realisticmarkets:engraved_plate*1,minecraft:redstone*8,minecraft:glass*2
+realisticmarkets:portfolio_binder,portfolio_binder,minecraft:leather*4,realisticmarkets:security_paper*2,realisticmarkets:brass_fittings*1
+realisticmarkets:safe_deposit_box,safe_deposit_box,minecraft:iron_block*4,realisticmarkets:lock_mechanism*1

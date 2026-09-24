@@ -51,6 +51,8 @@ public final class ModCreativeTab {
                             output.accept(ModBlocks.TICKER_TAPE);
                             output.accept(ModBlocks.STOCK_EXCHANGE);
                             output.accept(ModBlocks.NEWSFEED);
+                            output.accept(ModItems.PORTFOLIO_BINDER);
+                            output.accept(ModBlocks.SAFE_DEPOSIT_BOX);
                             output.accept(ModItems.ENGRAVED_PLATE);
                         })
                         .build());

@@ -41,6 +41,7 @@ public final class ModBlocks {
     public static Block TICKER_TAPE;
     public static Block STOCK_EXCHANGE;
     public static Block NEWSFEED;
+    public static Block SAFE_DEPOSIT_BOX;
 
     public static void init() {
         ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("basic_exchange"));
@@ -99,6 +100,15 @@ public final class ModBlocks {
                 new TickerTapeMenu(id, inv, access, FloorService.get(), ProgressionService.get(), DealerService.get()));
         STOCK_EXCHANGE = registerMenuBlock("stock_exchange", (id, inv, access) -> new StockExchangeMenu(id, inv, access,
                 com.realisticmarkets.mod.stocks.StockService.get(), ProgressionService.get(), DealerService.get()));
+        ResourceKey<Block> boxKey = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("safe_deposit_box"));
+        SAFE_DEPOSIT_BOX = Registry.register(BuiltInRegistries.BLOCK, boxKey,
+                new com.realisticmarkets.mod.block.SafeDepositBoxBlock(BlockBehaviour.Properties.of()
+                        .setId(boxKey)
+                        .mapColor(MapColor.METAL)
+                        .strength(5.0f, 3_600_000.0f)
+                        .requiresCorrectToolForDrops()
+                        .sound(SoundType.METAL)));
+        ModItems.register("safe_deposit_box", props -> new BlockItem(SAFE_DEPOSIT_BOX, props), new Item.Properties().useBlockDescriptionPrefix());
         NEWSFEED = registerMenuBlock("electronic_newsfeed", (id, inv, access) -> new com.realisticmarkets.mod.menu.NewsfeedMenu(id, inv,
                 access, com.realisticmarkets.mod.stocks.StockService.get(), ProgressionService.get(), DealerService.get()));
     }
