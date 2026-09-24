@@ -6,7 +6,7 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 
 - **Design doc (source of truth for gameplay):** `docs/design.md`, exported from the "Realistic Markets —
   Game Design Document" Claude Doc. If a request conflicts with it, ask before building.
-- **Current milestone:** M4b (collateral and loans); M4a (banking) is done. Spec `docs/milestones/M4.md`
+- **Current milestone:** M5, the Trading Floor (no spec file yet). M4 (banking and collateral) is done. Spec `docs/milestones/M4.md`
   (decisions answered). Done: M2 (`docs/milestones/M2.md`),
   M3 (`docs/milestones/M3.md`).
 - **Owner:** James. He play-tests in the IntelliJ dev client; keep him in the loop on anything that
@@ -142,7 +142,8 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   86 unit tests, 30 GameTests; crate lifts farm-heavy income +35%. → `docs/milestones/M3.md`
 - [x] **M4a: Banking.** Bank Vault, Passbook, interest, CDs, security registry, Tier 2 guides and quests.
   107 unit tests, 34 GameTests. → `docs/milestones/M4.md`
-- [ ] **M4b: Collateral and loans** (Loan Note, escrow, margin calls, liquidation). → `docs/milestones/M4.md`
+- [x] **M4b: Collateral and loans.** Loan Note, escrow, collateral grades, floating rate, dawn margin calls and
+  forced sales, Leverage guide and quest. 124 unit tests, 37 GameTests. → `docs/milestones/M4.md`
 - [ ] M5: Trading Floor on the batch auction (order slips, NPC traders, Ticker Tape)
 - [ ] M6–M10: equities, bonds, futures, options, modern finance (ATM, Brokerage)
 - [ ] M11: multiplayer

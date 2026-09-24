@@ -110,7 +110,7 @@ public final class ProgressionSim {
         System.out.println("Target (M3): the crate lifts a farm-heavy player's income by roughly 30-50%, not multiplies it.");
 
         System.out.println();
-        System.out.printf(Locale.ROOT, "Tier 2 so far (every Tier 2 node in the tree owned, Bank Vault built; cumulative play time;%n"
+        System.out.printf(Locale.ROOT, "Tier 2 complete (Bank Vault, CD and Loan Note owned, vault built; cumulative play time;%n"
                 + "  interest and income measured over the %d days after, all savings in the vault):%n", AFTER_DAYS);
         System.out.printf(Locale.ROOT, "%-16s  %6s  %7s  %12s  %14s  %16s%n", "profile", "days", "hours", "Tier 2 spend",
                 "interest total", "income vs interest/day");
@@ -121,7 +121,7 @@ public final class ProgressionSim {
                     Money.format(r.nodeCents() + r.componentCents()), Money.format(r.interestCents()),
                     Money.format(r.recentIncomePerDay()), Money.format(r.recentInterestPerDay()));
         }
-        System.out.println("Target: all of Tier 2 by about 5 h. M4a has Bank Vault + CD; the Loan Note ($2,000) comes in M4b.");
+        System.out.println("Design target: all of Tier 2 by about 5 h (parked: James kept current prices, 2026-09-24).");
     }
 
     static final int CRATE_DAYS = 30;

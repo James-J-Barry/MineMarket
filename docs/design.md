@@ -483,6 +483,8 @@ In single player the Dealer is an unlimited faucet, so its price impact is the m
 
 All of these live in datapack JSON, and difficulty presets (Relaxed, Standard, Realistic) swap whole sets at world creation.
 
+**Measured so far (`sim progression`, assumed gathering profiles):** Tier 1 complete at 2.0 h (target ~2 h). Tier 2 complete (Bank Vault, CD, Loan Note, vault built) at 9.7-10.3 h against a ~5 h target: Tier 2 costs about 7x Tier 1 while Tier 1's tools add only 11-35% income. Current prices are kept for now; halving Tier 2 prices and a 4-block vault recipe would bring it to about 5.3-6.3 h. Vault savings earn about $4-8 a day against $106-174 of income.
+
 ## Technical architecture
 
 The existing three-module scaffold stays: every rule of the economy lives in pure-Java `exchange-core` with unit tests, `sim` balances it headlessly, and `mod` is a thin Fabric layer (Minecraft 26.1.x, Java 25) that turns blocks, items and ticks into calls on the core.
