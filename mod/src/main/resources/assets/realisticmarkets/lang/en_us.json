@@ -27,5 +27,10 @@
   "item.realisticmarkets.security_paper": "Security Paper",
   "item.realisticmarkets.passbook": "Passbook",
   "item.realisticmarkets.certificate_of_deposit": "Certificate of Deposit",
-  "item.realisticmarkets.loan_note": "Loan Note"
+  "item.realisticmarkets.loan_note": "Loan Note",
+  "block.realisticmarkets.trading_floor": "Trading Floor",
+  "container.realisticmarkets.trading_floor": "Trading Floor",
+  "item.realisticmarkets.clockwork_gear": "Clockwork Gear",
+  "item.realisticmarkets.order_slip": "Order Slip",
+  "item.realisticmarkets.trade_receipt": "Trade Receipt"
 }

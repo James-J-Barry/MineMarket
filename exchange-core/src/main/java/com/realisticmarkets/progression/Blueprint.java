@@ -8,7 +8,7 @@ import java.util.Map;
  * A Drafting Table recipe. Material ids are opaque to the core: item ids, or {@code #tag} ids that the mod
  * layer counts by tag membership.
  */
-public record Blueprint(String result, String node, List<Material> materials) {
+public record Blueprint(String result, String node, List<Material> materials, int resultCount) {
 
     public record Material(String item, int count) {
         public Material {
@@ -25,6 +25,12 @@ public record Blueprint(String result, String node, List<Material> materials) {
         if (node == null || node.isBlank()) throw new IllegalArgumentException(result + ": node required");
         if (materials == null || materials.isEmpty()) throw new IllegalArgumentException(result + ": materials required");
         materials = List.copyOf(materials);
+        if (resultCount <= 0) throw new IllegalArgumentException(result + ": result count must be positive");
+    }
+
+    /** One result per craft. */
+    public Blueprint(String result, String node, List<Material> materials) {
+        this(result, node, materials, 1);
     }
 
     public int maxCraftable(Map<String, Integer> inventory) {

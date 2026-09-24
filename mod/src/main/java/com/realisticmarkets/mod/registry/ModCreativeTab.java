@@ -44,6 +44,9 @@ public final class ModCreativeTab {
                             output.accept(ModItems.LOCK_MECHANISM);
                             output.accept(ModItems.SECURITY_PAPER);
                             output.accept(ModItems.PASSBOOK);
+                            output.accept(ModBlocks.TRADING_FLOOR);
+                            output.accept(ModItems.CLOCKWORK_GEAR);
+                            output.accept(ModItems.ORDER_SLIP);
                         })
                         .build());
     }

@@ -112,7 +112,7 @@ public class DraftingTableMenu extends AbstractContainerMenu {
         if (r.times() == 0) return false;
         r.consumed().forEach((id, n) -> Materials.remove(inv, id, n));
 
-        int left = r.times();
+        int left = r.times() * bp.resultCount();
         ItemStack out = output.getItem(0);
         if (out.isEmpty()) {
             int n = Math.min(left, result.getDefaultMaxStackSize());

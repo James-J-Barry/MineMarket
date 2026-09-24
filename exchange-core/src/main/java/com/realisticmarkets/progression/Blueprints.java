@@ -17,7 +17,8 @@ import java.util.Set;
  * result,node,material:count,...
  * realisticmarkets:bill_clip,bill_clip,minecraft:leather*2,realisticmarkets:brass_fittings*1
  * </pre>
- * Materials are written {@code id*count} because ids already contain {@code :}.
+ * Materials are written {@code id*count} because ids already contain {@code :}. A result may be written the same
+ * way ({@code realisticmarkets:order_slip*8}) when one craft makes several.
  */
 public final class Blueprints {
     public static final String DEFAULT_RESOURCE = "/realisticmarkets/blueprints.csv";
@@ -47,7 +48,10 @@ public final class Blueprints {
                     if (star < 0) throw new IllegalArgumentException("material '" + c[i] + "' needs *count");
                     mats.add(new Blueprint.Material(c[i].substring(0, star), Integer.parseInt(c[i].substring(star + 1))));
                 }
-                rows.add(new Blueprint(c[0], c.length > 1 ? c[1] : "", mats));
+                int star = c[0].lastIndexOf('*');
+                String result = star < 0 ? c[0] : c[0].substring(0, star);
+                int count = star < 0 ? 1 : Integer.parseInt(c[0].substring(star + 1));
+                rows.add(new Blueprint(result, c.length > 1 ? c[1] : "", mats, count));
             } catch (RuntimeException e) {
                 throw new IllegalArgumentException("blueprints line " + r.lineNo() + ": " + e.getMessage(), e);
             }

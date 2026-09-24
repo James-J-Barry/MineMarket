@@ -18,6 +18,7 @@ public final class RealisticMarketsClient implements ClientModInitializer {
         MenuScreens.register(ModMenus.BILL_CLIP, BillClipScreen::new);
         MenuScreens.register(ModMenus.TRADE_ROUTE_CRATE, TradeRouteCrateScreen::new);
         MenuScreens.register(ModMenus.BANK_VAULT, BankVaultScreen::new);
+        MenuScreens.register(ModMenus.TRADING_FLOOR, TradingFloorScreen::new);
         PassbookItem.openBook = stack -> Minecraft.getInstance().setScreen(
                 new BookViewScreen(BookViewScreen.BookAccess.fromItem(stack)));
         BlockEntityRenderers.register(ModBlockEntities.PRICE_BOARD, PriceBoardRenderer::new);

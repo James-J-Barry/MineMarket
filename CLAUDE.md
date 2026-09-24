@@ -48,8 +48,8 @@ mod/             Fabric layer. Thin: translate Minecraft events <-> core calls.
   menu/BasicExchangeMenu    Sell + Buy tabs, server logic, ContainerData sync
   client/                   BasicExchangeScreen, RealisticMarketsClient (client entrypoint)
   dealer/                   DealerService (owns Dealer, config, persistence), Wallet, DealerCommands
-  MarketService/MarketCommands  scaffold for the batch-auction exchange (/mkt buy|sell|book), Tier 3
-  gametest/               DealerGameTests, MarketGameTests
+  floor/                  FloorService (Trading Floor: NPC books, auctions, tickets, receipts), TradeReceiptItem
+  gametest/               DealerGameTests, FloorGameTests, ...
 scripts/         dev.sh, mcapi.py (jar inspector), rcon.py
 docs/            design.md, milestones/
 ```
@@ -161,5 +161,3 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
 - `capital_catalog.csv` loads from the jar only (not copied to `config/` like the Dealer's files yet).
 - Floating price above the Basic Exchange (design doc) skipped; the screen covers it.
 - Placeholder art: currency, block and GUI textures are generated; James may repaint.
-- `MarketCommands`/`MarketService` (batch auction) are scaffold for M5; the DIAMOND/IRON/WHEAT tickers there
-  are not the Dealer.

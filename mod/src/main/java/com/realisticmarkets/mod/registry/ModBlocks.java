@@ -7,8 +7,10 @@ import com.realisticmarkets.mod.block.MenuBlock;
 import com.realisticmarkets.mod.block.PriceBoardBlock;
 import com.realisticmarkets.mod.block.TradeRouteCrateBlock;
 import com.realisticmarkets.mod.dealer.DealerService;
+import com.realisticmarkets.mod.floor.FloorService;
 import com.realisticmarkets.mod.menu.AlmanacMenu;
 import com.realisticmarkets.mod.menu.DraftingTableMenu;
+import com.realisticmarkets.mod.menu.TradingFloorMenu;
 import com.realisticmarkets.mod.progression.ProgressionService;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.Registry;
@@ -31,6 +33,7 @@ public final class ModBlocks {
     public static Block PRICE_BOARD;
     public static Block TRADE_ROUTE_CRATE;
     public static Block BANK_VAULT;
+    public static Block TRADING_FLOOR;
 
     public static void init() {
         ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("basic_exchange"));
@@ -79,6 +82,9 @@ public final class ModBlocks {
                         .sound(SoundType.METAL)));
         ModItems.register("bank_vault", props -> new BlockItem(BANK_VAULT, props),
                 new Item.Properties().useBlockDescriptionPrefix());
+
+        TRADING_FLOOR = registerMenuBlock("trading_floor", (id, inv, access) ->
+                new TradingFloorMenu(id, inv, access, FloorService.get(), ProgressionService.get(), DealerService.get()));
     }
 
     private static Block registerMenuBlock(String name, MenuBlock.Factory factory) {
