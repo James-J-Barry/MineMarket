@@ -84,3 +84,51 @@ Diversification also protects you. Fair values drift about 2% a day, and any sin
 There is a limit. Spreading into goods that take ages to gather, or are worth very little, can cost more time than it earns. Diversify across things that each pay their way.
 
 Real world: investors spread their money across many companies so one bad result can't sink them. The old saying is don't put all your eggs in one basket.
+
+@cash_on_hand Cash on Hand
+You bought a Bill Clip. It holds up to nine stacks of bills and coins, and every exchange pays from it and pays into it, so you no longer dig through your inventory for change.
+
+Cash is convenient, but it's also fragile. A Bill Clip is an item: drop it, or die carrying it, and the money inside goes with it. The more you carry, the more you can lose in one bad night.
+
+Every trade also leaks a little. The Dealer rounds in its own favor: sales round down to the dime, purchases round up. Sell 64 wheat and the exact price is $25.48, but you're paid $25.40. Eight cents is nothing once. Across hundreds of trades it adds up, and it's the same for everyone who deals in cash.
+
+So carry what you need to trade today and keep the rest somewhere safe. Later, a Bank Vault will hold money you can't lose by falling in lava, and it will even pay interest.
+
+Real world: cash in your pocket is instantly spendable but can be lost or stolen; money in a bank is safer but takes a trip to reach. People balance the two, and so will you.
+
+@reading_a_quote Reading a Quote
+You put up a Price Board. Each item on it shows two prices: the Bid, what the Dealer pays you, and the Ask, what it charges you. The arrow compares the market price with Normal: up means the Dealer is paying above normal right now, down means below.
+
+A quote is only good for the next item. Wheat shows a bid of $0.45, but sell 64 at once and the last ones fetch less. Right after that sale the board shows a bid of $0.35. Wait a few days and it climbs back.
+
+So read a board like a trader. A down arrow on something you hold means wait if you can. An up arrow means sell now, before someone else, or the drift, takes it away. Compare items side by side to decide what to sell today.
+
+The board shows the public price at the Basic Exchange. If you hold a Merchant License, your own prices are a little better than what the board says.
+
+Real world: a stock quote shows a bid and an ask, and they're good only for a limited number of shares. Anyone trading a large amount knows the price will move against them.
+
+@transaction_costs Transaction Costs
+You bought the Merchant License. Your spread at the Basic Exchange drops from 20% to 12%, for good.
+
+Here's what that means in dollars. Wheat's bid rises from $0.45 to $0.47 and its ask falls from $0.55 to $0.53. Sell 64 wheat and you're paid $26.60 instead of $25.40. Buying gets about 4% cheaper too.
+
+That's a small gain per trade against a big fixed cost. The license cost $150, and it raises your sale proceeds by about 4.4%. To earn the $150 back from selling alone, you need to sell about $3,500 worth of goods. A casual trader may never get there. A busy one gets there in a few days and profits from then on.
+
+That's the difference between a fixed cost and a variable cost. The spread is a variable cost: you pay it on every trade. The license is a fixed cost: you pay it once. The more you trade, the more a fixed cost is worth paying to cut the variable one.
+
+The license only applies at the Basic Exchange. The Capital's buyers charge their own spread.
+
+Real world: traders who buy a seat on an exchange, or a flat-fee brokerage plan, pay a large fixed cost to cut what every trade costs them. It only pays off if they trade a lot.
+
+@two_markets Two Markets
+You bought a Trade Route Crate. Goods you load into it travel to the Capital, a second market with its own prices, and are sold there when they arrive a day later, minus 5% freight.
+
+The Capital pays more than the local Dealer for some things and less for others. Farm goods are worth 30% more there; mining goods 10% less. Its spread is 15%.
+
+Take 128 wheat. Sold locally, it pays $45.30. Shipped, the Capital pays $60.50, freight takes $3.10, and you receive $57.40, about a quarter more. Iron goes the other way: 16 ingots pay $110.50 at home but only $97.00 after shipping.
+
+Can you buy wheat here and ship it for a profit? Not in bulk. Buying 64 wheat costs $40.00 and shipping it returns $32.30. The spreads, the freight and your own price impact eat the gap.
+
+The price you get is the Capital's price on arrival, not when you ship. If others' goods, or your own last shipment, arrived first, it will be lower. That delay is settlement risk.
+
+Real world: grain has always sold for more in the city than on the farm. Merchants profit from the difference only when it's bigger than the cost of moving goods between the two markets.

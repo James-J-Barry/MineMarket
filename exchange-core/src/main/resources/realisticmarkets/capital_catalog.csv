@@ -1,0 +1,12 @@
+# Realistic Markets: the Capital, a second Dealer reached by Trade Route Crate.
+# It trades the local Dealer's items with the same depths, at fair value x its group's multiplier.
+# Groups not listed here (components) are not traded at the Capital.
+# Settings: spread (the Merchant License does not apply), freight (share of gross proceeds), transit_days.
+key,value
+spread,0.15
+freight,0.05
+transit_days,1.0
+farm,1.30
+mobs,1.20
+wood_and_stone,1.10
+mining,0.90

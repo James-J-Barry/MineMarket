@@ -14,8 +14,9 @@ class GuidesTest {
     final Guides guides = Guides.loadDefault();
 
     @Test
-    void fiveGuidesOfTheRightLength() {
-        assertEquals(List.of("money_and_dealer", "spread", "price_impact", "recovery", "diversification"),
+    void guidesOfTheRightLength() {
+        assertEquals(List.of("money_and_dealer", "spread", "price_impact", "recovery", "diversification",
+                        "cash_on_hand", "reading_a_quote", "transaction_costs", "two_markets"),
                 guides.all().stream().map(Guides.Guide::id).toList());
         for (Guides.Guide g : guides.all()) {
             int words = g.wordCount();
@@ -71,6 +72,72 @@ class GuidesTest {
         assertEquals(0.70, oneItem, 0.01);
         assertEquals(0.88, threeItems, 0.01);
         assertEquals(1.25, threeItems / oneItem, 0.02); // "about a quarter more money"
+    }
+
+    String text(String id) {
+        return String.join("\n", guides.guide(id).paragraphs());
+    }
+
+    static String usd(long cents) {
+        return com.realisticmarkets.money.Money.format(cents);
+    }
+
+    @Test
+    void cashOnHandRounding() {
+        Dealer d = new Dealer(DealerCatalog.loadDefault(), DealerParams.noDrift(), 1L);
+        var q = d.quoteSell("minecraft:wheat", 64, 0, false);
+        assertTrue(text("cash_on_hand").contains("exact price is " + usd(Math.round(q.rawCents()))));
+        assertTrue(text("cash_on_hand").contains("paid " + usd(q.cents())));
+    }
+
+    @Test
+    void readingAQuoteNumbers() {
+        Dealer d = new Dealer(DealerCatalog.loadDefault(), DealerParams.noDrift(), 1L);
+        assertEquals(0.45, d.bid("minecraft:wheat", 0, false), 1e-9);
+        d.sell("minecraft:wheat", 64, 0, false);
+        String bid = String.format(java.util.Locale.ROOT, "$%.2f", d.bid("minecraft:wheat", 0, false));
+        assertTrue(text("reading_a_quote").contains("bid of " + bid), "board bid after 64 wheat should be " + bid);
+    }
+
+    @Test
+    void transactionCostsNumbers() {
+        Dealer d = new Dealer(DealerCatalog.loadDefault(), DealerParams.noDrift(), 1L);
+        String t = text("transaction_costs");
+        assertEquals(0.47, d.bid("minecraft:wheat", 0, true), 1e-9);
+        assertEquals(0.53, d.ask("minecraft:wheat", 0, true), 1e-9);
+        assertTrue(t.contains("paid " + usd(d.quoteSell("minecraft:wheat", 64, 0, true).cents())
+                + " instead of " + usd(d.quoteSell("minecraft:wheat", 64, 0, false).cents())));
+        double uplift = 0.94 / 0.90 - 1;
+        assertEquals(0.044, uplift, 0.0005);
+        double breakEvenSales = 150 / (1 - 0.90 / 0.94); // licensed proceeds needed to gain $150
+        assertEquals(3500, breakEvenSales, 50);
+        assertTrue(t.contains("about $3,500"));
+    }
+
+    @Test
+    void twoMarketsNumbers() {
+        DealerCatalog local = DealerCatalog.loadDefault();
+        Dealer home = new Dealer(local, DealerParams.noDrift(), 1L);
+        com.realisticmarkets.dealer.Capital.Config cfg = com.realisticmarkets.dealer.Capital.loadDefault();
+        Dealer capital = com.realisticmarkets.dealer.Capital.dealer(local, DealerParams.noDrift(), cfg, 2L);
+        String t = text("two_markets");
+
+        long wheatHome = home.quoteSell("minecraft:wheat", 128, 0, false).cents();
+        long wheatGross = capital.quoteSell("minecraft:wheat", 128, 0, false).cents();
+        long wheatNet = com.realisticmarkets.dealer.ShipmentBook.estimate(capital, java.util.Map.of("minecraft:wheat", 128), 0, cfg.freight());
+        assertTrue(t.contains("pays " + usd(wheatHome)));
+        assertTrue(t.contains("Capital pays " + usd(wheatGross) + ", freight takes " + usd(wheatGross - wheatNet)
+                + ", and you receive " + usd(wheatNet)));
+        assertEquals(1.25, wheatNet / (double) wheatHome, 0.03); // "about a quarter more"
+
+        long ironHome = home.quoteSell("minecraft:iron_ingot", 16, 0, false).cents();
+        long ironNet = com.realisticmarkets.dealer.ShipmentBook.estimate(capital, java.util.Map.of("minecraft:iron_ingot", 16), 0, cfg.freight());
+        assertTrue(t.contains("16 ingots pay " + usd(ironHome) + " at home but only " + usd(ironNet)));
+
+        long buy = home.quoteBuy("minecraft:wheat", 64, 0, false).cents();
+        long back = com.realisticmarkets.dealer.ShipmentBook.estimate(capital, java.util.Map.of("minecraft:wheat", 64), 0, cfg.freight());
+        assertTrue(t.contains("Buying 64 wheat costs " + usd(buy) + " and shipping it returns " + usd(back)));
+        assertTrue(back < buy);
     }
 
     @Test

@@ -10,7 +10,7 @@ package com.realisticmarkets.progression;
  * groups_in_day:2000:3        (cents per group, number of groups)
  * net_worth:25000
  * hold_cash:50000
- * unreachable                 (defined now, needs a later milestone)
+ * ship_beats_local            (a Trade Route Crate payout, after freight, beats the local quote)
  * </pre>
  */
 public sealed interface QuestGoal {
@@ -21,7 +21,7 @@ public sealed interface QuestGoal {
     record GroupsInDay(long minCentsPerGroup, int minGroups) implements QuestGoal {}
     record NetWorthAtLeast(long cents) implements QuestGoal {}
     record HoldCashAtLeast(long cents) implements QuestGoal {}
-    record Unreachable() implements QuestGoal {}
+    record ShipBeatsLocal() implements QuestGoal {}
 
     static QuestGoal parse(String s) {
         String[] p = s.strip().split(":");
@@ -33,7 +33,7 @@ public sealed interface QuestGoal {
             case "groups_in_day" -> new GroupsInDay(Long.parseLong(p[1]), Integer.parseInt(p[2]));
             case "net_worth" -> new NetWorthAtLeast(Long.parseLong(p[1]));
             case "hold_cash" -> new HoldCashAtLeast(Long.parseLong(p[1]));
-            case "unreachable" -> new Unreachable();
+            case "ship_beats_local" -> new ShipBeatsLocal();
             default -> throw new IllegalArgumentException("unknown quest goal '" + s + "'");
         };
     }

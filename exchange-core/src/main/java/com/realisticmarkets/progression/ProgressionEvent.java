@@ -20,4 +20,10 @@ public sealed interface ProgressionEvent {
     record DayRollover(long day) implements ProgressionEvent {}
 
     record Craft(String result, int times, long day) implements ProgressionEvent {}
+
+    /**
+     * A Trade Route Crate shipment settled at the Capital. {@code localQuoteCents} is what the local Dealer would
+     * have paid for the same goods at shipping time; {@code payoutCents} is after freight.
+     */
+    record Shipment(long localQuoteCents, long payoutCents, long day) implements ProgressionEvent {}
 }

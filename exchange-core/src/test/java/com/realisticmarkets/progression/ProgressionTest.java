@@ -48,6 +48,14 @@ class ProgressionTest {
     // ---- data
 
     @Test
+    void everyNodeGrantsItsGuide() {
+        assertTrue(tree.node("bill_clip").grants().contains("guide:cash_on_hand"));
+        assertTrue(tree.node("price_board").grants().contains("guide:reading_a_quote"));
+        assertTrue(tree.node("merchant_license").grants().contains("guide:transaction_costs"));
+        assertTrue(tree.node("trade_route_crate").grants().contains("guide:two_markets"));
+    }
+
+    @Test
     void defaultDataLoadsAndIsConsistent() {
         assertEquals(4, tree.tier(1).size());
         assertEquals(4000, tree.node("bill_clip").costCents());
@@ -181,9 +189,29 @@ class ProgressionTest {
     }
 
     @Test
-    void q7TwoMarketsIsUnreachableInM2() {
+    void q7TwoMarketsNeedsAShipmentThatBeatsTheLocalQuote() {
         feed(sale(WHEAT, "farm", 1000, 100_000, 0), new NetWorth(1_000_000, 1_000_000, 0));
-        assertFalse(p.hasCompleted("two_markets"));
+        assertFalse(p.hasCompleted("two_markets"), "local trading never completes it");
+        feed(new ProgressionEvent.Shipment(11_050, 9_700, 1));
+        assertFalse(p.hasCompleted("two_markets"), "a losing shipment (iron) doesn't count");
+        feed(new ProgressionEvent.Shipment(4_530, 4_530, 2));
+        assertFalse(p.hasCompleted("two_markets"), "breaking even isn't a profit");
+        assertEquals(List.of("two_markets"), feed(new ProgressionEvent.Shipment(4_530, 5_740, 3)));
+        assertEquals(4000, quests.quest("two_markets").rewardCents());
+    }
+
+    @Test
+    void syncGrantsGivesOwnersContentAddedLater() throws Exception {
+        // A save from before M3: Bill Clip owned, but its node didn't grant the Cash on Hand guide yet.
+        String old = ProgressStateIO.HEADER + "\nnode\tbill_clip\nquest\tfirst_sale\n"
+                + "grant\tblueprint:realisticmarkets:bill_clip\n";
+        PlayerProgress loaded = ProgressStateIO.read(new StringReader(old));
+        assertFalse(loaded.hasGuide("cash_on_hand"));
+        assertTrue(loaded.syncGrants(tree, quests));
+        assertTrue(loaded.hasGuide("cash_on_hand"), "node grant re-applied");
+        assertTrue(loaded.hasGuide("money_and_dealer"), "quest grant re-applied");
+        assertFalse(loaded.hasGuide("two_markets"), "nothing for nodes not owned");
+        assertFalse(loaded.syncGrants(tree, quests), "second sync changes nothing");
     }
 
     // ---- blueprints and components

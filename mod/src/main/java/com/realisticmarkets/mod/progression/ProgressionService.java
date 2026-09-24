@@ -97,7 +97,13 @@ public final class ProgressionService {
     public Guides guides() { return guides; }
 
     public PlayerProgress progress(Player player) {
-        return players.computeIfAbsent(player.getUUID(), this::load);
+        PlayerProgress p = players.get(player.getUUID());
+        if (p == null) {
+            p = load(player.getUUID());
+            players.put(player.getUUID(), p);
+            if (p.syncGrants(tree, quests)) save(player.getUUID()); // content added since the last save
+        }
+        return p;
     }
 
     // ------------------------------------------------------------------ actions

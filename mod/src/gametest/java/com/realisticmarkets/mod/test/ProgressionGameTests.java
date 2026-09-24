@@ -192,6 +192,20 @@ public class ProgressionGameTests {
     }
 
     @GameTest
+    public void oldSavesGainGuidesAddedToOwnedNodes(GameTestHelper helper) throws Exception {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        Path dir = Files.createTempDirectory("rm-progress");
+        Path file = dir.resolve(player.getUUID() + ".txt");
+        Files.writeString(file, "# Realistic Markets player progress v1\nnode\tbill_clip\n"
+                + "grant\tblueprint:realisticmarkets:bill_clip\n"); // written before Bill Clip granted a guide
+
+        ProgressionService svc = ProgressionService.forTest(dir);
+        check(svc.progress(player).hasGuide("cash_on_hand"), "Cash on Hand granted on load");
+        check(Files.readString(file).contains("grant\tguide:cash_on_hand"), "and saved back");
+        helper.succeed();
+    }
+
+    @GameTest
     public void unreadableSaveIsMovedAsideNotOverwritten(GameTestHelper helper) throws Exception {
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
         Path dir = Files.createTempDirectory("rm-progress");

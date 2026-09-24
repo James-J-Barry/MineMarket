@@ -296,7 +296,8 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             case QuestGoal.NetWorthAtLeast(long cents) ->
                     "Reach " + Money.format(cents) + " net worth: cash plus goods at what the Dealer pays.";
             case QuestGoal.HoldCashAtLeast(long cents) -> "Hold " + Money.format(cents) + " in cash at once.";
-            case QuestGoal.Unreachable() -> "Needs the Trade Route Crate (coming soon).";
+            case QuestGoal.ShipBeatsLocal() ->
+                    "Ship goods with a Trade Route Crate and get more, after freight, than the local Dealer would pay.";
         };
     }
 }

@@ -68,6 +68,7 @@ public final class PlayerProgress {
             case ProgressionEvent.NetWorth e -> e.day();
             case ProgressionEvent.DayRollover e -> e.day();
             case ProgressionEvent.Craft e -> e.day();
+            case ProgressionEvent.Shipment e -> e.day();
         };
         if (day != trackedDay) {
             trackedDay = day;
@@ -109,6 +110,9 @@ public final class PlayerProgress {
                 default -> false;
             };
         }
+        if (event instanceof ProgressionEvent.Shipment s) {
+            return goal instanceof QuestGoal.ShipBeatsLocal && s.payoutCents() > s.localQuoteCents();
+        }
         if (event instanceof ProgressionEvent.NetWorth w) {
             return switch (goal) {
                 case QuestGoal.NetWorthAtLeast g -> w.netWorthCents() >= g.cents();
@@ -117,6 +121,17 @@ public final class PlayerProgress {
             };
         }
         return false;
+    }
+
+    /**
+     * Re-applies the grants of every owned node and completed quest, so content added after a purchase (a new
+     * guide on an old node) reaches existing players. Returns true if anything was added.
+     */
+    public boolean syncGrants(UnlockTree tree, Quests all) {
+        int before = grants.size();
+        for (String id : nodes) if (tree.has(id)) grants.addAll(tree.node(id).grants());
+        for (String id : quests) if (all.has(id)) grants.addAll(all.quest(id).grants());
+        return grants.size() != before;
     }
 
     public boolean hasNode(String id) {
