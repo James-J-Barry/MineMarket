@@ -19,10 +19,12 @@ import java.util.Map;
  *
  * <pre>
  * # comment lines and blank lines are ignored
- * item,fair_value,depth,group,base_item,base_units
+ * item,fair_value,depth,group,base_item,base_units,spread
  * minecraft:wheat,0.50,256,farm,,
  * minecraft:hay_block,,,farm,minecraft:wheat,9
+ * realisticmarkets:ledger_paper,4.00,64,components,,,0.40
  * </pre>
+ * {@code spread} is optional (base markets only); blank means {@link DealerParams#spread()}.
  */
 public final class DealerCatalog {
     public static final String DEFAULT_RESOURCE = "/realisticmarkets/dealer_catalog.csv";
@@ -73,8 +75,12 @@ public final class DealerCatalog {
             String baseItem = c.length > 4 && !c[4].isBlank() ? normalize(c[4]) : null;
             try {
                 if (baseItem == null) {
-                    rows.add(MarketSpec.base(item, Double.parseDouble(c[1].strip()), Double.parseDouble(c[2].strip()), group));
+                    Double spread = c.length > 6 && !c[6].isBlank() ? Double.valueOf(c[6].strip()) : null;
+                    rows.add(MarketSpec.base(item, Double.parseDouble(c[1].strip()), Double.parseDouble(c[2].strip()), group, spread));
                 } else {
+                    if (c.length > 6 && !c[6].isBlank()) {
+                        throw new IllegalArgumentException("line " + lineNo + ": linked item " + item + " can't set a spread (it uses " + baseItem + "'s)");
+                    }
                     int units = Integer.parseInt(c.length > 5 ? c[5].strip() : "");
                     rows.add(MarketSpec.linked(item, baseItem, units, group));
                 }

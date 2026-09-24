@@ -1,9 +1,10 @@
 # Realistic Markets: Dealer catalog.
 # Base markets set fair_value (dollars per item) and depth (units, L in the design doc).
 # Linked markets leave those blank and trade as base_units of base_item's pool.
+# spread (optional, base markets only) overrides dealer_params spread; the Merchant License scales it by 12/20.
 # Rows are listed by group; the Basic Exchange's Buy tab shows them in this order.
 # Edit the copy in config/realisticmarkets/ and run /mkt dealer reload to apply without restarting.
-item,fair_value,depth,group,base_item,base_units
+item,fair_value,depth,group,base_item,base_units,spread
 
 # ---- Farm
 minecraft:wheat,0.50,256,farm,,

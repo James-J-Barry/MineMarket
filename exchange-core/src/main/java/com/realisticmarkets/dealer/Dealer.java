@@ -92,7 +92,7 @@ public final class Dealer {
         MarketSpec spec = catalog.spec(itemId);
         MarketSpec base = catalog.pool(itemId);
         Pool p = advance(base, day);
-        return mid(base, p) * spec.baseUnits() * (1 - spread(licensed) / 2);
+        return mid(base, p) * spec.baseUnits() * (1 - spread(base, licensed) / 2);
     }
 
     /** Marginal price the Dealer charges for one more item right now, in dollars. */
@@ -100,7 +100,7 @@ public final class Dealer {
         MarketSpec spec = catalog.spec(itemId);
         MarketSpec base = catalog.pool(itemId);
         Pool p = advance(base, day);
-        return mid(base, p) * spec.baseUnits() * (1 + spread(licensed) / 2);
+        return mid(base, p) * spec.baseUnits() * (1 + spread(base, licensed) / 2);
     }
 
     /** The Dealer's current mid price per item (between bid and ask), in dollars. */
@@ -170,7 +170,7 @@ public final class Dealer {
         double units = (double) items * spec.baseUnits();
         double k = params.k();
         double depth = base.depth();
-        double s = spread(licensed);
+        double s = spread(base, licensed);
         double fv = fair(base, p);
         double level = Math.exp(-k * p.inventory / depth);
         double before = fv * level * spec.baseUnits();
@@ -198,8 +198,14 @@ public final class Dealer {
         return new Quote(spec.itemId(), items, side, cents, rawCents, before * sideFactor, after * sideFactor);
     }
 
-    private double spread(boolean licensed) {
-        return licensed ? params.licensedSpread() : params.spread();
+    /**
+     * A pool's spread. The Merchant License scales every spread by the same ratio
+     * (licensed_spread / spread, 12/20 by default), so a 40% component becomes 24%.
+     */
+    double spread(MarketSpec base, boolean licensed) {
+        if (base.spread() == null) return licensed ? params.licensedSpread() : params.spread();
+        if (!licensed) return base.spread();
+        return params.spread() == 0 ? base.spread() : base.spread() * params.licensedSpread() / params.spread();
     }
 
     private double mid(MarketSpec base, Pool p) {
