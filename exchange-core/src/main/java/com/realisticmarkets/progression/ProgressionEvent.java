@@ -26,4 +26,10 @@ public sealed interface ProgressionEvent {
      * have paid for the same goods at shipping time; {@code payoutCents} is after freight.
      */
     record Shipment(long localQuoteCents, long payoutCents, long day) implements ProgressionEvent {}
+
+    /** Bank interest credited: {@code lifetimeCents} is the account's total interest so far. */
+    record Interest(long creditedCents, long lifetimeCents, long day) implements ProgressionEvent {}
+
+    /** A Certificate of Deposit redeemed; {@code matured} is false for early redemption (principal only). */
+    record CdRedeemed(long principalCents, long payoutCents, boolean matured, long day) implements ProgressionEvent {}
 }

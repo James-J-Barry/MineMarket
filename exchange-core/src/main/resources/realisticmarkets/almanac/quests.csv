@@ -1,6 +1,7 @@
 # Realistic Markets: Almanac quests, in display order.
 # goal: any_sale | buy_then_sell | sell_qty_in_day:<qty> | recover_then_sell:<below>:<recovered>
 #       | groups_in_day:<cents per group>:<groups> | net_worth:<cents> | hold_cash:<cents> | ship_beats_local
+#       | interest_earned:<cents> | cd_matured
 # reward_cents is paid in bills; grants are ;-separated (guide:, perk:, blueprint:).
 id,goal,reward_cents,grants,title
 first_sale,any_sale,500,guide:money_and_dealer,First Sale
@@ -11,3 +12,5 @@ diversify,groups_in_day:2000:3,2500,guide:diversification,Diversify
 bookkeeper,net_worth:25000,1000,,Bookkeeper
 two_markets,ship_beats_local,4000,,Two Markets
 save_it,hold_cash:50000,0,perk:bank_vault_discount_10,Save It
+nest_egg,interest_earned:1000,1000,,Nest Egg
+locked_in,cd_matured,2000,,Locked In

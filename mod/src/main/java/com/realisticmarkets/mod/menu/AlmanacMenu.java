@@ -47,7 +47,8 @@ public class AlmanacMenu extends AbstractContainerMenu {
     private static final int D_NODES = 4;
     private static final int D_QUESTS = D_NODES + NODES.size();
     private static final int D_GUIDES = D_QUESTS + QUESTS.size();
-    private static final int DATA_SIZE = D_GUIDES + GUIDES.size();
+    private static final int D_COSTS = D_GUIDES + GUIDES.size(); // this player's price per node, 2 slots each
+    private static final int DATA_SIZE = D_COSTS + 2 * NODES.size();
     private static final int REFRESH_TICKS = 10;
 
     private final ContainerData data = new SimpleContainerData(DATA_SIZE);
@@ -83,6 +84,7 @@ public class AlmanacMenu extends AbstractContainerMenu {
     public int nodeState(int i) { return data.get(D_NODES + i); }
     public boolean questDone(int i) { return data.get(D_QUESTS + i) != 0; }
     public boolean guideUnlocked(int i) { return data.get(D_GUIDES + i) != 0; }
+    public long costCents(int i) { return (long) data.get(D_COSTS + 2 * i) | ((long) data.get(D_COSTS + 2 * i + 1) << 15); }
 
     // ---- server
 
@@ -108,6 +110,9 @@ public class AlmanacMenu extends AbstractContainerMenu {
             else if (p.canBuy(n, tree, Long.MAX_VALUE)) state = NO_CASH;
             else state = LOCKED;
             data.set(D_NODES + i, state);
+            long cost = Math.min(p.costOf(n), (1L << 30) - 1);
+            data.set(D_COSTS + 2 * i, (int) (cost & 0x7FFF));
+            data.set(D_COSTS + 2 * i + 1, (int) ((cost >> 15) & 0x7FFF));
         }
         for (int i = 0; i < QUESTS.size(); i++) data.set(D_QUESTS + i, p.hasCompleted(QUESTS.get(i).id()) ? 1 : 0);
         for (int i = 0; i < GUIDES.size(); i++) data.set(D_GUIDES + i, p.hasGuide(GUIDES.get(i).id()) ? 1 : 0);

@@ -176,7 +176,7 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             int ry = LIST_Y + i * ROW;
             int state = m.nodeState(i);
             boolean owned = state == AlmanacMenu.OWNED;
-            String cost = owned ? "Owned" : Money.format(n.costCents());
+            String cost = owned ? "Owned" : Money.format(m.costCents(i));
             int color = owned ? GREEN : state == AlmanacMenu.AVAILABLE ? GREY : LIGHT_GREY;
             g.text(font, Panels.trim(font, n.title(), LIST_W - font.width(cost) - 4), LIST_X, ry, color, false);
             g.text(font, cost, LIST_X + LIST_W - 2 - font.width(cost), ry, owned ? GREEN : GREY, false);
@@ -192,8 +192,8 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
         UnlockNode n = AlmanacMenu.NODES.get(sel);
         int ly = LIST_Y;
         ly = wrap(g, n.title(), DETAIL_X, ly, BLUE) + 4;
-        g.text(font, "Tier " + n.tier() + "  " + Money.format(n.costCents()), DETAIL_X, ly, GREY, false);
-        ly += 14;
+        String price = Money.format(m.costCents(sel)) + (m.costCents(sel) < n.costCents() ? " (was " + Money.format(n.costCents()) + ")" : "");
+        ly = wrap(g, "Tier " + n.tier() + "  " + price, DETAIL_X, ly, GREY) + 4;
         for (String grant : n.grants()) ly = wrap(g, describeGrant(grant), DETAIL_X, ly, GREY) + 2;
         ly += 4;
         String status = switch (m.nodeState(sel)) {
@@ -296,6 +296,8 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             case QuestGoal.NetWorthAtLeast(long cents) ->
                     "Reach " + Money.format(cents) + " net worth: cash plus goods at what the Dealer pays.";
             case QuestGoal.HoldCashAtLeast(long cents) -> "Hold " + Money.format(cents) + " in cash at once.";
+            case QuestGoal.InterestEarned(long cents) -> "Earn " + Money.format(cents) + " of interest at your Bank Vault.";
+            case QuestGoal.CdMatured() -> "Hold a Certificate of Deposit until it matures, then redeem it.";
             case QuestGoal.ShipBeatsLocal() ->
                     "Ship goods with a Trade Route Crate and get more, after freight, than the local Dealer would pay.";
         };

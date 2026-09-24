@@ -59,7 +59,7 @@ class ProgressionTest {
     void defaultDataLoadsAndIsConsistent() {
         assertEquals(4, tree.tier(1).size());
         assertEquals(4000, tree.node("bill_clip").costCents());
-        assertEquals(8, quests.all().size());
+        assertEquals(10, quests.all().size());
         assertEquals(3, blueprints.all().size());
         blueprints.validateAgainst(tree);
         for (UnlockNode n : tree.all()) {
@@ -212,6 +212,35 @@ class ProgressionTest {
         assertTrue(loaded.hasGuide("money_and_dealer"), "quest grant re-applied");
         assertFalse(loaded.hasGuide("two_markets"), "nothing for nodes not owned");
         assertFalse(loaded.syncGrants(tree, quests), "second sync changes nothing");
+    }
+
+    @Test
+    void nestEggNeedsTenDollarsOfLifetimeInterest() {
+        feed(new ProgressionEvent.Interest(600, 600, 3));
+        assertFalse(p.hasCompleted("nest_egg"));
+        assertEquals(List.of("nest_egg"), feed(new ProgressionEvent.Interest(400, 1000, 4)));
+        assertEquals(1000, quests.quest("nest_egg").rewardCents());
+    }
+
+    @Test
+    void lockedInNeedsACdHeldToMaturity() {
+        feed(new ProgressionEvent.CdRedeemed(50_000, 50_000, false, 3));
+        assertFalse(p.hasCompleted("locked_in"), "early redemption doesn't count");
+        assertEquals(List.of("locked_in"), feed(new ProgressionEvent.CdRedeemed(50_000, 51_590, true, 10)));
+    }
+
+    @Test
+    void saveItPerkTakesTenPercentOffTheBankVault() {
+        UnlockTree t = new UnlockTree(List.of(
+                new UnlockNode("bank_vault", "Bank Vault", 1, 50_000, List.of(), null, List.of())));
+        UnlockNode vault = t.node("bank_vault");
+        assertEquals(50_000, p.costOf(vault));
+        assertFalse(p.canBuy(vault, t, 45_000));
+        feed(new NetWorth(50_000, 50_000, 1)); // Save It
+        assertTrue(p.hasPerk("bank_vault_discount_10"));
+        assertEquals(45_000, p.costOf(vault));
+        assertEquals(45_000, p.buy(vault, t, 45_000), "charged the discounted price");
+        assertEquals(4_000, p.costOf(tree.node("bill_clip")));
     }
 
     // ---- blueprints and components

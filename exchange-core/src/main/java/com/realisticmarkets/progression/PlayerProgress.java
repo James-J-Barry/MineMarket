@@ -43,7 +43,7 @@ public final class PlayerProgress {
                 return Optional.of("Unlock half of Tier " + (node.tier() - 1) + " first");
             }
         }
-        if (cashCents < node.costCents()) return Optional.of("Not enough cash");
+        if (cashCents < costOf(node)) return Optional.of("Not enough cash");
         return Optional.empty();
     }
 
@@ -57,7 +57,26 @@ public final class PlayerProgress {
         if (why.isPresent()) throw new IllegalStateException(node.id() + ": " + why.get());
         nodes.add(node.id());
         grants.addAll(node.grants());
-        return node.costCents();
+        return costOf(node);
+    }
+
+    /**
+     * The node's price for this player: a perk named {@code <node id>_discount_<percent>} (Save It grants
+     * {@code bank_vault_discount_10}) takes that percentage off, rounded up to the dime like every purchase.
+     */
+    public long costOf(UnlockNode node) {
+        int best = 0;
+        String prefix = "perk:" + node.id() + "_discount_";
+        for (String g : grants) {
+            if (!g.startsWith(prefix)) continue;
+            try {
+                best = Math.max(best, Integer.parseInt(g.substring(prefix.length())));
+            } catch (NumberFormatException ignored) {
+                // not a discount perk
+            }
+        }
+        if (best == 0) return node.costCents();
+        return com.realisticmarkets.money.Money.roundUpToDime(node.costCents() * (100 - Math.min(best, 100)) / 100.0);
     }
 
     /** Feeds one event to every open quest; returns the quests it completed (caller pays their cash rewards). */
@@ -69,6 +88,8 @@ public final class PlayerProgress {
             case ProgressionEvent.DayRollover e -> e.day();
             case ProgressionEvent.Craft e -> e.day();
             case ProgressionEvent.Shipment e -> e.day();
+            case ProgressionEvent.Interest e -> e.day();
+            case ProgressionEvent.CdRedeemed e -> e.day();
         };
         if (day != trackedDay) {
             trackedDay = day;
@@ -109,6 +130,12 @@ public final class PlayerProgress {
                         dayGroupCents.values().stream().filter(c -> c >= g.minCentsPerGroup()).count() >= g.minGroups();
                 default -> false;
             };
+        }
+        if (event instanceof ProgressionEvent.Interest i) {
+            return goal instanceof QuestGoal.InterestEarned g && i.lifetimeCents() >= g.cents();
+        }
+        if (event instanceof ProgressionEvent.CdRedeemed r) {
+            return goal instanceof QuestGoal.CdMatured && r.matured();
         }
         if (event instanceof ProgressionEvent.Shipment s) {
             return goal instanceof QuestGoal.ShipBeatsLocal && s.payoutCents() > s.localQuoteCents();

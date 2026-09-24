@@ -115,10 +115,11 @@ public final class ProgressionService {
         long cash = Wallet.count(player.getInventory());
         Optional<String> why = p.whyCannotBuy(node, tree, cash);
         if (why.isPresent()) return why;
-        if (!Wallet.pay(player, node.costCents())) return Optional.of("Not enough cash");
+        long cost = p.costOf(node);
+        if (!Wallet.pay(player, cost)) return Optional.of("Not enough cash");
         p.buy(node, tree, cash);
         save(player.getUUID());
-        message(player, "Unlocked " + node.title() + " (-" + Money.format(node.costCents()) + ")");
+        message(player, "Unlocked " + node.title() + " (-" + Money.format(cost) + ")");
         return Optional.empty();
     }
 
