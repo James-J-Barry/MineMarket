@@ -50,6 +50,7 @@ public final class ModCreativeTab {
                             output.accept(ModBlocks.NEWSSTAND);
                             output.accept(ModBlocks.TICKER_TAPE);
                             output.accept(ModBlocks.STOCK_EXCHANGE);
+                            output.accept(ModBlocks.NEWSFEED);
                             output.accept(ModItems.ENGRAVED_PLATE);
                         })
                         .build());

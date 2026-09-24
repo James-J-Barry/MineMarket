@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "realisticmarkets:bank_vault"
+    "realisticmarkets:bank_vault",
+    "realisticmarkets:electronic_newsfeed"
   ]
 }

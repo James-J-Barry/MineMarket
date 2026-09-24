@@ -40,6 +40,7 @@ public final class ModBlocks {
     public static Block NEWSSTAND;
     public static Block TICKER_TAPE;
     public static Block STOCK_EXCHANGE;
+    public static Block NEWSFEED;
 
     public static void init() {
         ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("basic_exchange"));
@@ -98,6 +99,8 @@ public final class ModBlocks {
                 new TickerTapeMenu(id, inv, access, FloorService.get(), ProgressionService.get(), DealerService.get()));
         STOCK_EXCHANGE = registerMenuBlock("stock_exchange", (id, inv, access) -> new StockExchangeMenu(id, inv, access,
                 com.realisticmarkets.mod.stocks.StockService.get(), ProgressionService.get(), DealerService.get()));
+        NEWSFEED = registerMenuBlock("electronic_newsfeed", (id, inv, access) -> new com.realisticmarkets.mod.menu.NewsfeedMenu(id, inv,
+                access, com.realisticmarkets.mod.stocks.StockService.get(), ProgressionService.get(), DealerService.get()));
     }
 
     private static Block registerMenuBlock(String name, MenuBlock.Factory factory) {

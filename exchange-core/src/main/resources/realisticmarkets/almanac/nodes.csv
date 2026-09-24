@@ -14,3 +14,4 @@ trading_floor,3,300000,,,blueprint:realisticmarkets:trading_floor;blueprint:real
 newsstand,3,100000,,,blueprint:realisticmarkets:newsstand;guide:news_and_markets,Newsstand
 ticker_tape,3,150000,trading_floor,,blueprint:realisticmarkets:ticker_tape;guide:reading_a_chart,Ticker Tape
 stock_exchange,4,1000000,,,blueprint:realisticmarkets:stock_exchange;component:realisticmarkets:engraved_plate;guide:owning_a_share;guide:valuing_a_company,Stock Exchange
+electronic_newsfeed,4,200000,stock_exchange,,blueprint:realisticmarkets:electronic_newsfeed,Electronic Newsfeed

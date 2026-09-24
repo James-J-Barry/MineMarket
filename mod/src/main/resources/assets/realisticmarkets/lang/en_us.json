@@ -40,5 +40,7 @@
   "block.realisticmarkets.stock_exchange": "Stock Exchange",
   "container.realisticmarkets.stock_exchange": "Stock Exchange",
   "item.realisticmarkets.engraved_plate": "Engraved Plate",
-  "item.realisticmarkets.share_certificate": "Share Certificate"
+  "item.realisticmarkets.share_certificate": "Share Certificate",
+  "block.realisticmarkets.electronic_newsfeed": "Electronic Newsfeed",
+  "container.realisticmarkets.electronic_newsfeed": "Electronic Newsfeed"
 }

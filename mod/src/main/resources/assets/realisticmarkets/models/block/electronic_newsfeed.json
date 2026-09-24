@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "realisticmarkets:block/electronic_newsfeed_top",
+    "bottom": "minecraft:block/smooth_stone",
+    "side": "realisticmarkets:block/electronic_newsfeed_side"
+  }
+}

@@ -61,6 +61,10 @@ public final class Equities {
     private final Map<String, State> states = new LinkedHashMap<>();
     private final Map<String, Long> startValue = new LinkedHashMap<>();
     private long openQuarter = Long.MIN_VALUE;
+    private long lastDay = Long.MIN_VALUE;
+    private CompanyNews news; // null: no company news
+    /** News re-rates a share at once and fades as it shows up in reported earnings (the 4-quarter window). */
+    public static final int OUTLOOK_DAYS = NORMALIZE_QUARTERS * Company.QUARTER_DAYS;
 
     public Equities(CompanyCatalog catalog, ToDoubleFunction<String> baselinePrice, long seed) {
         this.catalog = catalog;
@@ -73,6 +77,11 @@ public final class Equities {
     }
 
     public CompanyCatalog catalog() { return catalog; }
+
+    /** Plugs in company news (the Electronic Newsfeed's stories), or null for none. */
+    public void setNews(CompanyNews news) { this.news = news; }
+
+    public CompanyNews news() { return news; }
 
     public static long quarterOf(long day) {
         return Math.floorDiv(day, Company.QUARTER_DAYS);
@@ -90,6 +99,16 @@ public final class Equities {
             issued.addAll(close(openQuarter));
             openQuarter++;
         }
+        if (news != null && lastDay != Long.MIN_VALUE) {
+            // Stories the rest of the market hears today (they appeared on the Newsfeed yesterday) change the business.
+            for (long d = lastDay + 1; d <= day; d++) {
+                for (CompanyNews.Story st : news.startingOn(d - 1)) {
+                    State s = states.get(st.type().ticker());
+                    if (s != null) s.logOutput += st.logEffect();
+                }
+            }
+        }
+        lastDay = Math.max(lastDay, day);
         for (Company c : catalog.all()) {
             State s = states.get(c.ticker());
             for (String k : keys(c)) {
@@ -189,8 +208,33 @@ public final class Equities {
             }
             e = sum / n;
         }
-        long v = Math.round(s.cash / c.shares()) + value(c, e);
+        long v = Math.round(s.cash / c.shares()) + Math.round(value(c, e) * outlook(c, s, e));
         return Math.max(Math.round(startValue.get(ticker) * VALUE_FLOOR), v);
+    }
+
+    /**
+     * How news the market has heard changes what it expects: each story's output change, magnified by the company's
+     * operating leverage (revenue / earnings), fading linearly over {@link #OUTLOOK_DAYS} as it shows up in reports.
+     */
+    private double outlook(Company c, State s, double normalizedEarnings) {
+        if (news == null || lastDay == Long.MIN_VALUE) return 1;
+        double revenue = s.reports.isEmpty() ? expectedRevenue(c) : s.reports.getLast().revenue();
+        double leverage = normalizedEarnings > 0 ? Math.max(1, Math.min(4, revenue / normalizedEarnings)) : 4;
+        double sum = 0;
+        for (long d = lastDay - 1; d > lastDay - 1 - OUTLOOK_DAYS; d--) {
+            for (CompanyNews.Story st : news.startingOn(d)) {
+                if (!st.type().ticker().equals(c.ticker())) continue;
+                double age = lastDay - st.heardDay();
+                sum += st.logEffect() * leverage * Math.max(0, 1 - age / OUTLOOK_DAYS);
+            }
+        }
+        return Math.exp(sum);
+    }
+
+    private double expectedRevenue(Company c) {
+        double revenue = 0;
+        for (Map.Entry<String, Long> e : c.revenue().entrySet()) revenue += e.getValue() * baseline.get(e.getKey());
+        return revenue * 100;
     }
 
     /** Company cash a share (cents): retained earnings plus their return; negative after losses. */
@@ -230,6 +274,7 @@ public final class Equities {
     public void write(Writer w) throws IOException {
         w.write(HEADER + "\n");
         w.write("open\t" + openQuarter + "\n");
+        w.write("day\t" + lastDay + "\n");
         for (Map.Entry<String, Double> e : lastAverage.entrySet()) w.write("avg\t" + e.getKey() + "\t" + e.getValue() + "\n");
         for (Map.Entry<String, State> e : states.entrySet()) {
             State s = e.getValue();
@@ -259,6 +304,7 @@ public final class Equities {
             try {
                 switch (c[0]) {
                     case "open" -> into.openQuarter = Long.parseLong(c[1]);
+                    case "day" -> into.lastDay = Long.parseLong(c[1]);
                     case "avg" -> into.lastAverage.put(c[1], Double.parseDouble(c[2]));
                     case "company" -> {
                         State s = into.states.get(c[1]);

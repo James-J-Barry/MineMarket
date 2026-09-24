@@ -5,6 +5,7 @@ import com.realisticmarkets.agents.TradingFloor;
 import com.realisticmarkets.dealer.DealerCatalog;
 import com.realisticmarkets.dealer.WorldEvents;
 import com.realisticmarkets.equities.CompanyCatalog;
+import com.realisticmarkets.equities.CompanyNews;
 import com.realisticmarkets.equities.CostBasis;
 import com.realisticmarkets.equities.Equities;
 import com.realisticmarkets.exchange.Account;
@@ -76,7 +77,9 @@ public final class StockService {
 
     static Equities newEquities(long seed) {
         DealerCatalog cat = DealerCatalog.loadDefault();
-        return new Equities(CompanyCatalog.loadDefault(), k -> cat.trades(k) ? cat.spec(k).fairValue() : 1.0, seed);
+        Equities eq = new Equities(CompanyCatalog.loadDefault(), k -> cat.trades(k) ? cat.spec(k).fairValue() : 1.0, seed);
+        eq.setNews(CompanyNews.loadDefault(seed ^ 0x4E657773L)); // "News": the Electronic Newsfeed's stories
+        return eq;
     }
 
     public static void start(MinecraftServer server) {

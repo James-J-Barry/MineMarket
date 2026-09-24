@@ -1,0 +1,16 @@
+# Realistic Markets: company news for the Electronic Newsfeed (M6b). Deterministic from the world seed and the day.
+# effect: permanent change in the company's log output (0.08 = about 8% more business), scaled 0.5-1.5 per story.
+# A story appears on the Newsfeed at dawn; the rest of the market hears at the next dawn.
+id,ticker,effect,chance_per_day,headline
+new_shaft,DSMC,0.08,0.025,Deepslate Mining opens a deep new shaft
+cave_in,DSMC,-0.10,0.025,Cave-in at a Deepslate mine
+new_fields,GHF,0.06,0.025,Golden Harvest buys new fields
+locusts,GHF,-0.08,0.025,Locusts hit Golden Harvest's crops
+new_line,NRP,0.10,0.025,Nether Rail opens a new line
+derailment,NRP,-0.08,0.025,Derailment halts Nether Rail
+army_contract,ENCH,0.12,0.025,Enchanted Arms wins a big contract
+recall,ENCH,-0.10,0.025,Enchanted Arms recalls faulty bows
+breakthrough,RSD,0.20,0.025,Redstone Dynamics unveils a breakthrough
+failed_launch,RSD,-0.15,0.025,Redstone Dynamics launch flops
+rate_increase,OWL,0.04,0.025,Overworld Utility wins a rate increase
+plant_outage,OWL,-0.05,0.025,Outage at an Overworld Utility plant

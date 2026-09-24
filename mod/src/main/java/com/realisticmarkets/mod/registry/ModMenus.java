@@ -31,6 +31,7 @@ public final class ModMenus {
     public static MenuType<NewsstandMenu> NEWSSTAND;
     public static MenuType<TickerTapeMenu> TICKER_TAPE;
     public static MenuType<StockExchangeMenu> STOCK_EXCHANGE;
+    public static MenuType<com.realisticmarkets.mod.menu.NewsfeedMenu> NEWSFEED;
 
     public static void init() {
         ResourceKey<MenuType<?>> key = ResourceKey.create(Registries.MENU, RealisticMarkets.id("basic_exchange"));
@@ -63,5 +64,8 @@ public final class ModMenus {
         STOCK_EXCHANGE = Registry.register(BuiltInRegistries.MENU,
                 ResourceKey.create(Registries.MENU, RealisticMarkets.id("stock_exchange")),
                 new MenuType<>(StockExchangeMenu::new, FeatureFlags.VANILLA_SET));
+        NEWSFEED = Registry.register(BuiltInRegistries.MENU,
+                ResourceKey.create(Registries.MENU, RealisticMarkets.id("electronic_newsfeed")),
+                new MenuType<>(com.realisticmarkets.mod.menu.NewsfeedMenu::new, FeatureFlags.VANILLA_SET));
     }
 }

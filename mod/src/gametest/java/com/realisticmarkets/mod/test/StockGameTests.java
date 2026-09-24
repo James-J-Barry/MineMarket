@@ -177,6 +177,39 @@ public class StockGameTests {
         helper.succeed();
     }
 
+    @GameTest
+    public void newsfeedShowsCompanyNewsBeforeTheMarketMoves(GameTestHelper helper) {
+        ServerPlayer p = helper.makeMockServerPlayerInLevel();
+        ServerPlayer stranger = helper.makeMockServerPlayerInLevel();
+        DealerService dealer = DealerService.forTest(1234L);
+        StockService stocks = StockService.forTest(dealer, 7L);
+        ProgressionService prog = ProgressionService.forTest();
+        Wallet.give(p, 5_000_000);
+        for (String node : new String[] {"bill_clip", "price_board", "bank_vault", "loan_note", "trading_floor", "newsstand",
+                "stock_exchange", "electronic_newsfeed"}) {
+            check(prog.buyNode(p, node).isEmpty(), "buy " + node);
+        }
+        var news = stocks.equities().news();
+        long day = 10;
+        while (news.startingOn(day).isEmpty() || (day + 1) % 7 == 0) day++;
+        var story = news.startingOn(day).getFirst();
+        String t = story.type().ticker();
+        dealer.shiftDays(day + 0.1 - dealer.day(helper.getLevel().getGameTime()));
+        stocks.observeTo(day);
+        var feed = new com.realisticmarkets.mod.menu.NewsfeedMenu(1, p.getInventory(), ContainerLevelAccess.NULL, stocks, prog, dealer);
+        check(feed.owner() && feed.storyCount() >= 1 && feed.storyType(0) == story.type().index() && feed.storyAge(0) == 0,
+                "today's story on the Newsfeed: " + story.type().id());
+        var theirs = new com.realisticmarkets.mod.menu.NewsfeedMenu(2, stranger.getInventory(), ContainerLevelAccess.NULL, stocks, prog, dealer);
+        check(!theirs.owner() && theirs.storyCount() == 0, "no news without the upgrade");
+        // The Dealer here doesn't drift, so overnight the share moves only on the news (and a hair of growth).
+        long before = stocks.fairCents(t);
+        stocks.observeTo(day + 1);
+        double moved = stocks.fairCents(t) / (double) before;
+        check(Math.signum(moved - 1) == Math.signum(story.type().effect()), story.type().id() + " moved " + t + " by " + moved
+                + " once the market heard");
+        helper.succeed();
+    }
+
     static int findCert(ServerPlayer p) {
         for (int i = 0; i < p.getInventory().getContainerSize(); i++) if (p.getInventory().getItem(i).is(ModItems.SHARE_CERTIFICATE)) return i;
         throw new IllegalStateException("no certificate");
