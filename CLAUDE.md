@@ -89,6 +89,9 @@ docs/            design.md, milestones/
   15-bit halves (`setPair`/`pair`, max 2^30). Server refreshes every 10 ticks and immediately when the input
   slot changes (`Slot.setChanged` override). Buttons use `handleInventoryButtonClick` → `clickMenuButton`.
 - **Hiding slots per tab:** override `Slot.isActive()`.
+- **Dev client username** is pinned to `James` in `mod/build.gradle` (`runs.client.programArgs`). Offline UUIDs
+  come from the name, and the default random `Player###` would make per-player saves look lost on every launch.
+  Loom never overwrites an existing `.idea/runConfigurations/*.xml`, so add `--username James` by hand there.
 - **Dev-only commands** live under `/mkt dealer sell|buy|timeshift|cash` and `/mkt dev ...`, registered only
   when `FabricLoader.isDevelopmentEnvironment()`.
 

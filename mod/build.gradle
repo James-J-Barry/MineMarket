@@ -26,6 +26,13 @@ loom {
     runConfigs.configureEach {
         ideConfigGenerated = true
     }
+    // Offline dev clients get a random "Player###" name, and the offline UUID is derived from the name, so
+    // per-player saves (Almanac progress) would belong to a new player on every launch. Pin the name.
+    runs {
+        client {
+            programArgs "--username", "James"
+        }
+    }
 }
 
 fabricApi {
