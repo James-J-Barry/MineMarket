@@ -1,32 +1,68 @@
 # Realistic Markets: Dealer catalog.
 # Base markets set fair_value (dollars per item) and depth (units, L in the design doc).
 # Linked markets leave those blank and trade as base_units of base_item's pool.
+# Rows are listed by group; the Basic Exchange's Buy tab shows them in this order.
 # Edit the copy in config/realisticmarkets/ and run /mkt dealer reload to apply without restarting.
 item,fair_value,depth,group,base_item,base_units
-minecraft:diamond,100.00,32,mining,,
-minecraft:emerald,40.00,48,mining,,
-minecraft:gold_ingot,15.00,96,mining,,
-minecraft:ender_pearl,12.00,48,mobs,,
-minecraft:iron_ingot,8.00,192,mining,,
-minecraft:lapis_lazuli,3.00,192,mining,,
-minecraft:gunpowder,3.00,128,mobs,,
-minecraft:coal,2.00,256,mining,,
-minecraft:leather,2.00,128,farm,,
-minecraft:copper_ingot,2.00,256,mining,,
-minecraft:oak_log,1.00,256,wood_and_stone,,
-minecraft:string,0.80,192,mobs,,
+
+# ---- Farm
 minecraft:wheat,0.50,256,farm,,
-minecraft:carrot,0.40,256,farm,,
-minecraft:bone,0.50,192,mobs,,
-minecraft:rotten_flesh,0.10,256,mobs,,
-minecraft:cobblestone,0.10,512,wood_and_stone,,
-# Compressed forms share their base pool
-minecraft:diamond_block,,,mining,minecraft:diamond,9
-minecraft:emerald_block,,,mining,minecraft:emerald,9
-minecraft:gold_block,,,mining,minecraft:gold_ingot,9
-minecraft:iron_block,,,mining,minecraft:iron_ingot,9
-minecraft:lapis_block,,,mining,minecraft:lapis_lazuli,9
-minecraft:coal_block,,,mining,minecraft:coal,9
-minecraft:copper_block,,,mining,minecraft:copper_ingot,9
 minecraft:hay_block,,,farm,minecraft:wheat,9
+minecraft:carrot,0.40,256,farm,,
+minecraft:potato,0.40,256,farm,,
+minecraft:beetroot,0.40,256,farm,,
+minecraft:sugar_cane,0.30,256,farm,,
+minecraft:pumpkin,1.50,96,farm,,
+minecraft:melon_slice,0.15,512,farm,,
+minecraft:melon,,,farm,minecraft:melon_slice,9
+minecraft:leather,2.00,128,farm,,
+minecraft:feather,0.30,192,farm,,
+minecraft:beef,1.20,128,farm,,
+
+# ---- Mining
+minecraft:coal,2.00,256,mining,,
+minecraft:coal_block,,,mining,minecraft:coal,9
+minecraft:copper_ingot,2.00,256,mining,,
+minecraft:copper_block,,,mining,minecraft:copper_ingot,9
+minecraft:iron_ingot,8.00,192,mining,,
+minecraft:iron_block,,,mining,minecraft:iron_ingot,9
+minecraft:gold_ingot,15.00,96,mining,,
+minecraft:gold_block,,,mining,minecraft:gold_ingot,9
+minecraft:redstone,1.50,256,mining,,
+minecraft:redstone_block,,,mining,minecraft:redstone,9
+minecraft:lapis_lazuli,3.00,192,mining,,
+minecraft:lapis_block,,,mining,minecraft:lapis_lazuli,9
+minecraft:quartz,2.50,192,mining,,
+minecraft:quartz_block,,,mining,minecraft:quartz,4
+minecraft:amethyst_shard,3.00,128,mining,,
+minecraft:amethyst_block,,,mining,minecraft:amethyst_shard,4
+minecraft:flint,0.30,192,mining,,
+minecraft:obsidian,4.00,96,mining,,
+minecraft:emerald,40.00,48,mining,,
+minecraft:emerald_block,,,mining,minecraft:emerald,9
+minecraft:diamond,100.00,32,mining,,
+minecraft:diamond_block,,,mining,minecraft:diamond,9
+
+# ---- Mobs
+minecraft:rotten_flesh,0.10,256,mobs,,
+minecraft:bone,0.50,192,mobs,,
 minecraft:bone_block,,,mobs,minecraft:bone,3
+minecraft:string,0.80,192,mobs,,
+minecraft:arrow,0.20,256,mobs,,
+minecraft:spider_eye,0.60,192,mobs,,
+minecraft:gunpowder,3.00,128,mobs,,
+minecraft:slime_ball,2.00,128,mobs,,
+minecraft:slime_block,,,mobs,minecraft:slime_ball,9
+minecraft:ender_pearl,12.00,48,mobs,,
+minecraft:blaze_rod,6.00,64,mobs,,
+minecraft:ghast_tear,20.00,32,mobs,,
+
+# ---- Wood and stone
+minecraft:oak_log,1.00,256,wood_and_stone,,
+minecraft:spruce_log,1.00,256,wood_and_stone,,
+minecraft:birch_log,1.00,256,wood_and_stone,,
+minecraft:cobblestone,0.10,512,wood_and_stone,,
+minecraft:stone,0.15,512,wood_and_stone,,
+minecraft:sand,0.10,512,wood_and_stone,,
+minecraft:gravel,0.10,512,wood_and_stone,,
+minecraft:glass,0.40,256,wood_and_stone,,

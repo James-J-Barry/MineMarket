@@ -7,7 +7,9 @@ import com.realisticmarkets.mod.registry.ModItems;
 import com.realisticmarkets.money.Denomination;
 import java.util.List;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.ItemStack;
@@ -80,6 +82,41 @@ public class DealerGameTests {
         menu.broadcastChanges();
         check(menu.status() == BasicExchangeMenu.STATUS_MONEY, "money should be refused");
         check(!menu.clickMenuButton(player, BasicExchangeMenu.BUTTON_SELL), "selling money must fail");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void exchangeBuyTabBuysWithCashAndGivesChange(GameTestHelper helper) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        DealerService svc = DealerService.forTest(1234L);
+        Wallet.give(player, 10_000); // $100.00 in bills
+        BasicExchangeMenu menu = new BasicExchangeMenu(2, player.getInventory(), ContainerLevelAccess.NULL, svc);
+
+        int wheat = menu.indexOf("minecraft:wheat");
+        check(wheat >= 0, "wheat should be in the buy list");
+        check(menu.itemCount() > 10, "buy list should show the catalog, got " + menu.itemCount());
+        check(menu.clickMenuButton(player, BasicExchangeMenu.BUTTON_TAB_BUY), "switch to Buy tab");
+        check(menu.clickMenuButton(player, BasicExchangeMenu.BUTTON_SELECT_BASE + wheat), "select wheat");
+        long expected = menu.buyTotalCents(1); // x16
+        check(expected > 0 && expected < 10_000, "16 wheat should cost under $100, got " + expected);
+        check(menu.buyNormalMills(wheat) == 500, "wheat normal price should be $0.50");
+        check(menu.buySellsMills(wheat) == 550, "wheat ask should be $0.55, got " + menu.buySellsMills(wheat));
+
+        check(menu.clickMenuButton(player, BasicExchangeMenu.BUTTON_BUY_FIRST + 1), "buy 16 should succeed");
+        check(player.getInventory().countItem(Items.WHEAT) == 16, "should now hold 16 wheat");
+        check(Wallet.count(player.getInventory()) == 10_000 - expected, "change should be exact");
+        check(menu.buySellsMills(wheat) > 550, "buying should push the ask up");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void everyCatalogItemExistsAndFitsTheBuyList(GameTestHelper helper) {
+        DealerService svc = DealerService.forTest(1234L);
+        for (String id : svc.dealer().catalog().all().keySet()) {
+            check(BuiltInRegistries.ITEM.getValue(Identifier.parse(id)) != Items.AIR, "catalog item " + id + " is not a real item");
+        }
+        int size = svc.dealer().catalog().all().size();
+        check(size <= BasicExchangeMenu.MAX_ITEMS, size + " catalog items exceed the Buy tab limit of " + BasicExchangeMenu.MAX_ITEMS);
         helper.succeed();
     }
 

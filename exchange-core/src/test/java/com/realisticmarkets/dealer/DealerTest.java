@@ -30,6 +30,17 @@ class DealerTest {
     }
 
     @Test
+    void midSitsBetweenBidAndAskAndStartsAtFairValue() {
+        assertEquals(0.50, dealer.mid(WHEAT, 0), 1e-9);
+        assertEquals(dealer.fairValue(WHEAT, 0), dealer.mid(WHEAT, 0), 1e-9);
+        dealer.sell(WHEAT, 64, 0, false);
+        double mid = dealer.mid(WHEAT, 0);
+        assertTrue(dealer.bid(WHEAT, 0, false) < mid && mid < dealer.ask(WHEAT, 0, false));
+        assertTrue(mid < dealer.fairValue(WHEAT, 0), "dealer holding stock trades below fair value");
+        assertEquals(9 * dealer.mid("iron_ingot", 0), dealer.mid("iron_block", 0), 1e-9);
+    }
+
+    @Test
     void designDocDumpTable() {
         // Doc: 64 -> $25.48, 256 -> $72.82, 1,024 -> $113.09 (before rounding down to a dime)
         assertEquals(2548.2, dealer.quoteSell(WHEAT, 64, 0, false).rawCents(), 0.5);
@@ -153,12 +164,31 @@ class DealerTest {
     }
 
     @Test
+    void stateSurvivesSaveAndLoad() throws Exception {
+        dealer.sell(WHEAT, 300, 1.5, false);
+        dealer.buy("diamond", 3, 2.0, false);
+        java.io.StringWriter out = new java.io.StringWriter();
+        DealerStateIO.write(new DealerStateIO.Saved(dealer.snapshot(), 2.5), out);
+
+        DealerStateIO.Saved loaded = DealerStateIO.read(new StringReader(out.toString()));
+        assertEquals(2.5, loaded.dayOffset(), 0.0);
+        Dealer copy = new Dealer(DealerCatalog.loadDefault(), DealerParams.noDrift(), 1234L);
+        copy.restore(loaded.pools());
+        for (String item : new String[] {WHEAT, "minecraft:diamond", "minecraft:iron_block"}) {
+            assertEquals(dealer.bid(item, 5.0, false), copy.bid(item, 5.0, false), 0.0, item);
+            assertEquals(dealer.ask(item, 5.0, false), copy.ask(item, 5.0, false), 0.0, item);
+        }
+        assertThrows(IllegalArgumentException.class,
+                () -> DealerStateIO.read(new StringReader("minecraft:wheat\tnot-a-number\t1\t1\t0\n")));
+    }
+
+    @Test
     void catalogValidation() throws Exception {
         String bad = "item,fair_value,depth,group,base_item,base_units\nminecraft:iron_block,,,mining,minecraft:iron_ingot,9\n";
         assertThrows(IllegalArgumentException.class, () -> DealerCatalog.parseCsv(new StringReader(bad)));
         String ok = "wheat,0.5,256,farm,,\nhay_block,,,farm,wheat,9\n";
         DealerCatalog c = DealerCatalog.parseCsv(new StringReader(ok));
         assertEquals("minecraft:wheat", c.pool("hay_block").itemId());
-        assertEquals(17, DealerCatalog.loadDefault().basePools().size());
+        assertEquals(40, DealerCatalog.loadDefault().basePools().size());
     }
 }

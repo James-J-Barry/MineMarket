@@ -5,5 +5,8 @@
   "item.realisticmarkets.hundred_dollar": "Hundred-Dollar Bill",
   "block.realisticmarkets.basic_exchange": "Basic Exchange",
   "container.realisticmarkets.basic_exchange": "Basic Exchange",
-  "gui.realisticmarkets.sell": "Sell"
+  "gui.realisticmarkets.sell": "Sell",
+  "gui.realisticmarkets.tab_sell": "Sell",
+  "gui.realisticmarkets.tab_buy": "Buy",
+  "itemGroup.realisticmarkets": "Realistic Markets"
 }

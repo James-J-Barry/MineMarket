@@ -3,12 +3,17 @@ package com.realisticmarkets.mod.menu;
 import com.realisticmarkets.dealer.Dealer;
 import com.realisticmarkets.exchange.RejectedException;
 import com.realisticmarkets.mod.dealer.DealerService;
+import com.realisticmarkets.mod.dealer.Wallet;
 import com.realisticmarkets.mod.registry.ModBlocks;
 import com.realisticmarkets.mod.registry.ModItems;
 import com.realisticmarkets.mod.registry.ModMenus;
 import com.realisticmarkets.money.Denomination;
 import com.realisticmarkets.money.Money;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -20,43 +25,86 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 /**
- * Furnace-style Basic Exchange screen: one input slot, a Sell button, and a 2x2 grid of payout
- * slots (dime, $1, $10, $100). The table stores nothing: on close, anything left in it goes back
- * to the player, like a crafting table.
+ * The Basic Exchange screen: a Sell tab (input slot, live quote, Sell button, 2x2 payout grid)
+ * and a Buy tab (villager-style scrollable list of everything the Dealer sells).
  *
- * <p>The server recomputes the quote every tick (prices recover over time) and syncs it to the
- * client through {@link ContainerData}. Data slots travel as shorts, so cents are split into two
- * 15-bit halves (max about $10.7M per quote).
+ * <p>Every price shown is per item:
+ * <ul>
+ *   <li><b>Normal</b>: the Dealer's fair value, what the price recovers to once it clears its stock.</li>
+ *   <li><b>Market</b>: the Dealer's current mid price.</li>
+ *   <li><b>Pays</b> (Sell tab) / <b>Sells</b> (Buy tab): what actually changes hands.</li>
+ * </ul>
+ *
+ * <p>All state the client shows travels through {@link ContainerData}. Data slots are synced as
+ * shorts, so every number is split into two 15-bit halves (max 2^30). Prices are in mills
+ * (thousandths of a dollar) so cheap items like cobblestone still show useful precision.
+ * The server refreshes prices every {@link #REFRESH_TICKS} ticks and right after any action.
  */
 public class BasicExchangeMenu extends AbstractContainerMenu {
+    public static final int WIDTH = 176;
+    public static final int HEIGHT = 222;
+
+    // ---- slots
     public static final int INPUT = 0;
     public static final int OUTPUT_START = 1;
     public static final int OUTPUT_COUNT = 4;
     public static final int INV_START = OUTPUT_START + OUTPUT_COUNT; // 5
     public static final int INV_END = INV_START + 36;                 // 41 (exclusive)
+    public static final int INPUT_X = 26, INPUT_Y = 30;
+    public static final int OUTPUT_X = 116, OUTPUT_Y = 22;
+    public static final int INVENTORY_Y = 140;
 
+    // ---- tabs and buttons
+    public static final int TAB_SELL = 0;
+    public static final int TAB_BUY = 1;
     public static final int BUTTON_SELL = 0;
+    public static final int BUTTON_TAB_SELL = 1;
+    public static final int BUTTON_TAB_BUY = 2;
+    public static final int BUTTON_BUY_FIRST = 3; // 3, 4, 5 -> BUY_QUANTITIES
+    public static final int BUTTON_SELECT_BASE = 100;
+    public static final int[] BUY_QUANTITIES = {1, 16, 64};
 
+    // ---- sell status
     public static final int STATUS_EMPTY = 0;
     public static final int STATUS_OK = 1;
     public static final int STATUS_NOT_TRADED = 2;
     public static final int STATUS_COLLAPSED = 3;
     public static final int STATUS_MONEY = 4;
 
-    /** Output slot order, left-to-right then top-to-bottom. */
     public static final Denomination[] OUTPUT_ORDER = {
             Denomination.DIME, Denomination.ONE, Denomination.TEN, Denomination.HUNDRED};
 
-    private static final long MAX_SYNCED_CENTS = (1L << 30) - 1;
+    // ---- data layout (indices into ContainerData)
+    private static final int D_TAB = 0;
+    private static final int D_STATUS = 1;
+    private static final int D_SELL_TOTAL = 2;   // cents (2 slots)
+    private static final int D_SELL_NORMAL = 4;  // mills per item (2)
+    private static final int D_SELL_MARKET = 6;  // mills (2)
+    private static final int D_SELL_PAYS = 8;    // mills (2)
+    private static final int D_CASH = 10;        // cents (2)
+    private static final int D_SELECTED = 12;    // selected buy index + 1 (0 = none)
+    private static final int D_BUY_TOTALS = 13;  // cents for each BUY_QUANTITIES entry (3 x 2)
+    private static final int D_COUNT = 19;       // number of buy-list items
+    private static final int D_ITEMS = 20;       // per item: raw item id, normal, market, sells (4 x 2), group (1)
+    private static final int ITEM_STRIDE = 9;
+    public static final int MAX_ITEMS = 64;
+    private static final int DATA_SIZE = D_ITEMS + MAX_ITEMS * ITEM_STRIDE;
+
+    private static final long MAX_SYNCED = (1L << 30) - 1;
+    private static final int REFRESH_TICKS = 10;
 
     private final Container input = new SimpleContainer(1);
     private final Container output = new SimpleContainer(OUTPUT_COUNT);
-    private final ContainerData data = new SimpleContainerData(3); // status, cents low 15 bits, cents high 15 bits
+    private final ContainerData data = new SimpleContainerData(DATA_SIZE);
     private final ContainerLevelAccess access;
     private final Player player;
-    private final DealerService dealer; // null on the client
+    private final DealerService dealer;          // null on the client
+    private final List<String> buyList = new ArrayList<>(); // server only
+    private int ticks;
+    private boolean inputChanged = true;
 
     /** Client-side constructor, called when the server opens the screen. */
     public BasicExchangeMenu(int containerId, Inventory playerInventory) {
@@ -70,38 +118,101 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         this.player = playerInventory.player;
         this.dealer = dealer;
 
-        addSlot(new Slot(input, 0, 26, 38));
+        addSlot(new Slot(input, 0, INPUT_X, INPUT_Y) {
+            @Override
+            public boolean isActive() {
+                return tab() == TAB_SELL;
+            }
+
+            @Override
+            public void setChanged() {
+                super.setChanged();
+                inputChanged = true; // quote the new stack immediately, not on the next refresh tick
+            }
+        });
         for (int i = 0; i < OUTPUT_COUNT; i++) {
-            addSlot(new Slot(output, i, 116 + (i % 2) * 18, 29 + (i / 2) * 18) {
+            addSlot(new Slot(output, i, OUTPUT_X + (i % 2) * 18, OUTPUT_Y + (i / 2) * 18) {
                 @Override
                 public boolean mayPlace(ItemStack stack) {
                     return false;
                 }
+
+                @Override
+                public boolean isActive() {
+                    return tab() == TAB_SELL;
+                }
             });
         }
-        addStandardInventorySlots(playerInventory, 8, 84);
+        addStandardInventorySlots(playerInventory, 8, INVENTORY_Y);
         addDataSlots(data);
+
+        if (dealer != null) {
+            for (String id : dealer.dealer().catalog().all().keySet()) {
+                if (buyList.size() == MAX_ITEMS) break;
+                if (itemFor(id) != Items.AIR) buyList.add(id);
+            }
+            refresh();
+        }
     }
 
-    // ------------------------------------------------------------------ synced state (client reads these)
+    // ================================================================== reads (client and server)
 
-    public int status() {
-        return data.get(0);
+    public int tab() { return data.get(D_TAB); }
+    public int status() { return data.get(D_STATUS); }
+    public long quoteCents() { return pair(D_SELL_TOTAL); }
+    public long sellNormalMills() { return pair(D_SELL_NORMAL); }
+    public long sellMarketMills() { return pair(D_SELL_MARKET); }
+    public long sellPaysMills() { return pair(D_SELL_PAYS); }
+    public long cashCents() { return pair(D_CASH); }
+    public int selected() { return data.get(D_SELECTED) - 1; }
+    public long buyTotalCents(int quantityIndex) { return pair(D_BUY_TOTALS + quantityIndex * 2); }
+    public int itemCount() { return data.get(D_COUNT); }
+    public ItemStack inputStack() { return input.getItem(0); }
+
+    public Item buyItem(int i) {
+        return BuiltInRegistries.ITEM.byId((int) pair(D_ITEMS + i * ITEM_STRIDE));
+    }
+    public long buyNormalMills(int i) { return pair(D_ITEMS + i * ITEM_STRIDE + 2); }
+    public long buyMarketMills(int i) { return pair(D_ITEMS + i * ITEM_STRIDE + 4); }
+    public long buySellsMills(int i) { return pair(D_ITEMS + i * ITEM_STRIDE + 6); }
+    public int buyGroup(int i) { return data.get(D_ITEMS + i * ITEM_STRIDE + 8); }
+
+    /** Catalog groups in display order; anything else is shown under "Other". */
+    public static final String[] GROUPS = {"farm", "mining", "mobs", "wood_and_stone"};
+    public static final int GROUP_OTHER = GROUPS.length;
+
+    private static int groupIndex(String group) {
+        for (int g = 0; g < GROUPS.length; g++) if (GROUPS[g].equals(group)) return g;
+        return GROUP_OTHER;
     }
 
-    public long quoteCents() {
-        return (long) data.get(1) | ((long) data.get(2) << 15);
+    /** Server-side: position of an item id in the buy list, or -1. */
+    public int indexOf(String itemId) {
+        return buyList.indexOf(itemId);
     }
 
-    public ItemStack inputStack() {
-        return input.getItem(0);
+    private long pair(int i) {
+        return (long) data.get(i) | ((long) data.get(i + 1) << 15);
     }
 
-    // ------------------------------------------------------------------ server logic
+    private void setPair(int i, long value) {
+        long v = Math.min(Math.max(value, 0), MAX_SYNCED);
+        data.set(i, (int) (v & 0x7FFF));
+        data.set(i + 1, (int) ((v >> 15) & 0x7FFF));
+    }
+
+    private static long mills(double dollars) {
+        return Math.round(dollars * 1000.0);
+    }
+
+    // ================================================================== server: prices
 
     @Override
     public void broadcastChanges() {
-        if (dealer != null) updateQuote();
+        if (dealer != null && (++ticks % REFRESH_TICKS == 0 || inputChanged)) {
+            inputChanged = false;
+            refresh();
+        }
         super.broadcastChanges();
     }
 
@@ -109,49 +220,153 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         return dealer.day(player.level().getGameTime());
     }
 
-    private void updateQuote() {
-        ItemStack stack = input.getItem(0);
-        if (stack.isEmpty()) {
-            setQuote(STATUS_EMPTY, 0);
-        } else if (ModItems.denominationOf(stack) != null) {
-            setQuote(STATUS_MONEY, 0);
-        } else if (!dealer.dealer().catalog().trades(DealerService.itemId(stack))) {
-            setQuote(STATUS_NOT_TRADED, 0);
-        } else {
-            try {
-                Dealer.Quote q = dealer.dealer().quoteSell(DealerService.itemId(stack), stack.getCount(), day(), false);
-                setQuote(STATUS_OK, q.cents());
-            } catch (RejectedException e) {
-                setQuote(STATUS_COLLAPSED, 0);
+    private static Item itemFor(String id) {
+        return BuiltInRegistries.ITEM.getValue(Identifier.parse(id));
+    }
+
+    private void refresh() {
+        double day = day();
+        Dealer d = dealer.dealer();
+        refreshSell(d, day);
+        setPair(D_CASH, Wallet.count(player.getInventory()) + drawerCents());
+
+        data.set(D_COUNT, buyList.size());
+        for (int i = 0; i < buyList.size(); i++) {
+            String id = buyList.get(i);
+            int base = D_ITEMS + i * ITEM_STRIDE;
+            setPair(base, BuiltInRegistries.ITEM.getId(itemFor(id)));
+            setPair(base + 2, mills(d.fairValue(id, day)));
+            setPair(base + 4, mills(d.mid(id, day)));
+            setPair(base + 6, mills(d.ask(id, day, false)));
+            data.set(base + 8, groupIndex(d.catalog().spec(id).group()));
+        }
+        int sel = selected();
+        for (int q = 0; q < BUY_QUANTITIES.length; q++) {
+            long total = 0;
+            if (sel >= 0 && sel < buyList.size()) {
+                try {
+                    total = d.quoteBuy(buyList.get(sel), BUY_QUANTITIES[q], day, false).cents();
+                } catch (RejectedException e) {
+                    total = 0;
+                }
             }
+            setPair(D_BUY_TOTALS + q * 2, total);
         }
     }
 
-    private void setQuote(int status, long cents) {
-        long c = Math.min(Math.max(cents, 0), MAX_SYNCED_CENTS);
-        data.set(0, status);
-        data.set(1, (int) (c & 0x7FFF));
-        data.set(2, (int) ((c >> 15) & 0x7FFF));
+    private void refreshSell(Dealer d, double day) {
+        ItemStack stack = input.getItem(0);
+        int status;
+        long total = 0, normal = 0, market = 0, pays = 0;
+        if (stack.isEmpty()) {
+            status = STATUS_EMPTY;
+        } else if (ModItems.denominationOf(stack) != null) {
+            status = STATUS_MONEY;
+        } else if (!d.catalog().trades(DealerService.itemId(stack))) {
+            status = STATUS_NOT_TRADED;
+        } else {
+            String id = DealerService.itemId(stack);
+            normal = mills(d.fairValue(id, day));
+            market = mills(d.mid(id, day));
+            pays = mills(d.bid(id, day, false));
+            try {
+                total = d.quoteSell(id, stack.getCount(), day, false).cents();
+                status = STATUS_OK;
+            } catch (RejectedException e) {
+                status = STATUS_COLLAPSED;
+            }
+        }
+        data.set(D_STATUS, status);
+        setPair(D_SELL_TOTAL, total);
+        setPair(D_SELL_NORMAL, normal);
+        setPair(D_SELL_MARKET, market);
+        setPair(D_SELL_PAYS, pays);
     }
+
+    // ================================================================== server: actions
 
     @Override
     public boolean clickMenuButton(Player p, int id) {
-        if (id != BUTTON_SELL || dealer == null) return false;
+        if (dealer == null) return false;
+        boolean handled;
+        if (id == BUTTON_TAB_SELL || id == BUTTON_TAB_BUY) {
+            data.set(D_TAB, id == BUTTON_TAB_SELL ? TAB_SELL : TAB_BUY);
+            handled = true;
+        } else if (id == BUTTON_SELL) {
+            handled = tab() == TAB_SELL && sell(p);
+        } else if (id >= BUTTON_BUY_FIRST && id < BUTTON_BUY_FIRST + BUY_QUANTITIES.length) {
+            handled = tab() == TAB_BUY && buy(p, BUY_QUANTITIES[id - BUTTON_BUY_FIRST]);
+        } else if (id >= BUTTON_SELECT_BASE && id < BUTTON_SELECT_BASE + buyList.size()) {
+            data.set(D_SELECTED, id - BUTTON_SELECT_BASE + 1);
+            handled = true;
+        } else {
+            handled = false;
+        }
+        if (handled) refresh();
+        return handled;
+    }
+
+    private boolean sell(Player p) {
         ItemStack stack = input.getItem(0);
         if (stack.isEmpty() || ModItems.denominationOf(stack) != null) return false;
         try {
             long cents = dealer.sellStack(stack, day(), false);
             input.setItem(0, ItemStack.EMPTY);
-            pay(p, cents);
-            updateQuote();
+            payIntoDrawer(p, cents);
             return true;
         } catch (RejectedException e) {
             return false;
         }
     }
 
+    /**
+     * Buys from the Dealer, paying with every bill and coin in the player's inventory and the
+     * payout drawer; change and the goods go into the player's inventory (dropped if full).
+     */
+    private boolean buy(Player p, int quantity) {
+        int sel = selected();
+        if (sel < 0 || sel >= buyList.size()) return false;
+        String id = buyList.get(sel);
+        Item item = itemFor(id);
+        double day = day();
+        long cost;
+        try {
+            cost = dealer.dealer().quoteBuy(id, quantity, day, false).cents();
+        } catch (RejectedException e) {
+            return false;
+        }
+        long available = Wallet.count(p.getInventory()) + drawerCents();
+        if (available < cost) return false;
+
+        for (int i = 0; i < OUTPUT_COUNT; i++) output.setItem(i, ItemStack.EMPTY);
+        Inventory inv = p.getInventory();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            if (ModItems.denominationOf(inv.getItem(i)) != null) inv.setItem(i, ItemStack.EMPTY);
+        }
+        dealer.dealer().buy(id, quantity, day, false);
+        Wallet.give(p, available - cost);
+
+        int left = quantity;
+        while (left > 0) {
+            int n = Math.min(left, item.getDefaultMaxStackSize());
+            inv.placeItemBackInInventory(new ItemStack(item, n));
+            left -= n;
+        }
+        return true;
+    }
+
+    private long drawerCents() {
+        long cents = 0;
+        for (int i = 0; i < OUTPUT_COUNT; i++) {
+            ItemStack s = output.getItem(i);
+            Denomination d = ModItems.denominationOf(s);
+            if (d != null) cents += d.cents() * s.getCount();
+        }
+        return cents;
+    }
+
     /** Fills the denomination slots; whatever doesn't fit goes to the player's inventory. */
-    private void pay(Player p, long cents) {
+    private void payIntoDrawer(Player p, long cents) {
         for (Map.Entry<Denomination, Long> e : Money.makeChange(cents).entrySet()) {
             int slot = indexOf(e.getKey());
             Item item = ModItems.CURRENCY.get(e.getKey());
@@ -180,7 +395,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         throw new IllegalArgumentException(String.valueOf(d));
     }
 
-    // ------------------------------------------------------------------ container plumbing
+    // ================================================================== container plumbing
 
     @Override
     public ItemStack quickMoveStack(Player p, int index) {
@@ -190,7 +405,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         ItemStack original = stack.copy();
         if (index < INV_START) {
             if (!moveItemStackTo(stack, INV_START, INV_END, true)) return ItemStack.EMPTY;
-        } else if (!moveItemStackTo(stack, INPUT, INPUT + 1, false)) {
+        } else if (tab() != TAB_SELL || !moveItemStackTo(stack, INPUT, INPUT + 1, false)) {
             return ItemStack.EMPTY;
         }
         if (stack.isEmpty()) slot.set(ItemStack.EMPTY);

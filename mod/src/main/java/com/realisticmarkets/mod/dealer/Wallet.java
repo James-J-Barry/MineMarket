@@ -6,8 +6,8 @@ import com.realisticmarkets.money.Money;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -41,7 +41,7 @@ public final class Wallet {
     }
 
     /** Puts cash into the player's inventory; anything that doesn't fit drops at their feet. */
-    public static void give(ServerPlayer player, long cents) {
+    public static void give(Player player, long cents) {
         for (ItemStack stack : toStacks(cents)) {
             player.getInventory().placeItemBackInInventory(stack);
         }
@@ -53,7 +53,7 @@ public final class Wallet {
      *
      * @return false (and changes nothing) if the player can't afford it
      */
-    public static boolean pay(ServerPlayer player, long cents) {
+    public static boolean pay(Player player, long cents) {
         Inventory inv = player.getInventory();
         long have = count(inv);
         if (have < cents) return false;

@@ -3,18 +3,22 @@ package com.realisticmarkets.mod.dealer;
 import com.realisticmarkets.dealer.Dealer;
 import com.realisticmarkets.dealer.DealerCatalog;
 import com.realisticmarkets.dealer.DealerParams;
+import com.realisticmarkets.dealer.DealerStateIO;
 import com.realisticmarkets.mod.RealisticMarkets;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 import java.util.Properties;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -24,21 +28,26 @@ import net.minecraft.world.item.ItemStack;
  * {@code dealer_params.properties}, copied from the defaults on first start and re-read by
  * {@code /mkt dealer reload}.
  *
- * <p>M1 limitation: Dealer state is in memory and resets when the server restarts. SavedData
- * persistence uses {@link Dealer#snapshot()} / {@link Dealer#restore} and is next on the list.
+ * <p>Dealer state (inventories, fair-value drift, dev time-shift) is saved to
+ * {@code <world>/realisticmarkets/dealer_state.txt} every {@link #SAVE_INTERVAL_TICKS} ticks and when
+ * the server stops, so dumping a farm and restarting doesn't reset prices.
  */
 public final class DealerService {
     public static final long TICKS_PER_DAY = 24_000L;
+    public static final int SAVE_INTERVAL_TICKS = 6_000; // 5 minutes
 
     private static DealerService instance;
 
     private final Dealer dealer;
     private final Path configDir;
+    private final Path stateFile; // null for test instances
     private double dayOffset; // dev time-shift for testing recovery without waiting
+    private int ticksSinceSave;
 
-    private DealerService(Dealer dealer, Path configDir) {
+    private DealerService(Dealer dealer, Path configDir, Path stateFile) {
         this.dealer = dealer;
         this.configDir = configDir;
+        this.stateFile = stateFile;
     }
 
     // ------------------------------------------------------------------ lifecycle
@@ -46,19 +55,62 @@ public final class DealerService {
     public static void start(MinecraftServer server) {
         Path dir = FabricLoader.getInstance().getConfigDir().resolve(RealisticMarkets.MOD_ID);
         long seed = server.overworld().getSeed();
-        DealerService svc = new DealerService(new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), seed), dir);
+        Path state = server.getWorldPath(LevelResource.ROOT).resolve(RealisticMarkets.MOD_ID).resolve("dealer_state.txt");
+        DealerService svc = new DealerService(new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), seed), dir, state);
         String msg = svc.reload();
+        String loaded = svc.load();
         instance = svc;
-        RealisticMarkets.LOGGER.info("Dealer started: {}", msg);
+        RealisticMarkets.LOGGER.info("Dealer started: {}; {}", msg, loaded);
     }
 
+    /** Called when the server is stopping: save, then forget the instance. */
     public static void stop() {
+        if (instance != null) instance.save();
         instance = null;
+    }
+
+    /** Periodic autosave from the server tick. */
+    public static void tick(MinecraftServer server) {
+        if (instance != null && ++instance.ticksSinceSave >= SAVE_INTERVAL_TICKS) instance.save();
+    }
+
+    /** Loads saved state if the world has any. Returns a short status for the log. */
+    private String load() {
+        if (stateFile == null || Files.notExists(stateFile)) return "no saved dealer state (fresh world)";
+        try (Reader r = Files.newBufferedReader(stateFile, StandardCharsets.UTF_8)) {
+            DealerStateIO.Saved saved = DealerStateIO.read(r);
+            dealer.restore(saved.pools());
+            dayOffset = saved.dayOffset();
+            return "restored " + saved.pools().size() + " price pools";
+        } catch (IOException | RuntimeException e) {
+            RealisticMarkets.LOGGER.error("Could not read {}; starting with fresh prices", stateFile, e);
+            return "saved dealer state unreadable, starting fresh";
+        }
+    }
+
+    /** Writes state atomically (temp file, then move) so a crash mid-write can't corrupt it. */
+    public void save() {
+        ticksSinceSave = 0;
+        if (stateFile == null) return;
+        try {
+            Files.createDirectories(stateFile.getParent());
+            Path tmp = stateFile.resolveSibling(stateFile.getFileName() + ".tmp");
+            try (Writer w = Files.newBufferedWriter(tmp, StandardCharsets.UTF_8)) {
+                DealerStateIO.write(new DealerStateIO.Saved(dealer.snapshot(), dayOffset), w);
+            }
+            try {
+                Files.move(tmp, stateFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (IOException atomicUnsupported) {
+                Files.move(tmp, stateFile, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException e) {
+            RealisticMarkets.LOGGER.error("Could not save dealer state to {}", stateFile, e);
+        }
     }
 
     /** Isolated instance with default catalog and no fair-value drift, for GameTests. */
     public static DealerService forTest(long seed) {
-        return new DealerService(new Dealer(DealerCatalog.loadDefault(), DealerParams.noDrift(), seed), null);
+        return new DealerService(new Dealer(DealerCatalog.loadDefault(), DealerParams.noDrift(), seed), null, null);
     }
 
     public static DealerService get() {

@@ -103,6 +103,13 @@ public final class Dealer {
         return mid(base, p) * spec.baseUnits() * (1 + spread(licensed) / 2);
     }
 
+    /** The Dealer's current mid price per item (between bid and ask), in dollars. */
+    public double mid(String itemId, double day) {
+        MarketSpec spec = catalog.spec(itemId);
+        MarketSpec base = catalog.pool(itemId);
+        return mid(base, advance(base, day)) * spec.baseUnits();
+    }
+
     public double fairValue(String itemId, double day) {
         MarketSpec spec = catalog.spec(itemId);
         MarketSpec base = catalog.pool(itemId);

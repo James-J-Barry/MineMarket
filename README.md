@@ -46,7 +46,7 @@ task differently, find it with `./gradlew :mod:tasks --all | grep -i gametest`.
 Run *Minecraft Client* in **Debug**, create a Creative or Survival world with cheats on, then:
 
 ```
-/give @s realisticmarkets:basic_exchange        (or craft it: gold, paper, gold / planks, crafting table, planks / planks, iron, planks)
+/give @s realisticmarkets:basic_exchange        (or craft it, or grab it from the Realistic Markets creative tab)
 /give @s minecraft:wheat 256
 ```
 
@@ -56,6 +56,10 @@ Run *Minecraft Client* in **Debug**, create a Creative or Survival world with ch
   (4 dimes, five $1s, two $10s). Shift-click or drag the money into your inventory.
 - Sell another 64 and watch the quote fall. Then `/mkt dealer timeshift 2` and the quote
   recovers while the screen is open.
+- Every price is shown per item: **Normal** (the fair value the price recovers to), **Market**
+  (the Dealer's current mid price) and **Pays** / **Sells** (what actually changes hands).
+- Click the **Buy** tab: scroll the list, pick an item, and buy x1, x16 or x64. You pay with the
+  bills and coins in your inventory (and the payout slots); change comes back to your inventory.
 - `/mkt dealer quote wheat 64` and `/mkt dealer state` print JSON; `/mkt dealer buy wheat 10`
   buys with your bills; `/mkt dealer cash 100` gives you money (dev only).
 
@@ -81,6 +85,7 @@ them into `exchange-core/src/main/resources/realisticmarkets/` and update `Deale
 
 ## Status
 
-- `exchange-core`: exchange, money and Dealer implemented; 33 tests passing.
-- `mod`: currency, Basic Exchange screen (input slot, live quote, Sell, payout slots), Dealer commands,
-  config reload, GameTests. Dealer state resets on restart until M1b adds persistence.
+- `exchange-core`: exchange, money and Dealer implemented; 35 tests passing.
+- `mod`: M1 complete: currency items and creative tab, Basic Exchange with Sell and Buy tabs,
+  a 40-item Dealer catalog in four groups (plus 14 compressed forms), prices that persist in
+  `<world>/realisticmarkets/dealer_state.txt`, Dealer commands, config reload, 8 GameTests.

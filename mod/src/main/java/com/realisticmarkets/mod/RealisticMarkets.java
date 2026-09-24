@@ -3,6 +3,7 @@ package com.realisticmarkets.mod;
 import com.realisticmarkets.mod.dealer.DealerCommands;
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.registry.ModBlocks;
+import com.realisticmarkets.mod.registry.ModCreativeTab;
 import com.realisticmarkets.mod.registry.ModItems;
 import com.realisticmarkets.mod.registry.ModMenus;
 import net.fabricmc.api.ModInitializer;
@@ -32,14 +33,16 @@ public final class RealisticMarkets implements ModInitializer {
         ModItems.init();
         ModBlocks.init();
         ModMenus.init();
+        ModCreativeTab.init();
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             MarketCommands.register(dispatcher);
             DealerCommands.register(dispatcher);
         });
         ServerTickEvents.END_SERVER_TICK.register(SERVICE::onServerTick);
+        ServerTickEvents.END_SERVER_TICK.register(DealerService::tick);
         ServerLifecycleEvents.SERVER_STARTED.register(DealerService::start);
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> DealerService.stop());
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> DealerService.stop());
 
         LOGGER.info("Realistic Markets loaded");
     }
