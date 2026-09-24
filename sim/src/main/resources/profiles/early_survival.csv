@@ -1,0 +1,23 @@
+# What a fresh-world survival player gathers per in-game day (20 minutes of play) and can spare to sell.
+# ASSUMPTIONS, not measurements: edit and rerun `./scripts/dev.sh sim progression [profile]`.
+# from_day: first day the source produces (crops need planting, mining needs a pickaxe).
+# ramp: days after from_day until full output (linear ramp from a third).
+item,per_day,from_day,ramp
+# ---- Farm: a small wheat/carrot/potato plot and a few cows
+minecraft:wheat,40,2,2
+minecraft:carrot,24,3,2
+minecraft:potato,24,3,2
+minecraft:leather,3,2,2
+# ---- Mining: branch mining with stone then iron tools
+minecraft:cobblestone,96,1,1
+minecraft:coal,16,1,2
+minecraft:iron_ingot,6,2,3
+minecraft:copper_ingot,8,2,3
+minecraft:redstone,8,3,2
+# ---- Mobs: whatever the night brings
+minecraft:bone,8,1,1
+minecraft:string,6,1,1
+minecraft:rotten_flesh,12,1,1
+minecraft:gunpowder,2,1,2
+# ---- Wood
+minecraft:oak_log,32,1,1

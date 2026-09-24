@@ -16,6 +16,7 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 |---|---|---|
 | `test` | exchange-core unit tests, prints `N tests, M failed` | ~5 s |
 | `sim farm [item] [days]` | Dealer balance: income vs farm size → `build/sim/*.csv` | ~5 s |
+| `sim progression [profile]` | Play time to own and craft all of Tier 1, from a gathering profile in `sim/src/main/resources/profiles/` | ~5 s |
 | `build` | compile everything **and run the GameTests** (Loom's `check` includes them) | ~15 s |
 | `gametest` | server GameTests only, in a headless Minecraft server | ~10 s |
 | `check` | `test` + `gametest`. **A change is not done until this passes.** | ~20 s |

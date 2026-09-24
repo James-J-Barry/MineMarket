@@ -8,6 +8,7 @@ import java.util.Arrays;
  * <pre>
  *   ./scripts/dev.sh sim farm [item] [days]        farm income vs daily sale size (Dealer balance)
  *   ./scripts/dev.sh sim auction [steps] [seed]    batch-auction price discovery demo
+ *   ./scripts/dev.sh sim progression [profile]     play time to own and craft all of Tier 1
  * </pre>
  */
 public final class SimMain {
@@ -17,8 +18,9 @@ public final class SimMain {
         switch (mode) {
             case "farm" -> FarmSim.main(rest);
             case "auction" -> AuctionSim.main(rest);
+            case "progression" -> ProgressionSim.main(rest);
             default -> {
-                System.err.println("unknown sim '" + mode + "'. Try: farm, auction");
+                System.err.println("unknown sim '" + mode + "'. Try: farm, auction, progression");
                 System.exit(2);
             }
         }
