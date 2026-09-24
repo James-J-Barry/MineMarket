@@ -92,5 +92,6 @@ value"). `docs/design.md` is updated with this milestone.
       Diversification, Reading a Quote, Limit and Market Orders (repricing) updated.
 - [x] Newsstand board (varying head start, 25 event types, menu + screen, guide News and Markets, GameTest).
 - [x] Normal shown as yesterday's close (Dealer.normalValue, save v3, Basic Exchange, Price Board, Patience Pays).
-- [ ] James's in-game check: the Newsstand board and acting on news, repricing, a day-old Normal, prices that move.
-- [ ] `./scripts/dev.sh check` green.
+- [x] James's in-game check: the Newsstand board and prices moving with the news (seen on the Ticker Tape). Works
+      (2026-09-24). Repricing and the day-old Normal are covered by GameTests.
+- [x] `./scripts/dev.sh check` green. 166 unit tests, 46 GameTests.

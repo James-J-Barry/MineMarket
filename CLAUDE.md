@@ -6,8 +6,8 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 
 - **Design doc (source of truth for gameplay):** `docs/design.md`, exported from the "Realistic Markets —
   Game Design Document" Claude Doc. If a request conflicts with it, ask before building.
-- **Current milestone:** M5, the Trading Floor. Spec `docs/milestones/M5.md` (M5a done, then M5c
-  `docs/milestones/M5c.md`: markets that move, then M5b). M4 (banking and collateral) is done. Spec `docs/milestones/M4.md`
+- **Current milestone:** M6 (equities), not yet specced. M5 (Trading Floor, M5a/M5b/M5c) is done:
+  `docs/milestones/M5.md`, `docs/milestones/M5c.md`. M4 (banking and collateral) is done. Spec `docs/milestones/M4.md`
   (decisions answered). Done: M2 (`docs/milestones/M2.md`),
   M3 (`docs/milestones/M3.md`).
 - **Owner:** James. He play-tests in the IntelliJ dev client; keep him in the loop on anything that
@@ -150,9 +150,10 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   forced sales, Leverage guide and quest. 124 unit tests, 37 GameTests. → `docs/milestones/M4.md`
 - [x] **M5a: Trading Floor.** Order Slips, Trade Receipts, NPC traders on the batch auction, day/market orders,
   three guides, Tier 3 quests. 149 unit tests, 42 GameTests; Tier 3 at ~16 h. → `docs/milestones/M5.md`
-- [ ] **M5c: Make trading pay.** Prices that trend and never snap back, world events read on the Newsstand before
+- [x] **M5c: Make trading pay.** Prices that trend and never snap back, world events read on the Newsstand before
   the market hears, cheaper slips, repricing, 14 books. → `docs/milestones/M5c.md`
-- [ ] **M5b: Ticker Tape** and Price Chart (built; awaiting James's check). → `docs/milestones/M5.md`
+- [x] **M5b: Ticker Tape.** Live 7-day chart (quarter-day points, volume) on the block's screen; Reading a Chart guide,
+  Read the Tape quest. 166 unit tests, 46 GameTests. → `docs/milestones/M5.md`
 - [ ] M6–M10: equities, bonds, futures, options, modern finance (ATM, Brokerage)
 - [ ] M11: multiplayer
 
