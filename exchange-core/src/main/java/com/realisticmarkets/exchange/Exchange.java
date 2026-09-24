@@ -26,6 +26,10 @@ public final class Exchange {
     private final Map<String, Long> lastPrice = new HashMap<>();
     private long nextOrderId = 1;
     private long auctionSeq = 0;
+    // Everything that ever entered or left, so tests can prove settlement never creates or destroys value.
+    private long cashIn, cashOut;
+    private final Map<String, Long> itemsIn = new TreeMap<>();
+    private final Map<String, Long> itemsOut = new TreeMap<>();
 
     // ------------------------------------------------------------------ instruments & accounts
 
@@ -55,6 +59,14 @@ public final class Exchange {
     public void deposit(String accountId, long cash) {
         if (cash <= 0) throw new IllegalArgumentException("deposit must be positive");
         account(accountId).creditCash(cash);
+        cashIn += cash;
+    }
+
+    /** Money leaving the system: only available (unlocked) cash. */
+    public void withdrawCash(String accountId, long cash) {
+        if (cash <= 0) throw new IllegalArgumentException("withdrawal must be positive");
+        account(accountId).debitCash(cash);
+        cashOut += cash;
     }
 
     /** External goods entering the system, e.g. a player depositing real items into custody. */
@@ -62,11 +74,22 @@ public final class Exchange {
         if (qty <= 0) throw new IllegalArgumentException("deposit must be positive");
         book(instrument);
         account(accountId).creditPosition(instrument, qty);
+        itemsIn.merge(instrument, qty, Long::sum);
     }
 
     /** Goods leaving the system, e.g. a player withdrawing real items. Only unlocked quantity. */
     public void withdrawPosition(String accountId, String instrument, long qty) {
         account(accountId).debitPosition(instrument, qty);
+        itemsOut.merge(instrument, qty, Long::sum);
+    }
+
+    /** Net money that entered: must always equal the cash held in accounts, locked or not. */
+    public long netCashIn() {
+        return cashIn - cashOut;
+    }
+
+    public long netItemsIn(String instrument) {
+        return itemsIn.getOrDefault(instrument, 0L) - itemsOut.getOrDefault(instrument, 0L);
     }
 
     public OptionalLong lastPrice(String instrument) {
@@ -102,6 +125,23 @@ public final class Exchange {
         for (Order o : liveOrders.values()) if (o.accountId().equals(accountId)) out.add(o);
         out.sort((a, b) -> Long.compare(a.id(), b.id()));
         return out;
+    }
+
+    /** Cancels every resting order with this time in force (DAY orders at dawn), releasing collateral. */
+    public List<Order> expire(TimeInForce tif) {
+        List<Order> out = new ArrayList<>();
+        for (Order o : List.copyOf(liveOrders.values())) {
+            if (o.timeInForce() == tif) {
+                removeAndRelease(o);
+                out.add(o);
+            }
+        }
+        out.sort((a, b) -> Long.compare(a.id(), b.id()));
+        return out;
+    }
+
+    public java.util.Optional<Order> liveOrder(long orderId) {
+        return java.util.Optional.ofNullable(liveOrders.get(orderId));
     }
 
     // ------------------------------------------------------------------ auctions
@@ -161,6 +201,88 @@ public final class Exchange {
                 clear == null ? 0 : clear.volume(),
                 List.copyOf(fills),
                 List.copyOf(cancelledIoc));
+    }
+
+    // ------------------------------------------------------------------ persistence
+
+    public static final String HEADER = "# Realistic Markets exchange state v1";
+
+    /**
+     * <pre>
+     * @counters	next_order_id	auction_seq	cash_in	cash_out
+     * instrument	minecraft:wheat
+     * flow	minecraft:wheat	in	out
+     * last	minecraft:wheat	52
+     * acct	id	cash	locked_cash
+     * pos	id	instrument	qty	locked
+     * order	id	account	instrument	side	quantity	remaining	limit	tif
+     * </pre>
+     */
+    public void write(java.io.Writer w) throws java.io.IOException {
+        w.write(HEADER + "\n");
+        w.write("@counters\t" + nextOrderId + "\t" + auctionSeq + "\t" + cashIn + "\t" + cashOut + "\n");
+        for (String i : books.keySet()) w.write("instrument\t" + i + "\n");
+        java.util.Set<String> flows = new java.util.TreeSet<>(itemsIn.keySet());
+        flows.addAll(itemsOut.keySet());
+        for (String i : flows) w.write("flow\t" + i + "\t" + itemsIn.getOrDefault(i, 0L) + "\t" + itemsOut.getOrDefault(i, 0L) + "\n");
+        for (Map.Entry<String, Long> e : new TreeMap<>(lastPrice).entrySet()) w.write("last\t" + e.getKey() + "\t" + e.getValue() + "\n");
+        for (Account a : accounts.values()) {
+            w.write("acct\t" + a.id() + "\t" + a.cash() + "\t" + a.lockedCash() + "\n");
+            java.util.Set<String> ins = new java.util.TreeSet<>(a.positions().keySet());
+            ins.addAll(a.lockedPositions().keySet());
+            for (String i : ins) w.write("pos\t" + a.id() + "\t" + i + "\t" + a.position(i) + "\t" + a.lockedPosition(i) + "\n");
+        }
+        List<Order> orders = new ArrayList<>(liveOrders.values());
+        orders.sort((x, y) -> Long.compare(x.id(), y.id()));
+        for (Order o : orders) {
+            w.write("order\t" + o.id() + "\t" + o.accountId() + "\t" + o.instrument() + "\t" + o.side() + "\t"
+                    + o.originalQuantity() + "\t" + o.remaining() + "\t" + o.limitPrice() + "\t" + o.timeInForce() + "\n");
+        }
+        w.flush();
+    }
+
+    public static Exchange read(java.io.Reader r) throws java.io.IOException {
+        Exchange ex = new Exchange();
+        java.io.BufferedReader br = new java.io.BufferedReader(r);
+        String line;
+        int n = 0;
+        while ((line = br.readLine()) != null) {
+            n++;
+            String t = line.strip();
+            if (t.isEmpty() || t.startsWith("#")) continue;
+            String[] c = t.split("\t");
+            try {
+                switch (c[0]) {
+                    case "@counters" -> {
+                        ex.nextOrderId = Long.parseLong(c[1]);
+                        ex.auctionSeq = Long.parseLong(c[2]);
+                        ex.cashIn = Long.parseLong(c[3]);
+                        ex.cashOut = Long.parseLong(c[4]);
+                    }
+                    case "instrument" -> ex.listInstrument(c[1]);
+                    case "flow" -> {
+                        ex.itemsIn.put(c[1], Long.parseLong(c[2]));
+                        ex.itemsOut.put(c[1], Long.parseLong(c[3]));
+                    }
+                    case "last" -> ex.lastPrice.put(c[1], Long.parseLong(c[2]));
+                    case "acct" -> ex.account(c[1]).restore(Long.parseLong(c[2]), Long.parseLong(c[3]));
+                    case "pos" -> ex.account(c[1]).restorePosition(c[2], Long.parseLong(c[3]), Long.parseLong(c[4]));
+                    case "order" -> {
+                        OrderRequest req = new OrderRequest(c[2], c[3], Side.valueOf(c[4]), Long.parseLong(c[5]),
+                                Long.parseLong(c[7]), TimeInForce.valueOf(c[8]));
+                        Order o = new Order(Long.parseLong(c[1]), req);
+                        long filled = req.quantity() - Long.parseLong(c[6]);
+                        if (filled > 0) o.fill(filled);
+                        ex.book(req.instrument()).add(o);
+                        ex.liveOrders.put(o.id(), o);
+                    }
+                    default -> throw new IllegalArgumentException("unknown key " + c[0]);
+                }
+            } catch (RuntimeException e) {
+                throw new IllegalArgumentException("exchange line " + n + " is malformed: '" + t + "'", e);
+            }
+        }
+        return ex;
     }
 
     // ------------------------------------------------------------------ internals

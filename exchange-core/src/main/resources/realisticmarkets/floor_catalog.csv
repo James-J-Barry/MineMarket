@@ -1,0 +1,17 @@
+# Realistic Markets: Trading Floor books and their NPC traders.
+# half_spread: the market maker's base half-spread (0.02 = quotes 2% either side of its reference).
+# depth: how much stock (items) the NPC population holds in total, spread over its traders; NPC cash is sized
+#   to match at fair value. Bigger depth = a deeper book that moves less when you trade.
+# noise, fundamentalists, momentum: how many of each trader type (plus one market maker per book).
+# Iron ingots and iron blocks are separate books on purpose: the price gap between them is real arbitrage.
+item,half_spread,depth,noise,fundamentalists,momentum
+minecraft:wheat,0.02,512,6,3,2
+minecraft:carrot,0.02,512,6,3,2
+minecraft:oak_log,0.02,384,6,3,2
+minecraft:coal,0.015,384,6,3,2
+minecraft:iron_ingot,0.015,256,6,3,2
+minecraft:iron_block,0.02,32,4,2,1
+minecraft:gold_ingot,0.015,128,6,3,2
+minecraft:redstone,0.02,384,6,3,2
+minecraft:emerald,0.015,64,5,3,2
+minecraft:diamond,0.015,48,5,3,2

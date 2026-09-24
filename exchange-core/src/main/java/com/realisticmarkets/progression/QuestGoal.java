@@ -14,6 +14,9 @@ package com.realisticmarkets.progression;
  * interest_earned:1000        (lifetime bank interest, cents)
  * cd_matured                  (a CD redeemed at or after maturity)
  * loan_repaid                 (a loan fully repaid by the borrower)
+ * limit_filled                (a Trading Floor limit order at least partly filled)
+ * beat_dealer                 (a Floor sale averaging more than the Dealer's bid)
+ * two_books:<big>:<small>:<n> (in one day, buy one of the pair and sell the other at a profit per base unit)
  * </pre>
  */
 public sealed interface QuestGoal {
@@ -28,6 +31,9 @@ public sealed interface QuestGoal {
     record InterestEarned(long cents) implements QuestGoal {}
     record CdMatured() implements QuestGoal {}
     record LoanRepaid() implements QuestGoal {}
+    record LimitFilled() implements QuestGoal {}
+    record BeatDealer() implements QuestGoal {}
+    record TwoBooks(String big, String small, int ratio) implements QuestGoal {}
 
     static QuestGoal parse(String s) {
         String[] p = s.strip().split(":");
@@ -43,6 +49,9 @@ public sealed interface QuestGoal {
             case "interest_earned" -> new InterestEarned(Long.parseLong(p[1]));
             case "cd_matured" -> new CdMatured();
             case "loan_repaid" -> new LoanRepaid();
+            case "limit_filled" -> new LimitFilled();
+            case "beat_dealer" -> new BeatDealer();
+            case "two_books" -> new TwoBooks(p[1] + ":" + p[2], p[3] + ":" + p[4], Integer.parseInt(p[5]));
             default -> throw new IllegalArgumentException("unknown quest goal '" + s + "'");
         };
     }

@@ -26,6 +26,8 @@ public final class PlayerProgress {
     long trackedDay = Long.MIN_VALUE;
     final Map<String, Integer> dayQty = new LinkedHashMap<>();
     final Map<String, Long> dayGroupCents = new LinkedHashMap<>();
+    /** Today's Floor trades: "B|item" or "S|item" to {qty, cents}. */
+    final Map<String, long[]> dayFloor = new LinkedHashMap<>();
 
     public Optional<String> whyCannotBuy(UnlockNode node, UnlockTree tree, long cashCents) {
         if (nodes.contains(node.id())) return Optional.of("Already unlocked");
@@ -91,11 +93,13 @@ public final class PlayerProgress {
             case ProgressionEvent.Interest e -> e.day();
             case ProgressionEvent.CdRedeemed e -> e.day();
             case ProgressionEvent.LoanRepaid e -> e.day();
+            case ProgressionEvent.FloorOrderDone e -> e.day();
         };
         if (day != trackedDay) {
             trackedDay = day;
             dayQty.clear();
             dayGroupCents.clear();
+            dayFloor.clear();
         }
         Double priorLowest = null;
         switch (event) {
@@ -106,6 +110,9 @@ public final class PlayerProgress {
                 dayGroupCents.merge(s.group(), s.proceedsCents(), Long::sum);
             }
             case ProgressionEvent.Purchase p -> boughtItems.add(p.item());
+            case ProgressionEvent.FloorOrderDone f when f.filledQty() > 0 ->
+                    dayFloor.merge((f.buy() ? "B|" : "S|") + f.item(), new long[] {f.filledQty(), f.filledCents()},
+                            (a, b) -> new long[] {a[0] + b[0], a[1] + b[1]});
             default -> {}
         }
 
@@ -135,6 +142,14 @@ public final class PlayerProgress {
         if (event instanceof ProgressionEvent.Interest i) {
             return goal instanceof QuestGoal.InterestEarned g && i.lifetimeCents() >= g.cents();
         }
+        if (event instanceof ProgressionEvent.FloorOrderDone f) {
+            return switch (goal) {
+                case QuestGoal.LimitFilled() -> !f.market() && f.filledQty() > 0;
+                case QuestGoal.BeatDealer() -> !f.buy() && f.filledQty() > 0 && f.avgMills() > f.dealerBidMills();
+                case QuestGoal.TwoBooks g -> twoBooks(g);
+                default -> false;
+            };
+        }
         if (event instanceof ProgressionEvent.LoanRepaid) {
             return goal instanceof QuestGoal.LoanRepaid;
         }
@@ -150,6 +165,19 @@ public final class PlayerProgress {
                 case QuestGoal.HoldCashAtLeast g -> w.cashCents() >= g.cents();
                 default -> false;
             };
+        }
+        return false;
+    }
+
+    /** Bought one of the pair today and sold the other for more per base unit (one big = {@code ratio} small). */
+    private boolean twoBooks(QuestGoal.TwoBooks g) {
+        long[] bBig = dayFloor.get("B|" + g.big()), sSmall = dayFloor.get("S|" + g.small());
+        long[] bSmall = dayFloor.get("B|" + g.small()), sBig = dayFloor.get("S|" + g.big());
+        if (bBig != null && sSmall != null && sSmall[0] >= g.ratio()) {
+            if (sSmall[1] / (double) sSmall[0] * g.ratio() > bBig[1] / (double) bBig[0]) return true;
+        }
+        if (bSmall != null && sBig != null && bSmall[0] >= g.ratio()) {
+            if (sBig[1] / (double) sBig[0] > bSmall[1] / (double) bSmall[0] * g.ratio()) return true;
         }
         return false;
     }
@@ -201,7 +229,14 @@ public final class PlayerProgress {
     public boolean equals(Object o) {
         return o instanceof PlayerProgress p && nodes.equals(p.nodes) && quests.equals(p.quests)
                 && grants.equals(p.grants) && boughtItems.equals(p.boughtItems) && lowestRatio.equals(p.lowestRatio)
-                && trackedDay == p.trackedDay && dayQty.equals(p.dayQty) && dayGroupCents.equals(p.dayGroupCents);
+                && trackedDay == p.trackedDay && dayQty.equals(p.dayQty) && dayGroupCents.equals(p.dayGroupCents)
+                && floorEquals(dayFloor, p.dayFloor);
+    }
+
+    private static boolean floorEquals(Map<String, long[]> a, Map<String, long[]> b) {
+        if (!a.keySet().equals(b.keySet())) return false;
+        for (String k : a.keySet()) if (!java.util.Arrays.equals(a.get(k), b.get(k))) return false;
+        return true;
     }
 
     @Override

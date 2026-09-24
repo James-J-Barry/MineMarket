@@ -28,4 +28,8 @@ public record OrderRequest(
     public static OrderRequest ioc(String account, String instrument, Side side, long qty, long price) {
         return new OrderRequest(account, instrument, side, qty, price, TimeInForce.IOC);
     }
+
+    public static OrderRequest day(String account, String instrument, Side side, long qty, long price) {
+        return new OrderRequest(account, instrument, side, qty, price, TimeInForce.DAY);
+    }
 }

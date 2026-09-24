@@ -80,6 +80,17 @@ public final class Account {
         put(lockedPositions, instrument, locked - qty);
     }
 
+    /** Save-file restore only. */
+    void restore(long cash, long lockedCash) {
+        this.cash = cash;
+        this.lockedCash = lockedCash;
+    }
+
+    void restorePosition(String instrument, long qty, long locked) {
+        put(positions, instrument, qty);
+        put(lockedPositions, instrument, locked);
+    }
+
     private static void put(Map<String, Long> map, String key, long value) {
         if (value == 0) map.remove(key);
         else map.put(key, value);

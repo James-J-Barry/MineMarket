@@ -35,6 +35,9 @@ public final class ProgressStateIO {
         if (p.trackedDay != Long.MIN_VALUE) w.write("day\t" + p.trackedDay + "\n");
         for (Map.Entry<String, Integer> e : p.dayQty.entrySet()) w.write("day_qty\t" + e.getKey() + "\t" + e.getValue() + "\n");
         for (Map.Entry<String, Long> e : p.dayGroupCents.entrySet()) w.write("day_group\t" + e.getKey() + "\t" + e.getValue() + "\n");
+        for (Map.Entry<String, long[]> e : p.dayFloor.entrySet()) {
+            w.write("day_floor\t" + e.getKey() + "\t" + e.getValue()[0] + "\t" + e.getValue()[1] + "\n");
+        }
         w.flush();
     }
 
@@ -58,6 +61,7 @@ public final class ProgressStateIO {
                     case "day" -> p.trackedDay = Long.parseLong(c[1]);
                     case "day_qty" -> p.dayQty.put(c[1], Integer.parseInt(c[2]));
                     case "day_group" -> p.dayGroupCents.put(c[1], Long.parseLong(c[2]));
+                    case "day_floor" -> p.dayFloor.put(c[1], new long[] {Long.parseLong(c[2]), Long.parseLong(c[3])});
                     default -> throw new IllegalArgumentException("unknown key " + c[0]);
                 }
             } catch (RuntimeException e) {

@@ -62,7 +62,7 @@ class ProgressionTest {
     void defaultDataLoadsAndIsConsistent() {
         assertEquals(4, tree.tier(1).size());
         assertEquals(4000, tree.node("bill_clip").costCents());
-        assertEquals(11, quests.all().size());
+        assertEquals(14, quests.all().size());
         assertEquals(4, blueprints.all().size());
         assertEquals(3, tree.tier(2).size());
         blueprints.validateAgainst(tree);
@@ -252,6 +252,56 @@ class ProgressionTest {
         p.buy(tree.node("price_board"), tree, 1_000_000);
         assertTrue(p.canBuy(vault, tree, 50_000));
         assertEquals("Requires Bank Vault", p.whyCannotBuy(tree.node("certificate_of_deposit"), tree, 1_000_000).orElseThrow());
+    }
+
+    static ProgressionEvent.FloorOrderDone floor(String item, boolean buy, boolean market, long qty, long cents, long dealerBidMills, long day) {
+        return new ProgressionEvent.FloorOrderDone(item, buy, market, qty, cents, dealerBidMills, day);
+    }
+
+    @Test
+    void nameYourPriceNeedsAFilledLimitOrder() {
+        feed(floor(WHEAT, true, true, 10, 500, 450, 1));
+        assertFalse(p.hasCompleted("name_your_price"), "a market order doesn't count");
+        feed(floor(WHEAT, true, false, 0, 0, 450, 1));
+        assertFalse(p.hasCompleted("name_your_price"), "an unfilled limit order doesn't count");
+        assertEquals(List.of("name_your_price"), feed(floor(WHEAT, true, false, 3, 150, 450, 1)));
+    }
+
+    @Test
+    void beatTheDealerNeedsASaleAboveTheDealersBid() {
+        feed(floor(WHEAT, false, false, 64, 2_880, 450, 1)); // 45.0 cents each: equal to the bid
+        assertFalse(p.hasCompleted("beat_the_dealer"), "matching the Dealer isn't beating it");
+        feed(floor(WHEAT, true, false, 64, 3_300, 450, 1));
+        assertFalse(p.hasCompleted("beat_the_dealer"), "buying doesn't count");
+        assertEquals(List.of("beat_the_dealer"), feed(floor(WHEAT, false, false, 64, 3_200, 450, 1))); // 50c > 45c
+    }
+
+    @Test
+    void twoBooksNeedsAProfitableBlockIngotRoundTripInOneDay() {
+        String block = "minecraft:iron_block", ingot = "minecraft:iron_ingot";
+        feed(floor(block, true, false, 2, 14_000, 0, 5));      // $70 a block = $7.78 an ingot
+        feed(floor(ingot, false, false, 18, 13_500, 0, 5));    // $7.50 an ingot: a loss
+        assertFalse(p.hasCompleted("two_books"));
+        feed(floor(ingot, false, false, 9, 7_200, 0, 6));      // next day: $8.00 an ingot, but no block bought today
+        assertFalse(p.hasCompleted("two_books"), "both legs must be the same day");
+        feed(floor(block, true, false, 1, 7_000, 0, 6));
+        assertTrue(p.hasCompleted("two_books"), "bought a block at $70, sold 9 ingots at $8.00 = $72");
+
+        PlayerProgress q = new PlayerProgress();
+        q.apply(floor(ingot, true, false, 18, 12_600, 0, 1), quests);                  // $7.00 an ingot
+        assertEquals(List.of("two_books"), q.apply(floor(block, false, false, 2, 13_000, 0, 1), quests)
+                .stream().map(Quest::id).filter(s -> s.equals("two_books")).toList(), "the reverse works too: $65 > $63");
+    }
+
+    @Test
+    void floorHistorySurvivesASave() throws Exception {
+        feed(floor("minecraft:iron_block", true, false, 1, 7_000, 0, 6));
+        StringWriter w = new StringWriter();
+        ProgressStateIO.write(p, w);
+        PlayerProgress back = ProgressStateIO.read(new StringReader(w.toString()));
+        assertEquals(p, back);
+        back.apply(floor("minecraft:iron_ingot", false, false, 9, 7_200, 0, 6), quests);
+        assertTrue(back.hasCompleted("two_books"));
     }
 
     @Test

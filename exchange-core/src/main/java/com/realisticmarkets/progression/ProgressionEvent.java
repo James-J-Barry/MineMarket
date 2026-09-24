@@ -33,6 +33,17 @@ public sealed interface ProgressionEvent {
     /** A Certificate of Deposit redeemed; {@code matured} is false for early redemption (principal only). */
     record CdRedeemed(long principalCents, long payoutCents, boolean matured, long day) implements ProgressionEvent {}
 
+    /**
+     * A Trading Floor order finished (filled, cancelled or expired). {@code filledCents} is the total paid or
+     * received for {@code filledQty}; {@code dealerBidMills} is what the Dealer would have paid per item at the time.
+     */
+    record FloorOrderDone(String item, boolean buy, boolean market, long filledQty, long filledCents, long dealerBidMills,
+                          long day) implements ProgressionEvent {
+        public double avgMills() {
+            return filledQty == 0 ? 0 : filledCents * 10.0 / filledQty;
+        }
+    }
+
     /** A loan paid off by the borrower (not by liquidation). */
     record LoanRepaid(long principalCents, long interestPaidCents, long day) implements ProgressionEvent {}
 }
