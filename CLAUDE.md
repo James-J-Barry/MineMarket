@@ -7,7 +7,8 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 - **Design doc (source of truth for gameplay):** `docs/design.md`, exported from the "Realistic Markets —
   Game Design Document" Claude Doc. If a request conflicts with it, ask before building.
 - **Current milestone:** M3, Tier 1 content. M2 (Almanac Lectern and Drafting Table) is done; spec in
-  `docs/milestones/M2.md`. M3 has no spec file yet.
+  `docs/milestones/M2.md`. M3 spec: `docs/milestones/M3.md` (draft: its "Decisions for James" must be
+  answered before building).
 - **Owner:** James. He play-tests in the IntelliJ dev client; keep him in the loop on anything that
   changes gameplay feel.
 
@@ -136,7 +137,8 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   Dealer pricing + persistence, 40-item catalog, creative tab. 35 unit tests, 8 GameTests.
 - [x] **M2: Almanac Lectern + Drafting Table.** Upgrades tree, Guides, Quests; per-player blueprints and perks;
   Tier 1 components in the Buy tab. 68 unit tests, 19 GameTests, `sim progression` = 2.0 h. → `docs/milestones/M2.md`
-- [ ] M3: Tier 1 content (Bill Clip, Price Board, Merchant License, Trade Route Crate + Capital dealer)
+- [ ] **M3: Tier 1 content** (Bill Clip, Price Board, Merchant License copy, Trade Route Crate + the Capital).
+  → `docs/milestones/M3.md` (draft)
 - [ ] M4: Banking and item collateral (Bank Vault, Passbook, CD, Loan Note, margin calls)
 - [ ] M5: Trading Floor on the batch auction (order slips, NPC traders, Ticker Tape)
 - [ ] M6–M10: equities, bonds, futures, options, modern finance (ATM, Brokerage)
