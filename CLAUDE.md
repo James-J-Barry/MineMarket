@@ -149,7 +149,6 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
 - Guides quote the design doc's wheat numbers, not the player's own sales (needs per-player sale stats).
 - `sim progression` rests on assumed gathering rates (`sim/src/main/resources/profiles/early_survival.csv`).
 - `capital_catalog.csv` loads from the jar only (not copied to `config/` like the Dealer's files yet).
-- Price Board rendering is unverified headlessly; James checks it in-game.
 - Floating price above the Basic Exchange (design doc) skipped; the screen covers it.
 - Placeholder art: currency, block and GUI textures are generated; James may repaint.
 - `MarketCommands`/`MarketService` (batch auction) are scaffold for M5; the DIAMOND/IRON/WHEAT tickers there
