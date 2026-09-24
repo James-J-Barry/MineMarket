@@ -30,10 +30,15 @@ public final class MarginCheck {
     private MarginCheck() {}
 
     public static Result atDawn(Loan loan, Dealer dealer, long day) {
+        return atDawn(loan, dealer, day, 0);
+    }
+
+    /** As above; the reset floating rate is moved by {@code rateShift} (the central rate's move from its start). */
+    public static Result atDawn(Loan loan, Dealer dealer, long day, double rateShift) {
         long interest = loan.accrueTo(day);
         if (loan.repaid()) return new Result(Status.OK, interest, Double.POSITIVE_INFINITY, List.of(), 0, 0);
         CollateralValuer.Valuation v = loan.value(dealer, day);
-        loan.setRate(v.dailyRate());
+        loan.setRate(Math.max(0.0001, v.dailyRate() + rateShift));
         double coverage = v.coverage(loan.owedCents());
         if (coverage >= CollateralValuer.MAINTENANCE) {
             boolean had = loan.underMarginCall();

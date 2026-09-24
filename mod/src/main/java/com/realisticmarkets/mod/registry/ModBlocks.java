@@ -95,7 +95,8 @@ public final class ModBlocks {
                 new TradingFloorMenu(id, inv, access, FloorService.get(), ProgressionService.get(), DealerService.get()));
 
         NEWSSTAND = registerMenuBlock("newsstand", (id, inv, access) ->
-                new NewsstandMenu(id, inv, access, ProgressionService.get(), DealerService.get()));
+                new NewsstandMenu(id, inv, access, ProgressionService.get(), DealerService.get(),
+                        com.realisticmarkets.mod.bank.BankService.get().centralBank()));
         TICKER_TAPE = registerMenuBlock("ticker_tape", (id, inv, access) ->
                 new TickerTapeMenu(id, inv, access, FloorService.get(), ProgressionService.get(), DealerService.get()));
         STOCK_EXCHANGE = registerMenuBlock("stock_exchange", (id, inv, access) -> new StockExchangeMenu(id, inv, access,

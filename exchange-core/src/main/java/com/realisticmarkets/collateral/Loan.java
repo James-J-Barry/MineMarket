@@ -33,6 +33,12 @@ public final class Loan {
 
     /** Opens a loan of {@code principalCents} against the collateral, if it can back that much. */
     public static Loan open(Map<String, Integer> items, long cashCents, long principalCents, Dealer dealer, long day) {
+        return open(items, cashCents, principalCents, dealer, day, 0);
+    }
+
+    /** As above, with loan rates moved by {@code rateShift} (how far the central rate is from its start). */
+    public static Loan open(Map<String, Integer> items, long cashCents, long principalCents, Dealer dealer, long day,
+                            double rateShift) {
         CollateralValuer.Valuation v = CollateralValuer.value(items, cashCents, dealer, day);
         if (!v.refused().isEmpty()) throw new RejectedException("The bank won't take " + String.join(", ", v.refused()));
         if (principalCents <= 0) throw new RejectedException("Borrow at least a dime");
@@ -45,7 +51,7 @@ public final class Loan {
         l.cashCollateralCents = cashCents;
         l.principalCents = principalCents;
         l.owedCents = principalCents;
-        l.dailyRate = v.dailyRate();
+        l.dailyRate = Math.max(0.0001, v.dailyRate() + rateShift);
         l.openedDay = day;
         l.lastDay = day;
         return l;

@@ -5,6 +5,7 @@ import com.realisticmarkets.collateral.MarginCheck;
 import com.realisticmarkets.contracts.BankAccount;
 import com.realisticmarkets.contracts.BankParams;
 import com.realisticmarkets.contracts.Cd;
+import com.realisticmarkets.rates.CentralBank;
 import com.realisticmarkets.dealer.Dealer;
 import com.realisticmarkets.exchange.RejectedException;
 import com.realisticmarkets.mod.RealisticMarkets;
@@ -59,8 +60,11 @@ public final class BankService {
     private SecurityRegistry registry = new SecurityRegistry();
     private int ticks;
 
-    private BankService(Path dir) {
+    private final CentralBank central;
+
+    private BankService(Path dir, CentralBank central) {
         this.dir = dir;
+        this.central = central;
         if (dir != null) {
             loadRegistry();
             loadLoans();
@@ -68,7 +72,8 @@ public final class BankService {
     }
 
     public static void start(MinecraftServer server) {
-        instance = new BankService(server.getWorldPath(LevelResource.ROOT).resolve(RealisticMarkets.MOD_ID));
+        instance = new BankService(server.getWorldPath(LevelResource.ROOT).resolve(RealisticMarkets.MOD_ID),
+                new CentralBank(server.overworld().getSeed() ^ 0x52617465L)); // "Rate"
     }
 
     public static void stop() {
@@ -83,7 +88,24 @@ public final class BankService {
 
     /** Test instance saving under {@code dir} (null: memory only). */
     public static BankService forTest(Path dir) {
-        return new BankService(dir);
+        return new BankService(dir, CentralBank.constant(CentralBank.START));
+    }
+
+    /** Test instance with a central bank of the test's choosing. */
+    public static BankService forTest(Path dir, CentralBank central) {
+        return new BankService(dir, central);
+    }
+
+    public CentralBank centralBank() { return central; }
+
+    /** What the vault pays a day on {@code day}: the central bank's rate. */
+    public double vaultRate(long day) {
+        return central.rate(day);
+    }
+
+    /** How far bank rates (new CDs, loans) have moved from the configured ones, on {@code day}. */
+    public double rateShift(long day) {
+        return params.shift(central.rate(day));
     }
 
     public BankParams params() { return params; }
@@ -138,7 +160,7 @@ public final class BankService {
     /** Credits any interest due, telling the quests. Returns cents credited. */
     public long accrue(Player player, long day, ProgressionService prog) {
         BankAccount a = account(player.getUUID(), day);
-        long credited = a.accrueTo(day, params.interestRate());
+        long credited = a.accrueTo(day, d -> central.rate(d));
         if (credited > 0) {
             save(player.getUUID());
             if (prog != null) prog.emit(player, new ProgressionEvent.Interest(credited, a.interestTotalCents(), day));
@@ -182,7 +204,7 @@ public final class BankService {
         BankAccount a = account(player.getUUID(), day);
         Cd cd;
         try {
-            cd = Cd.issue(principalCents, params.term(termDays), day, params);
+            cd = Cd.issue(principalCents, params.term(termDays, central.rate(day)), day, params);
             a.withdraw(principalCents, day, BankAccount.Kind.CD_ISSUE);
         } catch (RejectedException | IllegalArgumentException e) {
             return Optional.of(e.getMessage());
@@ -255,7 +277,7 @@ public final class BankService {
         if (items.isEmpty() && cash == 0) return Optional.of("Put collateral in the slots");
         Loan loan;
         try {
-            loan = Loan.open(items, cash, principalCents, dealer, day);
+            loan = Loan.open(items, cash, principalCents, dealer, day, rateShift(day));
         } catch (RejectedException | IllegalArgumentException e) {
             return Optional.of(e.getMessage());
         }
@@ -356,7 +378,7 @@ public final class BankService {
             UUID owner = e.getKey();
             Loan loan = e.getValue();
             if (loan.repaid()) continue;
-            MarginCheck.Result r = MarginCheck.atDawn(loan, dealer, day);
+            MarginCheck.Result r = MarginCheck.atDawn(loan, dealer, day, rateShift(day));
             Player p = online.apply(owner);
             switch (r.status()) {
                 case CALL_ISSUED -> {
@@ -404,7 +426,7 @@ public final class BankService {
         }
         a.passbookIssued();
         ItemStack book = new ItemStack(ModItems.PASSBOOK);
-        PassbookItem.write(book, player.getName().getString(), a, day, params);
+        PassbookItem.write(book, player.getName().getString(), a, day, vaultRate(day));
         inv.placeItemBackInInventory(book);
         save(player.getUUID());
         return Optional.empty();

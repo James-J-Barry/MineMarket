@@ -319,7 +319,8 @@ class GuidesTest {
         String t = text("risk_and_return");
         assertEquals(0.001, DealerParams.defaults().inflation(), 0.0);
         assertEquals(0.003, com.realisticmarkets.contracts.BankParams.loadDefault().interestRate(), 0.0);
-        assertTrue(t.contains("about 0.1% a day") && t.contains("The vault pays 0.3% a day, about 0.2% more"));
+        assertTrue(t.contains("about 0.1% a day") && t.contains("0.3% a day to begin with, about 0.2% more"));
+        assertEquals(com.realisticmarkets.rates.CentralBank.START, com.realisticmarkets.contracts.BankParams.loadDefault().interestRate(), 0.0);
         double lo = 1, hi = 0;
         for (var c : com.realisticmarkets.equities.CompanyCatalog.loadDefault().all()) {
             lo = Math.min(lo, c.requiredReturn());

@@ -177,7 +177,7 @@ public class BankVaultMenu extends AbstractContainerMenu {
         setPair(D_BALANCE, has ? a.balanceCents() : 0);
         long stamp = a.balanceCents() * 31 + a.log().size() * 7L + today;
         if (has && stamp != lastWritten) {
-            PassbookItem.write(passbook, player.getName().getString(), a, today, bank.params());
+            PassbookItem.write(passbook, player.getName().getString(), a, today, bank.vaultRate(today));
             lastWritten = stamp;
         }
         data.set(D_HAS_PERK, progression.progress(player).hasPerk(BankService.CD_PERK) ? 1 : 0);
@@ -221,7 +221,7 @@ public class BankVaultMenu extends AbstractContainerMenu {
             setPair(D_MAX_LOAN, v.maxLoanCents());
             data.set(D_QUALITY, (int) Math.round(v.quality() * 100));
             data.set(D_REFUSED, v.refused().isEmpty() ? 0 : 1);
-            data.set(D_SLOT_RATE, (int) Math.round(v.dailyRate() * 100_000));
+            data.set(D_SLOT_RATE, (int) Math.round(Math.max(0.0001, v.dailyRate() + bank.rateShift(today)) * 100_000));
         }
     }
 

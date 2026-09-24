@@ -56,10 +56,15 @@ public final class BankAccount {
      * (0 if no full day passed). A single INTEREST entry summarizes the credit.
      */
     public long accrueTo(long day, double dailyRate) {
+        return accrueTo(day, d -> dailyRate);
+    }
+
+    /** As {@link #accrueTo(long, double)}, with the rate for each day (the central rate moves). */
+    public long accrueTo(long day, java.util.function.LongToDoubleFunction rateOnDay) {
         if (day <= lastDay) return 0;
         long credited = 0;
         for (long d = lastDay; d < day; d++) {
-            carryCents += balanceCents * dailyRate;
+            carryCents += balanceCents * rateOnDay.applyAsDouble(d);
             long whole = (long) Math.floor(carryCents / 10.0) * 10;
             balanceCents += whole;
             carryCents -= whole;

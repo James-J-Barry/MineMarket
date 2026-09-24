@@ -348,6 +348,26 @@ public class FloorGameTests {
         helper.succeed();
     }
 
+    @GameTest
+    public void theNewsstandReportsRateDecisions(GameTestHelper helper) {
+        ServerPlayer p = helper.makeMockServerPlayerInLevel();
+        DealerService dealer = DealerService.forTest(1234L);
+        ProgressionService prog = ProgressionService.forTest();
+        Wallet.give(p, 661_500);
+        for (String node : new String[] {"bill_clip", "price_board", "bank_vault", "loan_note", "newsstand"}) {
+            check(prog.buyNode(p, node).isEmpty(), "buy " + node);
+        }
+        var central = new com.realisticmarkets.rates.CentralBank(11L);
+        long q = 1;
+        while (central.decisionOn(q * 7).orElseThrow().move() == com.realisticmarkets.rates.CentralBank.Move.HOLD) q++;
+        var d = central.decisionOn(q * 7).orElseThrow();
+        dealer.shiftDays(d.day() + 0.1 - dealer.day(helper.getLevel().getGameTime()));
+        var board = new com.realisticmarkets.mod.menu.NewsstandMenu(1, p.getInventory(), ContainerLevelAccess.NULL, prog, dealer, central);
+        check(board.rateMove() == d.move() && board.rateAge() == 0, "today's rate decision: " + d.move());
+        check(board.rateMilliPct() == Math.round(d.rate() * 100_000), "at its new rate");
+        helper.succeed();
+    }
+
     static void check(boolean condition, String message) {
         if (!condition) throw new IllegalStateException(message);
     }

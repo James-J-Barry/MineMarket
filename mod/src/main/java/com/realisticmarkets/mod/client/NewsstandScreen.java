@@ -7,6 +7,7 @@ import static com.realisticmarkets.mod.client.Panels.RED;
 
 import com.realisticmarkets.dealer.DealerCatalog;
 import com.realisticmarkets.dealer.WorldEvents;
+import com.realisticmarkets.rates.CentralBank;
 import com.realisticmarkets.mod.menu.NewsstandMenu;
 import java.util.List;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -62,13 +63,24 @@ public class NewsstandScreen extends AbstractContainerScreen<NewsstandMenu> {
             g.text(font, "to read the market news.", 11, 52, INK, false);
             return;
         }
-        if (m.storyCount() == 0) {
+        int y = 38, shown = m.storyCount();
+        if (m.rateMove() != null) {
+            boolean raise = m.rateMove() == CentralBank.Move.RAISE;
+            String age = when(m.rateAge());
+            String head = String.format(java.util.Locale.ROOT, "Central bank %s its rate to %.2f%% a day", raise ? "raises" : "cuts",
+                    m.rateMilliPct() / 1000.0);
+            g.text(font, Panels.trim(font, head, w - font.width(age) - 6), 11, y, m.rateAge() == 0 ? HEADLINE_TODAY : INK, false);
+            g.text(font, age, imageWidth - 11 - font.width(age), y, LIGHT_GREY, false);
+            String expect = raise ? "Savings pay more; bond prices lower" : "Savings pay less; bond prices higher";
+            g.text(font, Panels.trim(font, expect, w), 11, y + 10, raise ? GREEN : RED, false);
+            y += 22;
+            shown = Math.min(shown, NewsstandMenu.MAX_STORIES - 1);
+        } else if (m.storyCount() == 0) {
             g.text(font, "A quiet few days: no market news.", 11, 42, LIGHT_GREY, false);
             return;
         }
         List<WorldEvents.Type> types = EVENTS.types();
-        int y = 38;
-        for (int i = 0; i < m.storyCount(); i++) {
+        for (int i = 0; i < shown; i++) {
             int ti = m.storyType(i);
             if (ti < 0 || ti >= types.size()) continue;
             WorldEvents.Type t = types.get(ti);

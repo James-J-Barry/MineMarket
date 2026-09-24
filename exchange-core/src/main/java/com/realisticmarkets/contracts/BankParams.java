@@ -24,6 +24,20 @@ public record BankParams(double interestRate, List<CdTerm> cdTerms, long cdMinim
         cdTerms = List.copyOf(cdTerms);
     }
 
+    /**
+     * How far bank rates have moved: the configured rates are the ones at the starting central rate
+     * ({@link #interestRate()}); when the central rate moves, the vault, new CDs and loans move with it.
+     */
+    public double shift(double centralRate) {
+        return centralRate - interestRate;
+    }
+
+    /** A CD term priced at today's central rate (its premium over the vault kept). */
+    public CdTerm term(int days, double centralRate) {
+        CdTerm t = term(days);
+        return new CdTerm(t.days(), Math.max(0.0001, t.dailyRate() + shift(centralRate)));
+    }
+
     public CdTerm term(int days) {
         for (CdTerm t : cdTerms) if (t.days() == days) return t;
         throw new IllegalArgumentException("no " + days + "-day CD");

@@ -157,6 +157,45 @@ public class BankGameTests {
 
     // ------------------------------------------------------------------ helpers
 
+    @GameTest
+    public void bankRatesFollowTheCentralBank(GameTestHelper helper) {
+        ServerPlayer p = helper.makeMockServerPlayerInLevel();
+        var central = new com.realisticmarkets.rates.CentralBank(11L);
+        long q = 1;
+        while (central.decisionOn(q * 7).orElseThrow().move() != com.realisticmarkets.rates.CentralBank.Move.RAISE) q++;
+        long raiseDay = q * 7;
+        BankService bank = BankService.forTest(null, central);
+        ProgressionService prog = ProgressionService.forTest();
+        Wallet.give(p, 1_000_000);
+        for (String node : new String[] {"bill_clip", "price_board", "bank_vault", "certificate_of_deposit"}) {
+            check(prog.buyNode(p, node).isEmpty(), "buy " + node);
+        }
+        long start = raiseDay - 3;
+        bank.depositAll(p, start, prog);
+        p.getInventory().add(new ItemStack(ModItems.SECURITY_PAPER, 2));
+        check(bank.issueCd(p, 50_000, 21, start, prog).isEmpty(), "a CD before the raise");
+        long balance = bank.account(p.getUUID(), start).balanceCents();
+        var expected = new com.realisticmarkets.contracts.BankAccount(start);
+        expected.deposit(balance, start, com.realisticmarkets.contracts.BankAccount.Kind.DEPOSIT);
+        expected.accrueTo(raiseDay + 4, d -> central.rate(d));
+        bank.accrue(p, raiseDay + 4, prog);
+        check(bank.account(p.getUUID(), raiseDay + 4).balanceCents() == expected.balanceCents(),
+                "the vault pays each day's central rate: " + bank.account(p.getUUID(), raiseDay + 4).balanceCents() + " vs " + expected.balanceCents());
+        check(bank.vaultRate(raiseDay) > bank.vaultRate(raiseDay - 1), "and a raise shows at once");
+        check(bank.issueCd(p, 50_000, 21, raiseDay + 4, prog).isEmpty(), "a CD after the raise");
+        java.util.List<Long> values = new java.util.ArrayList<>(); // each CD's value once both have matured
+        for (int i = 0; i < p.getInventory().getContainerSize(); i++) {
+            ItemStack s = p.getInventory().getItem(i);
+            if (s.is(ModItems.CERTIFICATE_OF_DEPOSIT)) values.add(bank.cdValue(s, raiseDay + 4 + 21));
+        }
+        check(values.size() == 2, "two CDs");
+        java.util.Collections.sort(values);
+        var cdBefore = com.realisticmarkets.contracts.Cd.issue(50_000, bank.params().term(21), 0, bank.params());
+        check(values.get(0) == cdBefore.valueAtMaturityCents(), "the old CD kept its rate: " + values);
+        check(values.get(1) > values.get(0), "the new CD pays more: " + values);
+        helper.succeed();
+    }
+
     static ItemStack bill(Denomination d, int n) {
         return new ItemStack(ModItems.CURRENCY.get(d), n);
     }

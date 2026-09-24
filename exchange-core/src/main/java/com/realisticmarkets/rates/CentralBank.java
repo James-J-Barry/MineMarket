@@ -25,11 +25,22 @@ public final class CentralBank {
     public record Decision(long day, Move move, double rate, double delay) {}
 
     private final long seed;
+    private final boolean frozen;
     private final List<Decision> decisions = new ArrayList<>(); // index = review number (0 = the start)
 
     public CentralBank(long seed) {
+        this(seed, START, false);
+    }
+
+    private CentralBank(long seed, double start, boolean frozen) {
         this.seed = seed;
-        decisions.add(new Decision(0, Move.HOLD, START, 0));
+        this.frozen = frozen;
+        decisions.add(new Decision(0, Move.HOLD, start, 0));
+    }
+
+    /** A central bank that never moves its rate (tests with exact numbers). */
+    public static CentralBank constant(double rate) {
+        return new CentralBank(0, rate, true);
     }
 
     private Decision review(int n) {
@@ -39,7 +50,7 @@ public final class CentralBank {
             SplittableRandom rnd = new SplittableRandom(seed ^ (k * 0x9E3779B97F4A7C15L) ^ 0x43656E7472616CL);
             double pull = Math.max(-1, Math.min(1, (LONG_RUN - r) / (2 * STEP)));
             double u = rnd.nextDouble(), raise = 0.25 + 0.2 * pull, cut = 0.25 - 0.2 * pull;
-            Move m = u < raise ? Move.RAISE : u > 1 - cut ? Move.CUT : Move.HOLD;
+            Move m = frozen ? Move.HOLD : u < raise ? Move.RAISE : u > 1 - cut ? Move.CUT : Move.HOLD;
             double next = switch (m) {
                 case RAISE -> Math.min(MAX, r + STEP);
                 case CUT -> Math.max(MIN, r - STEP);

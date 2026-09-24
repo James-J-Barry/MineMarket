@@ -43,10 +43,10 @@ public class PassbookItem extends Item {
         return InteractionResult.SUCCESS;
     }
 
-    public static void write(ItemStack book, String owner, BankAccount a, long day, BankParams params) {
+    public static void write(ItemStack book, String owner, BankAccount a, long day, double dailyRate) {
         List<Filterable<Component>> pages = new ArrayList<>();
         pages.add(page("Passbook\n" + owner + "\n\nBalance\n" + Money.format(a.balanceCents()) + "\nas of day " + day
-                + "\n\nInterest " + String.format(Locale.ROOT, "%.2f%%", params.interestRate() * 100) + " a day"
+                + "\n\nInterest " + String.format(Locale.ROOT, "%.2f%%", dailyRate * 100) + " a day today"
                 + "\nEarned so far " + Money.format(a.interestTotalCents())));
         List<BankAccount.Entry> log = new ArrayList<>(a.log());
         java.util.Collections.reverse(log); // newest first
