@@ -28,6 +28,8 @@ public final class BankAccount {
     private double carryCents;
     private long lastDay;
     private long interestTotalCents;
+    private String vaultLocation; // where the owner's one Bank Vault stands; null when none is placed
+    private int passbooksIssued;   // the first Passbook is free, later ones cost a Ledger Paper
     private final Deque<Entry> log = new ArrayDeque<>();
 
     /** A new, empty account whose interest starts counting from {@code day}. */
@@ -39,6 +41,10 @@ public final class BankAccount {
     public long interestTotalCents() { return interestTotalCents; }
     public long lastDay() { return lastDay; }
     public List<Entry> log() { return List.copyOf(log); }
+    public String vaultLocation() { return vaultLocation; }
+    public void setVaultLocation(String location) { vaultLocation = location; }
+    public int passbooksIssued() { return passbooksIssued; }
+    public void passbookIssued() { passbooksIssued++; }
 
     /** True when nothing is held (the vault block may be broken). */
     public boolean isEmpty() {
@@ -93,6 +99,8 @@ public final class BankAccount {
         w.write("carry\t" + carryCents + "\n");
         w.write("last_day\t" + lastDay + "\n");
         w.write("interest_total\t" + interestTotalCents + "\n");
+        if (vaultLocation != null) w.write("vault\t" + vaultLocation + "\n");
+        if (passbooksIssued > 0) w.write("passbooks\t" + passbooksIssued + "\n");
         for (Entry e : log) w.write("log\t" + e.day() + "\t" + e.kind() + "\t" + e.amountCents() + "\t" + e.balanceCents() + "\n");
         w.flush();
     }
@@ -114,6 +122,8 @@ public final class BankAccount {
                     case "carry" -> a.carryCents = Double.parseDouble(c[1]);
                     case "last_day" -> a.lastDay = Long.parseLong(c[1]);
                     case "interest_total" -> a.interestTotalCents = Long.parseLong(c[1]);
+                    case "vault" -> a.vaultLocation = c[1];
+                    case "passbooks" -> a.passbooksIssued = Integer.parseInt(c[1]);
                     case "log" -> entries.add(new Entry(Long.parseLong(c[1]), Kind.valueOf(c[2]), Long.parseLong(c[3]),
                             Long.parseLong(c[4])));
                     default -> throw new IllegalArgumentException("unknown key " + c[0]);
@@ -129,7 +139,8 @@ public final class BankAccount {
     @Override
     public boolean equals(Object o) {
         return o instanceof BankAccount b && balanceCents == b.balanceCents && carryCents == b.carryCents
-                && lastDay == b.lastDay && interestTotalCents == b.interestTotalCents && List.copyOf(log).equals(List.copyOf(b.log));
+                && lastDay == b.lastDay && interestTotalCents == b.interestTotalCents
+                && java.util.Objects.equals(vaultLocation, b.vaultLocation) && passbooksIssued == b.passbooksIssued && List.copyOf(log).equals(List.copyOf(b.log));
     }
 
     @Override

@@ -40,6 +40,10 @@ public final class ModCreativeTab {
                             output.accept(ModItems.BILL_CLIP);
                             output.accept(ModBlocks.PRICE_BOARD);
                             output.accept(ModBlocks.TRADE_ROUTE_CRATE);
+                            output.accept(ModBlocks.BANK_VAULT);
+                            output.accept(ModItems.LOCK_MECHANISM);
+                            output.accept(ModItems.SECURITY_PAPER);
+                            output.accept(ModItems.PASSBOOK);
                         })
                         .build());
     }

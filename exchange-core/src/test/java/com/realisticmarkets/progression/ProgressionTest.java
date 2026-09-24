@@ -60,7 +60,8 @@ class ProgressionTest {
         assertEquals(4, tree.tier(1).size());
         assertEquals(4000, tree.node("bill_clip").costCents());
         assertEquals(10, quests.all().size());
-        assertEquals(3, blueprints.all().size());
+        assertEquals(4, blueprints.all().size());
+        assertEquals(2, tree.tier(2).size());
         blueprints.validateAgainst(tree);
         for (UnlockNode n : tree.all()) {
             if (n.requiredQuest() != null) assertTrue(quests.has(n.requiredQuest()), n.id());
@@ -227,6 +228,27 @@ class ProgressionTest {
         feed(new ProgressionEvent.CdRedeemed(50_000, 50_000, false, 3));
         assertFalse(p.hasCompleted("locked_in"), "early redemption doesn't count");
         assertEquals(List.of("locked_in"), feed(new ProgressionEvent.CdRedeemed(50_000, 51_590, true, 10)));
+    }
+
+    @Test
+    void componentGrantsMakeAComponentVisibleWithoutABlueprint() {
+        String paper = "realisticmarkets:security_paper";
+        Set<String> all = Set.of(BRASS, INK, LEDGER, paper);
+        UnlockTree t = new UnlockTree(List.of(
+                new UnlockNode("cd", "CD", 1, 0, List.of(), null, List.of("perk:certificate_of_deposit", "component:" + paper))));
+        assertFalse(blueprints.componentsVisibleTo(p, all).contains(paper));
+        p.buy(t.node("cd"), t, 0);
+        assertEquals(Set.of(paper), blueprints.componentsVisibleTo(p, all));
+    }
+
+    @Test
+    void tierTwoNeedsHalfOfTierOne() {
+        UnlockNode vault = tree.node("bank_vault");
+        assertEquals("Unlock half of Tier 1 first", p.whyCannotBuy(vault, tree, 1_000_000).orElseThrow());
+        p.buy(tree.node("bill_clip"), tree, 1_000_000);
+        p.buy(tree.node("price_board"), tree, 1_000_000);
+        assertTrue(p.canBuy(vault, tree, 50_000));
+        assertEquals("Requires Bank Vault", p.whyCannotBuy(tree.node("certificate_of_deposit"), tree, 1_000_000).orElseThrow());
     }
 
     @Test

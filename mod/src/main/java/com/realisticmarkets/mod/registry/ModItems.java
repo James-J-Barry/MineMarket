@@ -1,6 +1,7 @@
 package com.realisticmarkets.mod.registry;
 
 import com.realisticmarkets.mod.RealisticMarkets;
+import com.realisticmarkets.mod.bank.PassbookItem;
 import com.realisticmarkets.mod.item.BillClipItem;
 import com.realisticmarkets.money.Denomination;
 import java.util.EnumMap;
@@ -24,6 +25,12 @@ public final class ModItems {
     /** Tier 1 components: buy-only from the Dealer. No recipes, loot or villager trades. */
     public static Item LEDGER_PAPER, INK_BOTTLE, BRASS_FITTINGS;
 
+    /** Tier 2 components. */
+    public static Item LOCK_MECHANISM, SECURITY_PAPER;
+
+    /** Bank papers: the Passbook (balance and history) and Certificates of Deposit (bearer papers). */
+    public static Item PASSBOOK, CERTIFICATE_OF_DEPOSIT;
+
     /** Tier 1 item made only at the Drafting Table (the Price Board and Trade Route Crate are blocks). */
     public static Item BILL_CLIP;
 
@@ -34,6 +41,10 @@ public final class ModItems {
         LEDGER_PAPER = register("ledger_paper", Item::new, new Item.Properties());
         INK_BOTTLE = register("ink_bottle", Item::new, new Item.Properties());
         BRASS_FITTINGS = register("brass_fittings", Item::new, new Item.Properties());
+        LOCK_MECHANISM = register("lock_mechanism", Item::new, new Item.Properties());
+        SECURITY_PAPER = register("security_paper", Item::new, new Item.Properties());
+        PASSBOOK = register("passbook", PassbookItem::new, new Item.Properties().stacksTo(1));
+        CERTIFICATE_OF_DEPOSIT = register("certificate_of_deposit", Item::new, new Item.Properties().stacksTo(1));
         BILL_CLIP = register("bill_clip", BillClipItem::new, new Item.Properties().stacksTo(1)
                 .component(DataComponents.CONTAINER, ItemContainerContents.EMPTY));
     }

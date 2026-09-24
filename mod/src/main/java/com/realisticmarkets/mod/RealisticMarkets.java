@@ -1,5 +1,6 @@
 package com.realisticmarkets.mod;
 
+import com.realisticmarkets.mod.bank.BankService;
 import com.realisticmarkets.mod.dealer.CapitalService;
 import com.realisticmarkets.mod.dealer.DealerCommands;
 import com.realisticmarkets.mod.dealer.DealerService;
@@ -46,12 +47,15 @@ public final class RealisticMarkets implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(SERVICE::onServerTick);
         ServerTickEvents.END_SERVER_TICK.register(DealerService::tick);
         ServerTickEvents.END_SERVER_TICK.register(CapitalService::tick);
+        ServerTickEvents.END_SERVER_TICK.register(BankService::tick);
         ServerLifecycleEvents.SERVER_STARTED.register(DealerService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(ProgressionService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(CapitalService::start);
+        ServerLifecycleEvents.SERVER_STARTED.register(BankService::start);
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> DealerService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> ProgressionService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> CapitalService.stop());
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> BankService.stop());
 
         LOGGER.info("Realistic Markets loaded");
     }

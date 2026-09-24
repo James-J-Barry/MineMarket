@@ -70,6 +70,8 @@ class BankTest {
         a.deposit(12_340, 3, BankAccount.Kind.DEPOSIT);
         a.accrueTo(9, params.interestRate());
         a.withdraw(1_000, 9, BankAccount.Kind.WITHDRAW);
+        a.setVaultLocation("minecraft:overworld|4|70|-2");
+        a.passbookIssued();
         StringWriter w = new StringWriter();
         a.write(w);
         assertEquals(a, BankAccount.read(new StringReader(w.toString())));

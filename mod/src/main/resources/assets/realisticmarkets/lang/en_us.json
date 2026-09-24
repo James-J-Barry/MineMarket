@@ -20,5 +20,11 @@
   "container.realisticmarkets.bill_clip": "Bill Clip",
   "block.realisticmarkets.price_board": "Price Board",
   "block.realisticmarkets.trade_route_crate": "Trade Route Crate",
-  "container.realisticmarkets.trade_route_crate": "Trade Route Crate"
+  "container.realisticmarkets.trade_route_crate": "Trade Route Crate",
+  "block.realisticmarkets.bank_vault": "Bank Vault",
+  "container.realisticmarkets.bank_vault": "Bank Vault",
+  "item.realisticmarkets.lock_mechanism": "Lock Mechanism",
+  "item.realisticmarkets.security_paper": "Security Paper",
+  "item.realisticmarkets.passbook": "Passbook",
+  "item.realisticmarkets.certificate_of_deposit": "Certificate of Deposit"
 }

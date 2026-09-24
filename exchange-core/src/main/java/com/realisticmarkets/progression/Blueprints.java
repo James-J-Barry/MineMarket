@@ -74,9 +74,10 @@ public final class Blueprints {
         return byResult.values();
     }
 
-    /** Components the player may buy: those used by a blueprint they have unlocked. */
+    /** Components the player may buy: those used by a blueprint they have unlocked, or granted outright. */
     public Set<String> componentsVisibleTo(PlayerProgress progress, Set<String> componentIds) {
         Set<String> visible = new LinkedHashSet<>();
+        for (String id : componentIds) if (progress.grants().contains("component:" + id)) visible.add(id);
         for (Blueprint b : byResult.values()) {
             if (!progress.hasBlueprint(b.result())) continue;
             for (Blueprint.Material m : b.materials()) if (componentIds.contains(m.item())) visible.add(m.item());

@@ -4,3 +4,4 @@ result,node,materials...
 realisticmarkets:bill_clip,bill_clip,minecraft:leather*2,realisticmarkets:brass_fittings*1
 realisticmarkets:price_board,price_board,minecraft:oak_planks*4,minecraft:glass_pane*1,realisticmarkets:brass_fittings*2,realisticmarkets:ink_bottle*1
 realisticmarkets:trade_route_crate,trade_route_crate,#minecraft:planks*6,minecraft:iron_ingot*2,realisticmarkets:brass_fittings*2,realisticmarkets:ledger_paper*1
+realisticmarkets:bank_vault,bank_vault,minecraft:iron_block*8,realisticmarkets:lock_mechanism*1,realisticmarkets:ledger_paper*1

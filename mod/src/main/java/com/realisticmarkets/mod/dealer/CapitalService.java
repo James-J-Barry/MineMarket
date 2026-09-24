@@ -7,6 +7,7 @@ import com.realisticmarkets.dealer.DealerStateIO;
 import com.realisticmarkets.dealer.ShipmentBook;
 import com.realisticmarkets.exchange.RejectedException;
 import com.realisticmarkets.mod.RealisticMarkets;
+import com.realisticmarkets.mod.block.Locations;
 import com.realisticmarkets.mod.block.TradeRouteCrateBlockEntity;
 import com.realisticmarkets.mod.progression.ProgressionService;
 import com.realisticmarkets.money.Money;
@@ -28,17 +29,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.LevelResource;
 
 /**
@@ -165,7 +160,7 @@ public final class CapitalService {
             return;
         }
         Function<UUID, Player> online = id -> server.getPlayerList().getPlayer(id);
-        instance.settle(location -> crateAt(server, location), online, prog, day);
+        instance.settle(location -> Locations.find(server, location, TradeRouteCrateBlockEntity.class), online, prog, day);
         instance.deliverPending(online, prog);
         if (instance.ticks % DealerService.SAVE_INTERVAL_TICKS == 0) instance.save();
     }
@@ -204,20 +199,6 @@ public final class CapitalService {
             any = true;
         }
         if (any) save();
-    }
-
-    private static TradeRouteCrateBlockEntity crateAt(MinecraftServer server, String location) {
-        String[] p = location.split("\\|");
-        if (p.length != 4) return null;
-        ServerLevel level = server.getLevel(ResourceKey.create(Registries.DIMENSION, Identifier.parse(p[0])));
-        if (level == null) return null;
-        BlockPos pos = new BlockPos(Integer.parseInt(p[1]), Integer.parseInt(p[2]), Integer.parseInt(p[3]));
-        if (!level.isLoaded(pos)) return null;
-        return level.getBlockEntity(pos) instanceof TradeRouteCrateBlockEntity c ? c : null;
-    }
-
-    public static String location(Level level, BlockPos pos) {
-        return level.dimension().identifier() + "|" + pos.getX() + "|" + pos.getY() + "|" + pos.getZ();
     }
 
     // ------------------------------------------------------------------ persistence

@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "realisticmarkets:block/bank_vault"
+    }
+  }
+}

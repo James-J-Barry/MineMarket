@@ -1,6 +1,7 @@
 package com.realisticmarkets.mod.registry;
 
 import com.realisticmarkets.mod.RealisticMarkets;
+import com.realisticmarkets.mod.block.BankVaultBlock;
 import com.realisticmarkets.mod.block.BasicExchangeBlock;
 import com.realisticmarkets.mod.block.MenuBlock;
 import com.realisticmarkets.mod.block.PriceBoardBlock;
@@ -29,6 +30,7 @@ public final class ModBlocks {
     public static Block DRAFTING_TABLE;
     public static Block PRICE_BOARD;
     public static Block TRADE_ROUTE_CRATE;
+    public static Block BANK_VAULT;
 
     public static void init() {
         ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("basic_exchange"));
@@ -65,6 +67,17 @@ public final class ModBlocks {
                         .strength(2.5f)
                         .sound(SoundType.WOOD)));
         ModItems.register("trade_route_crate", props -> new BlockItem(TRADE_ROUTE_CRATE, props),
+                new Item.Properties().useBlockDescriptionPrefix());
+
+        ResourceKey<Block> vaultKey = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("bank_vault"));
+        BANK_VAULT = Registry.register(BuiltInRegistries.BLOCK, vaultKey,
+                new BankVaultBlock(BlockBehaviour.Properties.of()
+                        .setId(vaultKey)
+                        .mapColor(MapColor.METAL)
+                        .strength(5.0f, 3_600_000.0f)
+                        .requiresCorrectToolForDrops()
+                        .sound(SoundType.METAL)));
+        ModItems.register("bank_vault", props -> new BlockItem(BANK_VAULT, props),
                 new Item.Properties().useBlockDescriptionPrefix());
     }
 
