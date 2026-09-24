@@ -54,6 +54,7 @@ public final class FloorSim {
 
     static Market market(FloorCatalog.Book book, long seed) {
         Dealer dealer = new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), seed);
+        dealer.setShocks(com.realisticmarkets.dealer.WorldEvents.loadDefault(dealer.catalog(), seed));
         Exchange ex = new Exchange();
         long fair = Math.round(dealer.fairValue(book.item(), 0) * 100);
         return new Market(ex, new AgentPopulation(ex, book, fair, seed), dealer, book.item(), new double[] {0});

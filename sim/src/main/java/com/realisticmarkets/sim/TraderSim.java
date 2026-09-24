@@ -5,6 +5,7 @@ import com.realisticmarkets.agents.TradingFloor;
 import com.realisticmarkets.dealer.Dealer;
 import com.realisticmarkets.dealer.DealerCatalog;
 import com.realisticmarkets.dealer.DealerParams;
+import com.realisticmarkets.dealer.WorldEvents;
 import com.realisticmarkets.exchange.Exchange;
 import com.realisticmarkets.exchange.PriceHistory;
 import com.realisticmarkets.exchange.RejectedException;
@@ -51,14 +52,19 @@ public final class TraderSim {
         World(long seed) {
             Dealer d = new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), seed);
             this.dealerRef = d;
-            floor = new TradingFloor(new Exchange(), new PriceHistory(), FloorCatalog.loadDefault(), this::fair, seed);
+            d.setShocks(WorldEvents.loadDefault(d.catalog(), seed ^ 0x4576656E7473L));
+            floor = new TradingFloor(new Exchange(), new PriceHistory(), FloorCatalog.loadDefault(), this::dealerFair, seed);
             slipCents = freeSlips ? 0 : Math.round(d.quoteBuy("realisticmarkets:ledger_paper", 1, 0, true).cents() / 8.0);
         }
 
         final Dealer dealerRef;
 
-        long fair(String item) {
+        long dealerFair(String item) {
             return Math.max(1, Math.round(dealerRef.fairValue(item, day) * 100));
+        }
+
+        long fair(String item) {
+            return floor.fairOnFloor(item, dealerFair(item), day);
         }
 
         void auctions(int n) {

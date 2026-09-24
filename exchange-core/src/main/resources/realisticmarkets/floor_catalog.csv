@@ -3,14 +3,16 @@
 # depth: how much stock (items) the NPC population holds in total, spread over its traders; NPC cash is sized
 #   to match at fair value. Bigger depth = a deeper book that moves less when you trade.
 # noise, fundamentalists, momentum: how many of each trader type (plus one market maker per book).
+# basis (optional): for a book priced from another item (iron block = 9 ingots at the Dealer), how far its own supply
+#   and demand move it from that price: standard deviation of the log gap, mean-reverting with a 1-day half-life.
 # Iron ingots and iron blocks are separate books on purpose: the price gap between them is real arbitrage.
-item,half_spread,depth,noise,fundamentalists,momentum
+item,half_spread,depth,noise,fundamentalists,momentum,basis
 minecraft:wheat,0.012,512,6,3,2
 minecraft:carrot,0.012,512,6,3,2
 minecraft:oak_log,0.02,384,6,3,2
 minecraft:coal,0.015,384,6,3,2
 minecraft:iron_ingot,0.015,256,6,5,2
-minecraft:iron_block,0.02,48,8,3,1
+minecraft:iron_block,0.02,48,8,3,1,0.05
 minecraft:gold_ingot,0.015,128,6,3,2
 minecraft:redstone,0.02,384,6,3,2
 minecraft:emerald,0.015,64,5,3,2

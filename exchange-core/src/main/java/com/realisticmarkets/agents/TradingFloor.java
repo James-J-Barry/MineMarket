@@ -77,12 +77,15 @@ public final class TradingFloor {
     private final PriceHistory history;
     private final Map<String, AgentPopulation> pops = new LinkedHashMap<>();
     private final Map<Long, Ticket> tickets = new LinkedHashMap<>();
+    private final long seed;
+    private final Map<String, double[]> basisCache = new LinkedHashMap<>(); // item -> {quarter, basis}
 
     /** A fresh floor or a reloaded one: {@code ex} and {@code history} may come from save files. */
     public TradingFloor(Exchange ex, PriceHistory history, FloorCatalog catalog, ToLongFunction<String> fairCents, long seed) {
         this.ex = ex;
         this.history = history;
         this.catalog = catalog;
+        this.seed = seed;
         long s = seed;
         for (FloorCatalog.Book b : catalog.all()) pops.put(b.item(), new AgentPopulation(ex, b, fairCents.applyAsLong(b.item()), s++));
     }
@@ -96,6 +99,41 @@ public final class TradingFloor {
         List<Ticket> out = new ArrayList<>();
         for (Ticket t : tickets.values()) if (t.account.equals(account)) out.add(t);
         return out;
+    }
+
+    /** Basis mean-reverts with this half-life. */
+    public static final double BASIS_HALF_LIFE_DAYS = 1.0;
+    private static final double BASIS_STEP_DAYS = 0.25;
+    private static final int BASIS_STEPS_KEPT = 40; // 0.5^(40/4) = 0.1%: older steps no longer matter
+
+    /**
+     * The Floor's own fair value for a book: the Dealer's, moved by the book's basis. Only books priced from another
+     * item (iron block) have one, so the iron block book and the ingot book drift apart and back.
+     */
+    public long fairOnFloor(String item, long dealerFairCents, double day) {
+        return Math.max(1, Math.round(dealerFairCents * Math.exp(basis(item, day))));
+    }
+
+    /**
+     * Log basis at {@code day}: a mean-reverting walk in quarter-day steps, derived from the seed and the step
+     * number alone (no save state), with long-run standard deviation {@link FloorCatalog.Book#basis()}.
+     */
+    public double basis(String item, double day) {
+        FloorCatalog.Book b = catalog.trades(item) ? catalog.book(item) : null;
+        if (b == null || b.basis() == 0) return 0;
+        long q = (long) Math.floor(day / BASIS_STEP_DAYS);
+        double[] cached = basisCache.get(item);
+        if (cached != null && cached[0] == q) return cached[1];
+        double phi = Math.pow(0.5, BASIS_STEP_DAYS / BASIS_HALF_LIFE_DAYS);
+        double innov = b.basis() * Math.sqrt(1 - phi * phi);
+        double sum = 0, w = 1;
+        for (int k = 0; k < BASIS_STEPS_KEPT; k++, w *= phi) {
+            long step = q - k;
+            long mix = seed ^ (item.hashCode() * 0x9E3779B97F4A7C15L) ^ (step * 0xBF58476D1CE4E5B9L);
+            sum += w * innov * new java.util.SplittableRandom(mix).nextGaussian();
+        }
+        basisCache.put(item, new double[] {q, sum});
+        return sum;
     }
 
     /** Last clearing price, or fair value before the first trade. */

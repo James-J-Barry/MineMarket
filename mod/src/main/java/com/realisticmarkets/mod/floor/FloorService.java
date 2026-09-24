@@ -122,8 +122,9 @@ public final class FloorService {
         return Math.max(1, Math.round(d.fairValue(item, day) * 100));
     }
 
+    /** The Floor's fair value for a book: the Dealer's, moved by the book's own basis (iron block vs ingots). */
     public long fairCents(String item, double day) {
-        return fairCents(dealer.dealer(), item, day);
+        return floor.fairOnFloor(item, fairCents(dealer.dealer(), item, day), day);
     }
 
     public long ticksToAuction() {

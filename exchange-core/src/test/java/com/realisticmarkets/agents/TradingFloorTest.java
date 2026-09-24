@@ -104,4 +104,27 @@ class TradingFloorTest {
         assertEquals(500, back.exchange().account("p").lockedCash(), "escrow survives");
         assertEquals(TradingFloor.Ending.EXPIRED, back.dawn(2).getFirst().ending());
     }
+
+    @Test
+    void ironBlockHasItsOwnBasisAndIngotsDoNot() {
+        TradingFloor a = new TradingFloor(new Exchange(), new PriceHistory(), FloorCatalog.loadDefault(), item -> 100, 5L);
+        TradingFloor b = new TradingFloor(new Exchange(), new PriceHistory(), FloorCatalog.loadDefault(), item -> 100, 5L);
+        double sumSq = 0, lag = 0;
+        int n = 0, wide = 0;
+        for (double d = 0; d < 400; d += 0.25) {
+            double x = a.basis("minecraft:iron_block", d);
+            assertEquals(x, b.basis("minecraft:iron_block", d), 0.0, "deterministic");
+            assertEquals(0.0, a.basis("minecraft:iron_ingot", d), 0.0);
+            sumSq += x * x;
+            lag += x * a.basis("minecraft:iron_block", d + 1.0);
+            if (Math.abs(x) > 0.03) wide++;
+            n++;
+        }
+        double sd = Math.sqrt(sumSq / n);
+        assertEquals(0.05, sd, 0.012, "basis standard deviation");
+        assertEquals(0.5, lag / sumSq, 0.2, "half-life about a day");
+        assertTrue(wide > n / 3, "the gap is wide enough to trade (over 3%) much of the time: " + wide + " of " + n);
+        assertEquals(Math.round(9_000 * Math.exp(a.basis("minecraft:iron_block", 3.3))),
+                a.fairOnFloor("minecraft:iron_block", 9_000, 3.3));
+    }
 }

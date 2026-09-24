@@ -17,8 +17,18 @@ import java.util.Map;
 public final class FloorCatalog {
     public static final String DEFAULT_RESOURCE = "/realisticmarkets/floor_catalog.csv";
 
-    public record Book(String item, double halfSpread, long depth, int noise, int fundamentalists, int momentum) {
+    /**
+     * @param basis for a book whose Dealer price comes from another item (iron block = 9 ingots): how far its own
+     *              supply and demand move it from that price (standard deviation of log basis; 0 = none)
+     */
+    public record Book(String item, double halfSpread, long depth, int noise, int fundamentalists, int momentum,
+                       double basis) {
+        public Book(String item, double halfSpread, long depth, int noise, int fundamentalists, int momentum) {
+            this(item, halfSpread, depth, noise, fundamentalists, momentum, 0);
+        }
+
         public Book {
+            if (basis < 0 || basis > 0.5) throw new IllegalArgumentException(item + ": basis out of range");
             if (halfSpread <= 0 || halfSpread >= 0.5) throw new IllegalArgumentException(item + ": half_spread out of range");
             if (depth <= 0) throw new IllegalArgumentException(item + ": depth must be positive");
             if (noise < 0 || fundamentalists < 0 || momentum < 0) throw new IllegalArgumentException(item + ": negative trader count");
@@ -54,7 +64,8 @@ public final class FloorCatalog {
             String[] c = t.split(",");
             try {
                 rows.add(new Book(c[0].strip(), Double.parseDouble(c[1]), Long.parseLong(c[2].strip()), Integer.parseInt(c[3].strip()),
-                        Integer.parseInt(c[4].strip()), Integer.parseInt(c[5].strip())));
+                        Integer.parseInt(c[4].strip()), Integer.parseInt(c[5].strip()),
+                        c.length > 6 && !c[6].isBlank() ? Double.parseDouble(c[6]) : 0));
             } catch (RuntimeException e) {
                 throw new IllegalArgumentException("floor line " + n + ": " + e.getMessage(), e);
             }
