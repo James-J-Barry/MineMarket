@@ -127,4 +127,35 @@ class TradingFloorTest {
         assertEquals(Math.round(9_000 * Math.exp(a.basis("minecraft:iron_block", 3.3))),
                 a.fairOnFloor("minecraft:iron_block", 9_000, 3.3));
     }
+
+    @Test
+    void repricingARestingBuyKeepsTheTicketAndCollectsOnlyTheDifference() {
+        TradingFloor f = floor();
+        TradingFloor.Ticket t = f.place("p", WHEAT, Side.BUY, 20, 25, false, 450, 1); // $5.00 held
+        run(f, 5, 1);
+        assertEquals(20 * 30 - 20 * 25, f.repriceCost("p", t.orderId(), 30), "raising to 30c needs $1.00 more");
+        assertThrows(RejectedException.class, () -> f.reprice("p", t.orderId(), 30, 50, 1));
+        TradingFloor.Ticket up = f.reprice("p", t.orderId(), 30, 100, 1);
+        assertEquals(1, f.openTickets("p").size());
+        assertEquals(30, up.limitCents());
+        assertEquals(0, f.available("p").cents(), "nothing spare: all $6.00 is held by the order");
+        TradingFloor.Ticket down = f.reprice("p", up.orderId(), 20, 0, 1);
+        assertEquals(200, f.available("p").cents(), "lowering the bid frees $2.00 for collection");
+        assertEquals(0, f.repriceCost("p", down.orderId(), 30), "and that spare cash covers raising it again");
+        List<TradingFloor.Receipt> expired = f.dawn(2);
+        assertEquals(1, expired.size());
+        assertEquals(600, f.available("p").cents(), "everything comes back at dawn: $6.00");
+    }
+
+    @Test
+    void repricingASellUpToTheMarketFillsIt() {
+        TradingFloor f = floor();
+        TradingFloor.Ticket t = f.place("p", WHEAT, Side.SELL, 16, 80, false, 450, 1); // far above the market
+        assertTrue(run(f, 10, 1).isEmpty());
+        f.reprice("p", t.orderId(), 45, 0, 1);
+        List<TradingFloor.Receipt> r = run(f, 60, 1);
+        assertEquals(1, r.size());
+        assertEquals(16, r.getFirst().filledQty(), "one ticket, one receipt, all 16 sold");
+        assertThrows(RejectedException.class, () -> f.reprice("p", t.orderId(), 40, 0, 1), "the old id is gone");
+    }
 }

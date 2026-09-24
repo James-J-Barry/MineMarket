@@ -196,6 +196,46 @@ public final class TradingFloor {
         t.filledCents += f.quantity() * f.price();
     }
 
+    /**
+     * Extra cash a buy order needs to move to {@code newLimitCents}, beyond what it already holds and any cash
+     * waiting in the account. 0 for sells and for lower prices.
+     */
+    public long repriceCost(String account, long orderId, long newLimitCents) {
+        Ticket t = ticket(account, orderId);
+        if (t.side == Side.SELL) return 0;
+        long remaining = ex.liveOrder(orderId).orElseThrow().remaining();
+        long have = remaining * t.limitCents + ex.account(account).cash();
+        return Math.max(0, Math.multiplyExact(remaining, newLimitCents) - have);
+    }
+
+    /**
+     * Moves an open limit order to a new price, keeping its fills and its Order Slip. It joins the back of the
+     * queue at its new price. For a buy, {@code extraCents} (at least {@link #repriceCost}) is deposited first;
+     * collateral it no longer needs waits in the account for collection.
+     */
+    public Ticket reprice(String account, long orderId, long newLimitCents, long extraCents, long day) {
+        Ticket t = ticket(account, orderId);
+        if (t.market) throw new RejectedException("Market orders can't be repriced");
+        if (newLimitCents <= 0) throw new RejectedException("Price must be positive");
+        if (extraCents < repriceCost(account, orderId, newLimitCents)) throw new RejectedException("Not enough cash to raise that bid");
+        long remaining = ex.liveOrder(orderId).orElseThrow().remaining();
+        if (extraCents > 0) ex.deposit(account, extraCents);
+        ex.cancel(orderId);
+        Order o = ex.submit(OrderRequest.day(account, t.item, t.side, remaining, newLimitCents));
+        Ticket moved = new Ticket(o.id(), account, t.item, t.side, false, t.qty, newLimitCents, t.dealerBidMills, t.placedDay);
+        moved.filledQty = t.filledQty;
+        moved.filledCents = t.filledCents;
+        tickets.remove(orderId);
+        tickets.put(o.id(), moved);
+        return moved;
+    }
+
+    private Ticket ticket(String account, long orderId) {
+        Ticket t = tickets.get(orderId);
+        if (t == null || !t.account.equals(account) || ex.liveOrder(orderId).isEmpty()) throw new RejectedException("No such order");
+        return t;
+    }
+
     public Receipt cancel(String account, long orderId, long day) {
         Ticket t = tickets.get(orderId);
         if (t == null || !t.account.equals(account)) throw new RejectedException("No such order");

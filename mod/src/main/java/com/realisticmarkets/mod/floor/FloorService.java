@@ -232,6 +232,29 @@ public final class FloorService {
         return Optional.empty();
     }
 
+    /**
+     * Moves one of the player's open orders to {@code newLimitCents} without a new Order Slip. Raising a bid takes
+     * the extra escrow from their bills (rounded up to the dime; spare cents wait in their Floor account).
+     */
+    public Optional<String> reprice(Player player, long orderId, long newLimitCents, long day) {
+        String acct = account(player);
+        long extra;
+        try {
+            extra = Money.roundUpToDime(floor.repriceCost(acct, orderId, newLimitCents));
+        } catch (RejectedException | java.util.NoSuchElementException e) {
+            return Optional.of("No such order");
+        }
+        if (Wallet.count(player.getInventory()) < extra) return Optional.of("Not enough cash: raising it needs " + Money.format(extra));
+        try {
+            floor.reprice(acct, orderId, newLimitCents, extra, day);
+        } catch (RejectedException e) {
+            return Optional.of(e.getMessage());
+        }
+        if (extra > 0) Wallet.pay(player, extra);
+        save();
+        return Optional.empty();
+    }
+
     public Optional<String> cancel(Player player, long orderId, long day) {
         try {
             receipts.computeIfAbsent(account(player), k -> new ArrayList<>()).add(floor.cancel(account(player), orderId, day));

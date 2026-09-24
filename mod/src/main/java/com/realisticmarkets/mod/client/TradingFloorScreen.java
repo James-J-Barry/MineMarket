@@ -12,6 +12,7 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -27,6 +28,7 @@ public class TradingFloorScreen extends AbstractContainerScreen<TradingFloorMenu
     private Button side, market;
     private final List<Button> priceButtons = new ArrayList<>();
     private final Button[] cancel = new Button[TradingFloorMenu.MAX_SHOWN_ORDERS];
+    private final Button[] reprice = new Button[TradingFloorMenu.MAX_SHOWN_ORDERS];
 
     public TradingFloorScreen(TradingFloorMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title, TradingFloorMenu.WIDTH, TradingFloorMenu.HEIGHT);
@@ -53,7 +55,12 @@ public class TradingFloorScreen extends AbstractContainerScreen<TradingFloorMenu
         priceButtons.add(button("+1c", TradingFloorMenu.BUTTON_PRICE_PLUS_1, 58, 88, 20));
         priceButtons.add(button("+10%", TradingFloorMenu.BUTTON_PRICE_PLUS_10PCT, 80, 88, 26));
         button("Place order", TradingFloorMenu.BUTTON_PLACE, 8, 104, 70);
-        for (int i = 0; i < cancel.length; i++) cancel[i] = button("x", TradingFloorMenu.BUTTON_CANCEL_BASE + i, 158, 104 + i * 11, 12);
+        for (int i = 0; i < cancel.length; i++) {
+            reprice[i] = button("=", TradingFloorMenu.BUTTON_REPRICE_BASE + i, 145, 104 + i * 11, 12);
+            reprice[i].setTooltip(Tooltip.create(Component.literal("Move this order to the price you've set (no new slip)")));
+            cancel[i] = button("x", TradingFloorMenu.BUTTON_CANCEL_BASE + i, 158, 104 + i * 11, 12);
+            cancel[i].setTooltip(Tooltip.create(Component.literal("Cancel: goods or cash come back")));
+        }
         updateWidgets();
     }
 
@@ -74,7 +81,10 @@ public class TradingFloorScreen extends AbstractContainerScreen<TradingFloorMenu
         side.setMessage(Component.literal(m.selling() ? "Sell" : "Buy"));
         market.setMessage(Component.literal(m.market() ? "Market" : "Limit"));
         for (Button b : priceButtons) b.visible = !m.market();
-        for (int i = 0; i < cancel.length; i++) cancel[i].visible = i < m.orderCount();
+        for (int i = 0; i < cancel.length; i++) {
+            cancel[i].visible = i < m.orderCount();
+            reprice[i].visible = i < m.orderCount() && !m.market();
+        }
     }
 
     @Override
@@ -142,7 +152,7 @@ public class TradingFloorScreen extends AbstractContainerScreen<TradingFloorMenu
         for (int i = 0; i < m.orderCount(); i++) {
             String line = (m.orderSelling(i) ? "S " : "B ") + m.orderFilled(i) + "/" + m.orderQty(i) + " @" + cents(m.orderPrice(i));
             g.item(icon(m.orderBook(i)), 80, 102 + i * 11);
-            g.text(font, Panels.trim(font, line, 60), 96, 107 + i * 11, GREEN, false);
+            g.text(font, Panels.trim(font, line, 48), 96, 107 + i * 11, GREEN, false);
         }
     }
 }

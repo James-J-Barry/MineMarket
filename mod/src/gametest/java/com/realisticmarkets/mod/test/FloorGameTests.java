@@ -212,7 +212,7 @@ public class FloorGameTests {
     }
 
     @GameTest
-    public void orderSlipBlueprintMakesEight(GameTestHelper helper) {
+    public void orderSlipBlueprintMakesThirtyTwo(GameTestHelper helper) {
         ServerPlayer p = helper.makeMockServerPlayerInLevel();
         ProgressionService prog = ProgressionService.forTest();
         Wallet.give(p, 561_500); // bill clip + price board + vault + loan note + trading floor
@@ -231,7 +231,7 @@ public class FloorGameTests {
         menu.clickMenuButton(p, DraftingTableMenu.BUTTON_SELECT_BASE + slip);
         check(menu.clickMenuButton(p, DraftingTableMenu.BUTTON_CRAFT_MAX), "craft");
         ItemStack out = menu.getSlot(DraftingTableMenu.OUTPUT).getItem();
-        check(out.is(ModItems.ORDER_SLIP) && out.getCount() == 16, "2 Ledger Paper make 16 slips, got " + out);
+        check(out.is(ModItems.ORDER_SLIP) && out.getCount() == 64, "2 Ledger Paper make 64 slips, got " + out);
         helper.succeed();
     }
 
@@ -255,6 +255,50 @@ public class FloorGameTests {
         double moved = dealer.dealer().fairValue(item, day + 0.5) / dealer.dealer().fairValue(item, day);
         check(Math.signum(moved - 1) == Math.signum(e.type().shock()) && Math.abs(moved - 1) > 0.1,
                 e.type().id() + " moved " + item + " by " + moved);
+        helper.succeed();
+    }
+
+    @GameTest
+    public void repricingMovesAnOrderWithoutANewSlip(GameTestHelper helper) {
+        ServerPlayer p = helper.makeMockServerPlayerInLevel();
+        p.getInventory().add(new ItemStack(Items.WHEAT, 16));
+        p.getInventory().add(new ItemStack(ModItems.ORDER_SLIP));
+        Pit pit = pit(helper, p);
+
+        press(pit, p, TradingFloorMenu.BUTTON_SIDE, 1);
+        press(pit, p, TradingFloorMenu.BUTTON_PRICE_PLUS_10PCT, 8); // far above the market: rests
+        check(pit.menu().clickMenuButton(p, TradingFloorMenu.BUTTON_PLACE), "place the sell");
+        check(p.getInventory().countItem(ModItems.ORDER_SLIP) == 0, "the only slip is spent");
+        pit.floor().runAuctions(pit.day());
+        check(pit.menu().orderCount() == 1 && pit.menu().orderFilled(0) == 0, "resting unfilled");
+
+        press(pit, p, TradingFloorMenu.BUTTON_PRICE_MINUS_10PCT, 12); // well under the bid now
+        long price = pit.menu().priceCents();
+        check(pit.menu().clickMenuButton(p, TradingFloorMenu.BUTTON_REPRICE_BASE), "reprice without a slip");
+        check(pit.menu().orderPrice(0) == price, "order moved to " + price + ", shows " + pit.menu().orderPrice(0));
+        auctionUntilDone(pit, p, 10);
+        collect(pit, p);
+        CompoundTag r = receipt(pit.menu().output());
+        check(r.getLongOr("qty", 0) == 16, "the repriced order filled: " + r);
+        helper.succeed();
+    }
+
+    @GameTest
+    public void raisingABidTakesOnlyTheExtraCash(GameTestHelper helper) {
+        ServerPlayer p = helper.makeMockServerPlayerInLevel();
+        Wallet.give(p, 10_000);
+        p.getInventory().add(new ItemStack(ModItems.ORDER_SLIP));
+        Pit pit = pit(helper, p);
+
+        press(pit, p, TradingFloorMenu.BUTTON_QTY_MINUS_1, 6); // 10
+        press(pit, p, TradingFloorMenu.BUTTON_PRICE_MINUS_10PCT, 6);
+        check(pit.menu().clickMenuButton(p, TradingFloorMenu.BUTTON_PLACE), "place a low bid");
+        long low = pit.menu().priceCents(), afterPlace = Wallet.count(p.getInventory());
+        press(pit, p, TradingFloorMenu.BUTTON_PRICE_PLUS_1, 5);
+        check(pit.menu().clickMenuButton(p, TradingFloorMenu.BUTTON_REPRICE_BASE), "raise the bid by 5c");
+        long paid = afterPlace - Wallet.count(p.getInventory());
+        check(paid >= 50 && paid < 60, "10 x 5c more escrow (to the dime), paid " + paid);
+        check(pit.menu().orderPrice(0) == low + 5, "bid now " + (low + 5));
         helper.succeed();
     }
 

@@ -54,7 +54,7 @@ value"). `docs/design.md` is updated with this milestone.
 - [x] World events: catalog, deterministic schedule, transient + permanent effects; headlines on the Floor
       screen and in chat; unit tests + GameTest.
 - [x] Floor basis for iron block; unit tests.
-- [ ] 32 Order Slips per Ledger Paper; reprice an open order without a slip (core + menu + GameTest).
+- [x] 32 Order Slips per Ledger Paper; reprice an open order without a slip (core + menu + GameTest).
 - [ ] Four new books.
 - [ ] Sims meet the targets; design doc, guides and pinned numbers updated.
 - [ ] James's in-game check: news on the Floor, repricing, prices that move.

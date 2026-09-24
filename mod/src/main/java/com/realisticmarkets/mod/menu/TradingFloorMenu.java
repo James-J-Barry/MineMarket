@@ -39,6 +39,7 @@ public class TradingFloorMenu extends AbstractContainerMenu {
     public static final int BUTTON_QTY_MINUS_16 = 3, BUTTON_QTY_MINUS_1 = 4, BUTTON_QTY_PLUS_1 = 5, BUTTON_QTY_PLUS_16 = 6;
     public static final int BUTTON_PRICE_MINUS_10PCT = 7, BUTTON_PRICE_MINUS_1 = 8, BUTTON_PRICE_PLUS_1 = 9, BUTTON_PRICE_PLUS_10PCT = 10;
     public static final int BUTTON_CANCEL_BASE = 20; // + shown order index
+    public static final int BUTTON_REPRICE_BASE = 30; // + shown order index: move it to the entered price
     public static final int BUTTON_BOOK_BASE = 100;  // + book index
 
     private static final int D_BOOK = 0, D_SELL = 1, D_MARKET = 2, D_QTY = 3, D_PRICE = 5, D_BID = 7, D_ASK = 9;
@@ -180,6 +181,10 @@ public class TradingFloorMenu extends AbstractContainerMenu {
         } else if (id >= BUTTON_CANCEL_BASE && id < BUTTON_CANCEL_BASE + MAX_SHOWN_ORDERS) {
             int i = id - BUTTON_CANCEL_BASE;
             why = i < shown.size() ? floor.cancel(p, shown.get(i).orderId(), (long) Math.floor(day())) : Optional.of("No such order");
+        } else if (id >= BUTTON_REPRICE_BASE && id < BUTTON_REPRICE_BASE + MAX_SHOWN_ORDERS) {
+            int i = id - BUTTON_REPRICE_BASE;
+            why = i < shown.size() ? floor.reprice(p, shown.get(i).orderId(), priceCents(), (long) Math.floor(day()))
+                    : Optional.of("No such order");
         } else {
             switch (id) {
                 case BUTTON_SIDE -> data.set(D_SELL, selling() ? 0 : 1);
