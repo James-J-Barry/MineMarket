@@ -6,7 +6,7 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 
 - **Design doc (source of truth for gameplay):** `docs/design.md`, exported from the "Realistic Markets —
   Game Design Document" Claude Doc. If a request conflicts with it, ask before building.
-- **Current milestone:** M6, equities. Spec `docs/milestones/M6.md` (decisions answered; M6a first, then M6b). M5 (Trading Floor, M5a/M5b/M5c) is done:
+- **Current milestone:** M7 (bonds), not yet specced. M6 (equities) is done: `docs/milestones/M6.md`. M5 (Trading Floor, M5a/M5b/M5c) is done:
   `docs/milestones/M5.md`, `docs/milestones/M5c.md`. M4 (banking and collateral) is done. Spec `docs/milestones/M4.md`
   (decisions answered). Done: M2 (`docs/milestones/M2.md`),
   M3 (`docs/milestones/M3.md`).
@@ -22,7 +22,7 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 | `sim floor` | Trading Floor: liquidity, spreads, fair-value tracking, sale impact vs the Dealer, no-arbitrage loops | ~10 s |
 | `sim trader [free] [visits=N] [capital=C] [size=D] [cap=C] [seeds=N]` | Does the Floor make a player money? Gatherer uplift + payback; five trading strategies vs the vault | ~40 s |
 | `sim equities` | Six companies over 20 quarters: returns vs the vault, volatility, worst weeks, the even portfolio | ~10 s |
-| `sim progression [profile]` | Tier 1 play time, then Trade Route Crate income uplift, from gathering profiles in `sim/src/main/resources/profiles/` | ~5 s |
+| `sim progression [profile]` | Tier 1-4 play time, Trade Route Crate uplift, vault interest, from gathering profiles in `sim/src/main/resources/profiles/` | ~15 s |
 | `build` | compile everything **and run the GameTests** (Loom's `check` includes them) | ~15 s |
 | `gametest` | server GameTests only, in a headless Minecraft server | ~10 s |
 | `check` | `test` + `gametest`. **A change is not done until this passes.** | ~20 s |
@@ -158,7 +158,8 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   Read the Tape quest. 166 unit tests, 46 GameTests. → `docs/milestones/M5.md`
 - [x] **M6a: Companies and the Stock Exchange.** Six companies, quarterly earnings and dividends, Share Certificates,
   inflation (buy and hold works), three guides, three quests. 185 unit tests, 52 GameTests. → `docs/milestones/M6.md`
-- [ ] **M6b: Electronic Newsfeed, Portfolio Binder, Safe Deposit Box.** → `docs/milestones/M6.md`
+- [x] **M6b: Electronic Newsfeed, Portfolio Binder, Safe Deposit Box.** Company news with a day's head start, live
+  portfolio value, safekeeping; Custody guide, Diversified quest. 187 unit tests, 56 GameTests. → `docs/milestones/M6.md`
 - [ ] M7–M10: bonds, futures, options, modern finance (ATM, Brokerage)
 - [ ] M11: multiplayer
 
@@ -170,6 +171,8 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
 - Tier 2 balance: full Tier 2 projects to ~10 h vs the design's ~5 h (see `docs/milestones/M4.md`). James chose
   to keep current prices for now; revisit later.
 - Tier 3 balance: Trading Floor + Newsstand + Ticker Tape land at ~22 h vs the design's ~10 h (`sim progression`). Deferred by James.
+- Tier 4 balance: a gather-only player needs ~57-61 h for Tiers 1-4 vs ~15 h; `sim progression` doesn't yet model a
+  player who sells on the Floor, trades or invests. Same deferred decision.
 - `capital_catalog.csv` loads from the jar only (not copied to `config/` like the Dealer's files yet).
 - Floating price above the Basic Exchange (design doc) skipped; the screen covers it.
 - Placeholder art: currency, block and GUI textures are generated; James may repaint.
