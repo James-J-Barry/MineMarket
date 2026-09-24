@@ -27,8 +27,8 @@ RCON_PORT="${RCON_PORT:-25575}"
 summarize_tests() {
   local dir="$ROOT/exchange-core/build/test-results/test"
   local total failed
-  total=$(cat "$dir"/*.xml 2>/dev/null | grep -o '<testcase ' | wc -l | tr -d ' ')
-  failed=$(cat "$dir"/*.xml 2>/dev/null | grep -Eo '<(failure|error) ' | wc -l | tr -d ' ')
+  total=$(cat "$dir"/*.xml 2>/dev/null | { grep -o '<testcase ' || true; } | wc -l | tr -d ' ')
+  failed=$(cat "$dir"/*.xml 2>/dev/null | { grep -Eo '<(failure|error) ' || true; } | wc -l | tr -d ' ')
   echo "exchange-core: $total tests, $failed failed"
 }
 

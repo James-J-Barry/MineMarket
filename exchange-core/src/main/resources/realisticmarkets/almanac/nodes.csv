@@ -1,0 +1,9 @@
+# Realistic Markets: Almanac upgrade nodes.
+# cost_cents is in cents ($40 = 4000). parents and grants are ;-separated.
+# Grants: blueprint:<item id> (craftable at the Drafting Table), perk:<id> (applies to the account), guide:<id>.
+# Tier gate: the first node bought in a tier needs at least half of the previous tier.
+id,tier,cost_cents,parents,required_quest,grants,title
+bill_clip,1,4000,,,blueprint:realisticmarkets:bill_clip,Bill Clip
+price_board,1,7500,,,blueprint:realisticmarkets:price_board,Price Board
+merchant_license,1,15000,,meet_the_spread,perk:merchant_license,Merchant License
+trade_route_crate,1,25000,,,blueprint:realisticmarkets:trade_route_crate,Trade Route Crate
