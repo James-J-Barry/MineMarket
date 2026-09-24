@@ -16,7 +16,8 @@ class GuidesTest {
     @Test
     void guidesOfTheRightLength() {
         assertEquals(List.of("money_and_dealer", "spread", "price_impact", "recovery", "diversification",
-                        "cash_on_hand", "reading_a_quote", "transaction_costs", "two_markets"),
+                        "cash_on_hand", "reading_a_quote", "transaction_costs", "two_markets",
+                        "interest_and_compounding", "term_and_liquidity"),
                 guides.all().stream().map(Guides.Guide::id).toList());
         for (Guides.Guide g : guides.all()) {
             int words = g.wordCount();
@@ -138,6 +139,37 @@ class GuidesTest {
         long back = com.realisticmarkets.dealer.ShipmentBook.estimate(capital, java.util.Map.of("minecraft:wheat", 64), 0, cfg.freight());
         assertTrue(t.contains("Buying 64 wheat costs " + usd(buy) + " and shipping it returns " + usd(back)));
         assertTrue(back < buy);
+    }
+
+    static long vault(long cents, int days) {
+        com.realisticmarkets.contracts.BankAccount a = new com.realisticmarkets.contracts.BankAccount(0);
+        a.deposit(cents, 0, com.realisticmarkets.contracts.BankAccount.Kind.DEPOSIT);
+        a.accrueTo(days, com.realisticmarkets.contracts.BankParams.loadDefault().interestRate());
+        return a.balanceCents();
+    }
+
+    @Test
+    void interestAndCompoundingNumbers() {
+        String t = text("interest_and_compounding");
+        assertTrue(t.contains("one day you have " + usd(vault(100_000, 1))));
+        assertTrue(t.contains("After a week you have " + usd(vault(100_000, 7))));
+        assertTrue(t.contains("After 30 days you have " + usd(vault(100_000, 30))));
+        assertTrue(t.contains("only $90"), "simple interest on $1,000 for 30 days");
+        assertTrue(vault(100_000, 231) < 200_000 && vault(100_000, 232) >= 200_000, "doubles on day 232");
+        assertTrue(t.contains("doubles by day 232"));
+        assertTrue(t.contains("about $3 a day"));
+    }
+
+    @Test
+    void termAndLiquidityNumbers() {
+        var params = com.realisticmarkets.contracts.BankParams.loadDefault();
+        String t = text("term_and_liquidity");
+        long cd7 = com.realisticmarkets.contracts.Cd.issue(50_000, params.term(7), 0, params).valueAtMaturityCents();
+        long cd21 = com.realisticmarkets.contracts.Cd.issue(100_000, params.term(21), 0, params).valueAtMaturityCents();
+        assertTrue(t.contains("grows to " + usd(vault(50_000, 7))));
+        assertTrue(t.contains("it pays " + usd(cd7)));
+        assertTrue(t.contains("becomes " + usd(cd21) + ", against " + usd(vault(100_000, 21)) + " in the vault"));
+        assertTrue(cd7 > vault(50_000, 7) && cd21 > vault(100_000, 21), "CDs beat the vault over their term");
     }
 
     @Test

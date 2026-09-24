@@ -119,6 +119,8 @@ public class BankGameTests {
         for (String node : new String[] {"bill_clip", "price_board", "bank_vault", "certificate_of_deposit"}) {
             check(b.prog().buyNode(p, node).isEmpty(), "buy " + node);
         }
+        check(b.prog().progress(p).hasGuide("interest_and_compounding"), "Bank Vault grants its guide");
+        check(b.prog().progress(p).hasGuide("term_and_liquidity"), "CD grants its guide");
         b.menu().clickMenuButton(p, BankVaultMenu.BUTTON_DEPOSIT_ALL);
         long before = b.bank().account(p.getUUID(), 10).balanceCents();
 

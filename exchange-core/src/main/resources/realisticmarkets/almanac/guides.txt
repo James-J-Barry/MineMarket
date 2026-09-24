@@ -132,3 +132,29 @@ Can you buy wheat here and ship it for a profit? Not in bulk. Buying 64 wheat co
 The price you get is the Capital's price on arrival, not when you ship. If others' goods, or your own last shipment, arrived first, it will be lower. That delay is settlement risk.
 
 Real world: grain has always sold for more in the city than on the farm. Merchants profit from the difference only when it's bigger than the cost of moving goods between the two markets.
+
+@interest_and_compounding Interest and Compounding
+You opened a Bank Vault. Money inside it is safe: it doesn't drop when you die, and nobody else can open your vault. It also earns interest, 0.3% every in-game day.
+
+That sounds tiny, but the interest itself earns interest. Put in $1,000 and after one day you have $1,003.00. The next day you earn 0.3% of $1,003, not of $1,000. After a week you have $1,021.10. After 30 days you have $1,094.00, where plain interest on the original $1,000 would have paid only $90. Leave it alone and the money doubles by day 232.
+
+The bank credits interest in whole dimes. The fractions carry over to the next day, so nothing is lost; you just see it a dime at a time.
+
+Keep the vault in perspective, though. $1,000 earns about $3 a day, while a good farm earns $20 or more. The vault is for keeping money safe and letting spare cash grow, not a way to get rich.
+
+To see your balance you need your Passbook in the vault's slot. The vault can only be broken once it's empty, so a vault is a place, not something you carry.
+
+Real world: a savings account pays interest on interest in the same way. Over years that small daily edge is what turns steady saving into real wealth.
+
+@term_and_liquidity Term and Liquidity
+You unlocked Certificates of Deposit. A CD locks money away for a fixed term in exchange for a better rate.
+
+Compare $500 for a week. Left in the vault it grows to $510.50. In a 7-day CD at 0.45% a day it pays $515.90. The longer CD pays more still: $1,000 for 21 days at 0.60% a day becomes $1,133.80, against $1,064.90 in the vault.
+
+Why pay more for longer? Because you give something up: the right to use that money whenever you like. Being able to spend money right away is called liquidity, and it has a price. Cash in a CD early and you get your principal back but none of the interest, so you'd have done better leaving it in the vault.
+
+So match the term to your plans. Money you'll need for the next upgrade belongs in the vault. Money you won't touch for three weeks can earn more in a long CD.
+
+A CD is also a paper you carry. Whoever holds it can cash it, so losing it means losing the money, and each certificate can only be redeemed once.
+
+Real world: banks pay more on term deposits than on savings accounts because they can lend that money out for longer. Tying money up is a cost, and the higher rate is your payment for it.
