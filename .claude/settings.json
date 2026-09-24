@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./scripts/dev.sh test)",
+      "Bash(./scripts/dev.sh build)",
+      "Bash(./scripts/dev.sh gametest)",
+      "Bash(./scripts/dev.sh check)",
+      "Bash(./scripts/dev.sh sim:*)",
+      "Bash(./scripts/dev.sh api:*)",
+      "Bash(./scripts/dev.sh logs:*)",
+      "Bash(./scripts/dev.sh cmd:*)",
+      "Bash(./scripts/dev.sh server:*)",
+      "Bash(./gradlew:*)",
+      "Bash(python3 scripts/mcapi.py:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}

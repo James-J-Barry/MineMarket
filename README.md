@@ -83,6 +83,19 @@ them into `exchange-core/src/main/resources/realisticmarkets/` and update `Deale
 | New items, blocks, textures, recipes | Textures: rebuild + F3+T. Recipes/loot: rebuild + `/reload`. New registrations: restart | 5–60 s |
 | Anything before calling it done | `./scripts/dev.sh check` | ~1 min |
 
+## Working with Claude Code
+
+Run `claude` in the repo root. `CLAUDE.md` gives it the rules, invariants, module map and the verified
+Minecraft 26.1 API notes; `docs/design.md` is the game design; `docs/milestones/` has the current spec.
+
+- `/next`: continue the current milestone (implement, test, tick the checklist, commit).
+- `/check`: run unit tests + GameTests and fix failures.
+- `/api <what you need>`: look up real 26.1 / Fabric class and method names from your local jars
+  (same as `./scripts/dev.sh api ...`). Use it whenever code fails on a renamed API.
+
+`.claude/settings.json` pre-approves the dev commands (build, tests, sim, api, git status/diff/commit) so
+Claude Code doesn't ask every time. Pushing stays manual.
+
 ## Status
 
 - `exchange-core`: exchange, money and Dealer implemented; 35 tests passing.

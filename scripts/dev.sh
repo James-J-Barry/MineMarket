@@ -9,6 +9,8 @@
 #   ./scripts/dev.sh server start|stop|status
 #   ./scripts/dev.sh cmd "<command>"      send a command to the running dev server via RCON
 #   ./scripts/dev.sh logs [n]             tail the dev server log
+#   ./scripts/dev.sh api <class> [names]  real 26.1 member names from the Minecraft jar (see scripts/mcapi.py)
+#   ./scripts/dev.sh api --find <text>    find classes by name (add --fabric to include Fabric API)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -88,6 +90,8 @@ case "$cmd" in
     python3 "$ROOT/scripts/rcon.py" --port "$RCON_PORT" --password "$RCON_PASSWORD" "$@" ;;
   logs)
     tail -n "${1:-60}" "$LOG_FILE" ;;
+  api)
+    python3 "$ROOT/scripts/mcapi.py" "$@" ;;
   help|*)
-    sed -n '2,12p' "$0" ;;
+    sed -n '2,13p' "$0" ;;
 esac

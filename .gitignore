@@ -7,3 +7,5 @@ out/
 mod/run/
 *.log
 .DS_Store
+__pycache__/
+*.pyc
