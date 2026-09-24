@@ -24,9 +24,13 @@ import java.util.function.ToDoubleFunction;
  *   earnings = revenue - costs;  dividend a share = payout x earnings / shares (none if earnings are negative)
  * </pre>
  * Fixed costs make earnings swing more than revenue, so a fall in iron hits a miner's earnings harder than its sales.
- * Fair value a share = normalized earnings (average of the last 4 quarters) x (1 + g) / (r - g) / shares, where r is
- * the quarterly required return: the value of the whole earnings stream, paid now as dividends or later from what
- * is kept. Nothing here reads a clock.
+ * Earnings not paid out stay in the company as cash, reinvested at the required return r (a quarter), so a company
+ * that pays no dividend still rewards its owners, through the share price.
+ * <p>Fair value a share = (company cash + normalized earnings x (1 + g) / (r - g)) / shares. Normalized earnings
+ * average the last 4 reports, with this quarter so far (at its prices and events to date) taking the oldest one's
+ * place a seventh at a time as its days pass, so the value moves every day with commodity prices and news, and glides
+ * rather than jumps from quarter to quarter. When a quarter closes, its dividend leaves the company and the
+ * value drops by it. Nothing here reads a clock.
  */
 public final class Equities {
     public static final String HEADER = "# Realistic Markets equities v1";
@@ -39,6 +43,7 @@ public final class Equities {
 
     private static final class State {
         double logOutput;
+        double cash; // cents: retained earnings, reinvested at the required return
         final Map<String, double[]> sums = new LinkedHashMap<>(); // key -> {sum, samples}
         final Map<String, Integer> events = new LinkedHashMap<>();
         final List<Report> reports = new ArrayList<>();
@@ -103,29 +108,34 @@ public final class Equities {
         for (Company c : catalog.all()) {
             State s = states.get(c.ticker());
             s.logOutput += Math.log(1 + c.growth()) + c.outputVol() * shock(c.ticker(), quarter);
-            double scale = Math.exp(s.logOutput);
-            Map<String, Double> avg = new LinkedHashMap<>();
-            for (String k : keys(c)) {
-                double[] acc = s.sums.get(k);
-                double a = acc != null && acc[1] > 0 ? acc[0] / acc[1] : lastAverage.getOrDefault(k, baseline.get(k));
-                avg.put(k, a);
-                lastAverage.put(k, a);
-            }
-            double revenue = 0;
-            for (Map.Entry<String, Long> e : c.revenue().entrySet()) revenue += e.getValue() * avg.get(e.getKey());
-            for (Map.Entry<String, Integer> e : s.events.entrySet()) revenue *= Math.pow(1 + c.events().get(e.getKey()), e.getValue());
-            revenue *= scale;
-            double costs = c.fixedCost() * Math.pow(1 + c.growth(), quarter + 1);
-            for (Map.Entry<String, Long> e : c.inputs().entrySet()) costs += scale * e.getValue() * avg.get(e.getKey());
-            long rev = Math.round(revenue * 100), cost = Math.round(costs * 100), earn = rev - cost;
+            for (String k : keys(c)) lastAverage.put(k, average(s, k));
+            long[] rc = results(c, s, quarter, Math.exp(s.logOutput));
+            long earn = rc[0] - rc[1];
             long div = earn > 0 ? (long) Math.floor(c.payout() * earn / c.shares()) : 0;
-            Report r = new Report(c.ticker(), quarter, rev, cost, earn, div);
+            s.cash = s.cash * (1 + c.quarterReturn()) + earn - (double) div * c.shares();
+            Report r = new Report(c.ticker(), quarter, rc[0], rc[1], earn, div);
             s.reports.add(r);
             s.sums.clear();
             s.events.clear();
             out.add(r);
         }
         return out;
+    }
+
+    private double average(State s, String key) {
+        double[] acc = s.sums.get(key);
+        return acc != null && acc[1] > 0 ? acc[0] / acc[1] : lastAverage.getOrDefault(key, baseline.get(key));
+    }
+
+    /** {revenue, costs} in cents for a quarter at the state's average prices and events so far. */
+    private long[] results(Company c, State s, long quarter, double scale) {
+        double revenue = 0;
+        for (Map.Entry<String, Long> e : c.revenue().entrySet()) revenue += e.getValue() * average(s, e.getKey());
+        for (Map.Entry<String, Integer> e : s.events.entrySet()) revenue *= Math.pow(1 + c.events().get(e.getKey()), e.getValue());
+        revenue *= scale;
+        double costs = c.fixedCost() * Math.pow(1 + c.growth(), quarter + 1);
+        for (Map.Entry<String, Long> e : c.inputs().entrySet()) costs += scale * e.getValue() * average(s, e.getKey());
+        return new long[] {Math.round(revenue * 100), Math.round(costs * 100)};
     }
 
     private double shock(String ticker, long quarter) {
@@ -146,20 +156,38 @@ public final class Equities {
         return Math.round(earningsCents * (1 + g) / (r - g) / c.shares());
     }
 
-    /** Fair value of one share, in cents: normalized earnings capitalized at the required return, never below the floor. */
+    /**
+     * Fair value of one share, in cents: company cash plus normalized earnings capitalized at the required return,
+     * never below the floor. Normalized earnings average the last reports with this quarter's results so far.
+     */
     public long fairValueCents(String ticker) {
         Company c = catalog.company(ticker);
-        List<Report> rs = states.get(ticker).reports;
+        State s = states.get(ticker);
+        List<Report> rs = s.reports;
         double e;
         if (rs.isEmpty()) {
             e = expectedEarnings(c);
         } else {
+            // The last 4 reports, with this quarter so far gradually taking the oldest one's place as its days pass.
             int n = Math.min(NORMALIZE_QUARTERS, rs.size());
             double sum = 0;
             for (int i = rs.size() - n; i < rs.size(); i++) sum += rs.get(i).earnings();
+            double[] acc = s.sums.isEmpty() ? null : s.sums.values().iterator().next();
+            double f = acc == null ? 0 : Math.min(1, acc[1] / Company.QUARTER_DAYS);
+            if (f > 0) {
+                long[] rc = results(c, s, openQuarter, Math.exp(s.logOutput) * (1 + c.growth()));
+                double oldest = rs.get(rs.size() - n).earnings();
+                sum += f * ((rc[0] - rc[1]) - oldest);
+            }
             e = sum / n;
         }
-        return Math.max(Math.round(startValue.get(ticker) * VALUE_FLOOR), value(c, e));
+        long v = Math.round(s.cash / c.shares()) + value(c, e);
+        return Math.max(Math.round(startValue.get(ticker) * VALUE_FLOOR), v);
+    }
+
+    /** Company cash a share (cents): retained earnings plus their return; negative after losses. */
+    public long cashPerShareCents(String ticker) {
+        return Math.round(states.get(ticker).cash / catalog.company(ticker).shares());
     }
 
     /** The share's fair value before any quarter was reported. */
@@ -197,7 +225,7 @@ public final class Equities {
         for (Map.Entry<String, Double> e : lastAverage.entrySet()) w.write("avg\t" + e.getKey() + "\t" + e.getValue() + "\n");
         for (Map.Entry<String, State> e : states.entrySet()) {
             State s = e.getValue();
-            w.write("company\t" + e.getKey() + "\t" + s.logOutput + "\n");
+            w.write("company\t" + e.getKey() + "\t" + s.logOutput + "\t" + s.cash + "\n");
             for (Map.Entry<String, double[]> a : s.sums.entrySet()) {
                 w.write("sum\t" + e.getKey() + "\t" + a.getKey() + "\t" + a.getValue()[0] + "\t" + a.getValue()[1] + "\n");
             }
@@ -226,7 +254,10 @@ public final class Equities {
                     case "avg" -> into.lastAverage.put(c[1], Double.parseDouble(c[2]));
                     case "company" -> {
                         State s = into.states.get(c[1]);
-                        if (s != null) s.logOutput = Double.parseDouble(c[2]);
+                        if (s != null) {
+                            s.logOutput = Double.parseDouble(c[2]);
+                            s.cash = c.length > 3 ? Double.parseDouble(c[3]) : 0;
+                        }
                     }
                     case "sum" -> {
                         State s = into.states.get(c[1]);

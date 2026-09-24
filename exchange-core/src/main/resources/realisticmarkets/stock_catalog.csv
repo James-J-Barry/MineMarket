@@ -1,0 +1,10 @@
+# Realistic Markets: Stock Exchange books, one per company (same columns as floor_catalog.csv).
+# depth is in shares; the NPCs' cash is sized to match at fair value. The fundamentalists anchor on the company's
+# fair value (Equities.fairValueCents), which moves every day with commodity prices and news.
+item,half_spread,depth,noise,fundamentalists,momentum,basis
+DSMC,0.01,3000,6,3,2,
+GHF,0.01,3000,6,3,2,
+NRP,0.012,2400,6,3,3,
+ENCH,0.012,2400,6,3,3,
+RSD,0.015,2400,6,2,4,
+OWL,0.008,3000,5,4,1,

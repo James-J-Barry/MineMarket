@@ -156,4 +156,52 @@ class EquitiesTest {
             assertEquals(a.fairValueCents(c.ticker()), b.fairValueCents(c.ticker()));
         }
     }
+
+    @Test
+    void keptEarningsBuildCashThatCountsInTheValue() {
+        Equities e = run(8, 3, EquitiesTest::base, Map.of());
+        Company rsd = CATALOG.company("RSD");
+        double cash = 0;
+        for (Equities.Report r : e.reports("RSD")) cash = cash * (1 + rsd.quarterReturn()) + r.earnings();
+        assertEquals(Math.round(cash / rsd.shares()), e.cashPerShareCents("RSD"), "no dividend: it all stays in");
+        Company owl = CATALOG.company("OWL");
+        double owlCash = 0;
+        for (Equities.Report r : e.reports("OWL")) owlCash = owlCash * (1 + owl.quarterReturn()) + r.earnings() - r.dividend() * owl.shares();
+        assertEquals(Math.round(owlCash / owl.shares()), e.cashPerShareCents("OWL"), "only the 10% not paid out");
+    }
+
+    @Test
+    void theValueMovesWithinTheQuarter() {
+        Equities e = new Equities(CATALOG, EquitiesTest::base, 2);
+        for (long d = 0; d <= 9; d++) e.observe(d, EquitiesTest::base, List.of());
+        long before = e.fairValueCents("DSMC");
+        e.observe(10, with(Map.of("minecraft:iron_ingot", 0.5)), List.of());
+        assertTrue(e.fairValueCents("DSMC") < before, "iron crashing today shows in today's value");
+        long ench = e.fairValueCents("ENCH");
+        e.observe(11, EquitiesTest::base, List.of("pillager_raid"));
+        assertTrue(e.fairValueCents("ENCH") > ench, "so does a raid");
+    }
+
+    @Test
+    void onAverageOwnersEarnTheRequiredReturn() {
+        Company owl = CATALOG.company("OWL");
+        Company calm = new Company("CALM", "Calm", owl.revenue(), owl.fixedCost(), owl.inputs(), owl.growth(), 0, owl.payout(),
+                owl.shares(), owl.requiredReturn(), owl.events());
+        Company keeper = new Company("KEEP", "Keeper", owl.revenue(), owl.fixedCost(), owl.inputs(), owl.growth(), 0, 0,
+                owl.shares(), owl.requiredReturn(), owl.events());
+        Equities e = new Equities(new CompanyCatalog(List.of(calm, keeper)), EquitiesTest::base, 1);
+        for (long d = 0; d <= 28; d++) e.observe(d, EquitiesTest::base, List.of()); // settle the first year
+        Map<String, Long> start = new java.util.HashMap<>(), paid = new java.util.HashMap<>();
+        for (String t : List.of("CALM", "KEEP")) {
+            start.put(t, e.fairValueCents(t));
+            paid.put(t, 0L);
+        }
+        for (long d = 29; d <= 29 + 7 * 20; d++) {
+            for (Equities.Report r : e.observe(d, EquitiesTest::base, List.of())) paid.merge(r.ticker(), r.dividend(), Long::sum);
+        }
+        for (String t : List.of("CALM", "KEEP")) {
+            double perQuarter = Math.pow((e.fairValueCents(t) + (double) paid.get(t)) / start.get(t), 1 / 20.0) - 1;
+            assertEquals(calm.quarterReturn(), perQuarter, 0.004, t + ": price growth plus dividends");
+        }
+    }
 }

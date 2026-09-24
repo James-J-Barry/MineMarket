@@ -43,9 +43,20 @@ public final class FloorCatalog {
         books = Collections.unmodifiableMap(m);
     }
 
+    /** The Stock Exchange's books: one per company, keyed by ticker. */
+    public static final String STOCK_RESOURCE = "/realisticmarkets/stock_catalog.csv";
+
     public static FloorCatalog loadDefault() {
-        try (InputStream in = FloorCatalog.class.getResourceAsStream(DEFAULT_RESOURCE)) {
-            if (in == null) throw new IllegalStateException("missing " + DEFAULT_RESOURCE);
+        return load(DEFAULT_RESOURCE);
+    }
+
+    public static FloorCatalog loadStocks() {
+        return load(STOCK_RESOURCE);
+    }
+
+    public static FloorCatalog load(String resource) {
+        try (InputStream in = FloorCatalog.class.getResourceAsStream(resource)) {
+            if (in == null) throw new IllegalStateException("missing " + resource);
             return parse(new InputStreamReader(in, StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new UncheckedIOException(e);

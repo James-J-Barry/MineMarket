@@ -9,7 +9,7 @@
 # events: world event id*effect on that quarter's revenue per occurrence (0.4 = +40%).
 ticker,name,revenue,fixed_cost,inputs,growth,output_vol,payout,shares,required_return,events
 DSMC,Deepslate Mining Co.,minecraft:iron_ingot*20000;minecraft:gold_ingot*4000;minecraft:diamond*400,153500,minecraft:coal*10000,0.003,0.05,0.6,50000,0.0045,mine_collapse*-0.15;rich_vein*0.1
-GHF,Golden Harvest Farms,minecraft:wheat*120000;minecraft:carrot*80000;minecraft:potato*80000,85000,,0.004,0.04,0.7,40000,0.004,drought*-0.25;bumper_harvest*0.2
+GHF,Golden Harvest Farms,minecraft:wheat*120000;minecraft:carrot*80000;minecraft:potato*80000,50000,,0.004,0.03,0.7,75000,0.004,drought*-0.25;bumper_harvest*0.2
 NRP,Nether Rail & Portal,shipping*100000,30100,minecraft:iron_ingot*4000,0.01,0.07,0.3,30000,0.005,
 ENCH,Enchanted Arms,minecraft:iron_ingot*10000;minecraft:emerald*1000,72400,,0.005,0.06,0.5,40000,0.0055,pillager_raid*0.4
 RSD,Redstone Dynamics,minecraft:redstone*60000,43400,,0.02,0.15,0.0,60000,0.0065,redstone_craze*0.3;redstone_dump*-0.2
