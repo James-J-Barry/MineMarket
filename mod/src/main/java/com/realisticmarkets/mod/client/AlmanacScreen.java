@@ -11,29 +11,30 @@ import com.realisticmarkets.money.Money;
 import com.realisticmarkets.progression.Quest;
 import com.realisticmarkets.progression.QuestGoal;
 import com.realisticmarkets.progression.UnlockNode;
+import com.realisticmarkets.progression.Guides;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.player.Inventory;
 
 /** Book-style Almanac: Upgrades, Guides and Quests tabs. */
 public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
     private static final int LIST_X = 8, LIST_Y = 24, ROW = 13, LIST_W = 112;
     private static final int DETAIL_X = 126, DETAIL_RIGHT = 212;
-    private static final Map<String, String> GUIDE_TITLES = Map.of(
-            "money_and_dealer", "Money & the Dealer",
-            "spread", "The Spread",
-            "price_impact", "Price Impact",
-            "recovery", "Recovery & Patience",
-            "diversification", "Diversification");
+    private static final int PAGE_TOP = 24, PAGE_BOTTOM_PAD = 26;
 
     private final Button[] tabs = new Button[3];
-    private Button buy;
+    private Button buy, back, tearOut;
+    private int reading = -1; // guide index being read (client-side view state)
+    private int readScroll;
+    private int lastTab = -1;
 
     public AlmanacScreen(AlmanacMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title, AlmanacMenu.WIDTH, AlmanacMenu.HEIGHT);
@@ -50,6 +51,11 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
         }
         buy = addRenderableWidget(Button.builder(Component.literal("Buy"), b -> click(AlmanacMenu.BUTTON_BUY))
                 .bounds(leftPos + DETAIL_X, topPos + 132, DETAIL_RIGHT - DETAIL_X, 16).build());
+        back = addRenderableWidget(Button.builder(Component.literal("Back"), b -> reading = -1)
+                .bounds(leftPos + 8, topPos + imageHeight - 24, 50, 16).build());
+        tearOut = addRenderableWidget(Button.builder(Component.literal("Tear out"),
+                        b -> click(AlmanacMenu.BUTTON_TEAR_OUT_BASE + reading))
+                .bounds(leftPos + imageWidth - 68, topPos + imageHeight - 24, 60, 16).build());
         updateWidgets();
     }
 
@@ -67,7 +73,13 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
     private void updateWidgets() {
         if (buy == null) return;
         AlmanacMenu m = getMenu();
+        if (m.tab() != lastTab) {
+            lastTab = m.tab();
+            reading = -1;
+        }
         for (int t = 0; t < 3; t++) tabs[t].active = m.tab() != t;
+        boolean isReading = m.tab() == AlmanacMenu.TAB_GUIDES && reading >= 0;
+        back.visible = tearOut.visible = isReading;
         int sel = m.selected();
         buy.visible = m.tab() == AlmanacMenu.TAB_UPGRADES && sel >= 0 && sel < AlmanacMenu.NODES.size()
                 && m.nodeState(sel) != AlmanacMenu.OWNED;
@@ -76,6 +88,15 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (getMenu().tab() == AlmanacMenu.TAB_GUIDES && reading < 0) {
+            int row = rowAt(event.x(), event.y(), AlmanacMenu.GUIDES.size());
+            if (row >= 0 && getMenu().guideUnlocked(row)) {
+                reading = row;
+                readScroll = 0;
+                updateWidgets();
+                return true;
+            }
+        }
         if (getMenu().tab() == AlmanacMenu.TAB_UPGRADES) {
             int row = rowAt(event.x(), event.y(), AlmanacMenu.NODES.size());
             if (row >= 0) {
@@ -84,6 +105,32 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             }
         }
         return super.mouseClicked(event, doubleClick);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (getMenu().tab() == AlmanacMenu.TAB_GUIDES && reading >= 0) {
+            int max = Math.max(0, guideLines(AlmanacMenu.GUIDES.get(reading)).size() - visibleLines());
+            readScroll = Math.max(0, Math.min(max, readScroll - 3 * (int) Math.signum(scrollY)));
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    private int visibleLines() {
+        return (imageHeight - PAGE_TOP - 14 - PAGE_BOTTOM_PAD) / 10;
+    }
+
+    /** Wrapped lines of a guide; an empty sequence marks a paragraph gap. */
+    private List<FormattedCharSequence> guideLines(Guides.Guide guide) {
+        List<FormattedCharSequence> out = new ArrayList<>();
+        for (int p = 0; p < guide.paragraphs().size(); p++) {
+            if (p > 0) out.add(FormattedCharSequence.EMPTY);
+            for (String line : guide.paragraphs().get(p).split("\n")) {
+                out.addAll(font.split(Component.literal(line), imageWidth - 20));
+            }
+        }
+        return out;
     }
 
     private int rowAt(double mx, double my, int count) {
@@ -117,7 +164,7 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
         g.text(font, title, 8, 7, GREY, false);
         AlmanacMenu m = getMenu();
         switch (m.tab()) {
-            case AlmanacMenu.TAB_GUIDES -> drawGuides(g, m);
+            case AlmanacMenu.TAB_GUIDES -> drawGuides(g, m, mouseX, mouseY);
             case AlmanacMenu.TAB_QUESTS -> drawQuests(g, m, mouseX, mouseY);
             default -> drawUpgrades(g, m);
         }
@@ -159,14 +206,32 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
         wrap(g, status, DETAIL_X, ly, m.nodeState(sel) <= AlmanacMenu.AVAILABLE ? GREEN : RED);
     }
 
-    private void drawGuides(GuiGraphicsExtractor g, AlmanacMenu m) {
-        for (int i = 0; i < AlmanacMenu.GUIDES.size(); i++) {
-            String id = AlmanacMenu.GUIDES.get(i);
-            boolean open = m.guideUnlocked(i);
-            String name = open ? GUIDE_TITLES.getOrDefault(id, id) : "??? (finish a quest)";
-            g.text(font, name, LIST_X, LIST_Y + i * ROW, open ? GREY : LIGHT_GREY, false);
+    private void drawGuides(GuiGraphicsExtractor g, AlmanacMenu m, int mouseX, int mouseY) {
+        if (reading >= 0) {
+            drawGuideText(g, AlmanacMenu.GUIDES.get(reading));
+            return;
         }
-        wrap(g, "Guide pages arrive in a later update.", LIST_X, imageHeight - 28, LIGHT_GREY);
+        int hover = rowAt(mouseX, mouseY, AlmanacMenu.GUIDES.size());
+        for (int i = 0; i < AlmanacMenu.GUIDES.size(); i++) {
+            boolean open = m.guideUnlocked(i);
+            String name = open ? AlmanacMenu.GUIDES.get(i).title() : "??? (finish a quest)";
+            g.text(font, name, LIST_X, LIST_Y + i * ROW, !open ? LIGHT_GREY : i == hover ? BLUE : GREY, false);
+        }
+        wrap(g, "Click a guide to read it. You can tear out a copy to keep or share.", LIST_X, imageHeight - 28, LIGHT_GREY);
+    }
+
+    private void drawGuideText(GuiGraphicsExtractor g, Guides.Guide guide) {
+        g.text(font, guide.title(), LIST_X, PAGE_TOP, BLUE, false);
+        List<FormattedCharSequence> lines = guideLines(guide);
+        int y = PAGE_TOP + 14;
+        int shown = visibleLines();
+        for (int i = readScroll; i < lines.size() && i < readScroll + shown; i++, y += 10) {
+            g.text(font, lines.get(i), LIST_X, y, GREY, false);
+        }
+        if (readScroll + shown < lines.size()) {
+            String more = "scroll \u2193";
+            g.text(font, more, (imageWidth - font.width(more)) / 2, imageHeight - 20, LIGHT_GREY, false);
+        }
     }
 
     private void drawQuests(GuiGraphicsExtractor g, AlmanacMenu m, int mouseX, int mouseY) {
@@ -212,7 +277,9 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             return "Blueprint: " + name.substring(0, 1).toUpperCase(Locale.ROOT) + name.substring(1);
         }
         if (grant.equals("perk:merchant_license")) return "Dealer spread 20% -> 12% on every trade";
-        if (grant.startsWith("guide:")) return "Guide: " + GUIDE_TITLES.getOrDefault(id, id);
+        if (grant.startsWith("guide:")) {
+            for (Guides.Guide gd : AlmanacMenu.GUIDES) if (gd.id().equals(id)) return "Guide: " + gd.title();
+        }
         return "Perk: " + id.replace('_', ' ');
     }
 

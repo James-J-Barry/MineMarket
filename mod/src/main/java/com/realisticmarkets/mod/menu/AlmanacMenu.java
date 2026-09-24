@@ -5,15 +5,13 @@ import com.realisticmarkets.mod.dealer.Wallet;
 import com.realisticmarkets.mod.progression.ProgressionService;
 import com.realisticmarkets.mod.registry.ModBlocks;
 import com.realisticmarkets.mod.registry.ModMenus;
+import com.realisticmarkets.progression.Guides;
 import com.realisticmarkets.progression.PlayerProgress;
 import com.realisticmarkets.progression.Quest;
 import com.realisticmarkets.progression.Quests;
 import com.realisticmarkets.progression.UnlockNode;
 import com.realisticmarkets.progression.UnlockTree;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -34,13 +32,14 @@ public class AlmanacMenu extends AbstractContainerMenu {
     public static final int BUTTON_TAB_BASE = 0; // 0..2
     public static final int BUTTON_BUY = 3;
     public static final int BUTTON_SELECT_BASE = 100;
+    public static final int BUTTON_TEAR_OUT_BASE = 200; // + guide index
 
     public static final int OWNED = 0, AVAILABLE = 1, NO_CASH = 2, NEEDS_QUEST = 3, LOCKED = 4;
 
     /** Same resources on client and server, so indices line up. */
     public static final List<UnlockNode> NODES = List.copyOf(UnlockTree.loadDefault().all());
     public static final List<Quest> QUESTS = List.copyOf(Quests.loadDefault().all());
-    public static final List<String> GUIDES = guideIds();
+    public static final List<Guides.Guide> GUIDES = List.copyOf(Guides.loadDefault().all());
 
     private static final int D_TAB = 0;
     private static final int D_CASH = 1;       // 2 slots
@@ -74,17 +73,6 @@ public class AlmanacMenu extends AbstractContainerMenu {
             }
             refresh();
         }
-    }
-
-    private static List<String> guideIds() {
-        Set<String> ids = new LinkedHashSet<>();
-        for (Quest q : Quests.loadDefault().all()) collectGuides(q.grants(), ids);
-        for (UnlockNode n : UnlockTree.loadDefault().all()) collectGuides(n.grants(), ids);
-        return List.copyOf(new ArrayList<>(ids));
-    }
-
-    private static void collectGuides(List<String> grants, Set<String> into) {
-        for (String g : grants) if (g.startsWith("guide:")) into.add(g.substring("guide:".length()));
     }
 
     // ---- reads (client and server)
@@ -122,7 +110,7 @@ public class AlmanacMenu extends AbstractContainerMenu {
             data.set(D_NODES + i, state);
         }
         for (int i = 0; i < QUESTS.size(); i++) data.set(D_QUESTS + i, p.hasCompleted(QUESTS.get(i).id()) ? 1 : 0);
-        for (int i = 0; i < GUIDES.size(); i++) data.set(D_GUIDES + i, p.hasGuide(GUIDES.get(i)) ? 1 : 0);
+        for (int i = 0; i < GUIDES.size(); i++) data.set(D_GUIDES + i, p.hasGuide(GUIDES.get(i).id()) ? 1 : 0);
     }
 
     @Override
@@ -136,6 +124,8 @@ public class AlmanacMenu extends AbstractContainerMenu {
             int sel = selected();
             handled = tab() == TAB_UPGRADES && sel >= 0 && sel < NODES.size()
                     && progression.buyNode(p, NODES.get(sel).id()).isEmpty();
+        } else if (id >= BUTTON_TEAR_OUT_BASE && id < BUTTON_TEAR_OUT_BASE + GUIDES.size()) {
+            handled = progression.tearOutGuide(p, GUIDES.get(id - BUTTON_TEAR_OUT_BASE).id());
         } else if (id >= BUTTON_SELECT_BASE && id < BUTTON_SELECT_BASE + NODES.size()) {
             data.set(D_SELECTED, id - BUTTON_SELECT_BASE + 1);
             handled = true;

@@ -1,0 +1,86 @@
+# Realistic Markets: Almanac field guides.
+# "@<id> <Title>" starts a guide. Blank lines separate paragraphs. The last paragraph starting with
+# "Real world:" is the one-line real-world parallel. Keep each guide 150-250 words (GuidesTest checks).
+# Numbers come from the design doc's wheat table (V=$0.50, L=256, 20% spread, tau=2 days).
+
+@money_and_dealer Money & the Dealer
+Every Basic Exchange in this world trades with the same Dealer. The Dealer buys what you bring and sells what you need, and it pays in dollars: dimes, $1, $10 and $100 bills.
+
+Dollars are real items. You can't craft them, mobs don't drop them, and if you die carrying them they fall to the ground like anything else. Keep what you don't need in a chest.
+
+The Sell tab shows three prices per item. Normal is the item's fair value, the price the Dealer drifts back to over time. Market is where the Dealer's price sits right now. Pays is what you get for the next item. Your first sale went through close to Normal because the Dealer had none of that item in stock.
+
+If the Dealer won't buy something, no market exists for it yet. More markets open as you unlock new tools here at the Almanac.
+
+Fair values also wander by about 2% a day, even when nobody trades. Yesterday's price is a guide, not a promise.
+
+Real world: money exists so you don't have to find someone who wants your wheat and also happens to have the pickaxe you need. Economists call that the double coincidence of wants.
+
+@spread The Spread
+You just bought an item and sold the same item straight back, and you ended up with less money than you started with. That gap is the spread.
+
+The Dealer always quotes two prices. The ask is what it charges when you buy. The bid is what it pays when you sell. At the Basic Exchange they sit 20% apart, centered on the market price. For wheat at $0.50 the ask is $0.55 and the bid is $0.45, so a round trip costs you $0.10 per wheat.
+
+Why does the Dealer get that cut? It stands ready to trade any time, in any amount, and it carries the risk of holding stock it may have to sell for less later. The spread is its pay for that service.
+
+Spreads differ by item. Components like Brass Fittings trade at a 40% spread, because the Dealer can't easily resell spare parts. Buy them when you need them, not to hold.
+
+The Merchant License, now available in Upgrades, cuts your spread from 20% to 12% on every trade. The more you trade, the faster it pays for itself.
+
+Real world: an airport currency booth quotes one rate to sell you euros and a worse one to buy them back. The difference is its spread.
+
+@price_impact Price Impact
+You sold 256 of one item in a single day, and each one paid a little less than the one before.
+
+The Dealer lowers its price as its stock grows. Every item has a depth: roughly how much the Dealer can absorb before its price falls to about a third of normal. Wheat's depth is 256. The price moves unit by unit inside one sale, so a big sale pays the average price along the way, not the price at the start.
+
+Here is wheat, sold to a Dealer that has none in stock:
+
+64 wheat pays $25.48, not the $28.80 you'd get at the first bid.
+256 wheat pays $72.82, not $115.20.
+1,024 wheat pays $113.09.
+
+No amount of wheat will ever pay more than $115.20 in one go, because the last units are worth almost nothing. After the 256-wheat sale the bid has fallen from $0.45 to $0.17.
+
+So a bigger farm doesn't earn proportionally more. Selling a little at a time, or selling different things, does.
+
+Buying works the same way in reverse: buy a lot at once and the ask climbs as you go.
+
+Real world: when a big fund dumps a large block of shares at once, the price slides as it sells. Traders call this market impact, and large sellers split their orders to limit it.
+
+@recovery Recovery & Patience
+You pushed a price down, waited, and sold again once it came back. That's the Dealer's recovery at work.
+
+Between your visits the Dealer sells its stock on to the outside world. Its inventory of each item shrinks by about 40% every in-game day, and the price climbs back toward normal as it does.
+
+Take 256 wheat sold at once. Right after, the Market price sits at 37% of Normal. Then:
+
+After 2 days: back to about 69%.
+After 4 days: about 87%.
+After about 5 days: past 90%.
+
+The steady pace a Dealer can absorb is about half its depth per day. For wheat that's roughly 128 a day, worth about $21. Sell faster and you mostly sell into your own price drop. Sell at that pace and every batch goes through near full price.
+
+So patience is a strategy. Store goods in a chest, check the Market price, and sell when it has recovered. Rotate between items while each one recovers.
+
+Waiting never undoes a sale that already happened, though. Money lost selling into a crashed price is gone; patience only helps the next sale.
+
+Real world: after a big trade, market makers slowly sell off the inventory they took on and prices drift back. Traders call this liquidity recovering.
+
+@diversification Diversification
+You earned $20 from each of three different groups of goods in one day. That beats selling the same amount of one thing.
+
+Each item has its own Dealer price and its own depth. Selling wheat does nothing to the price of iron. So the first units of every item sell near full price, while the hundredth unit of any one item sells well below it.
+
+Compare two ways to sell 192 items, all with wheat's depth of 256:
+
+192 of one item at once keeps about 70% of its full value.
+64 each of three items keeps about 88%.
+
+Same work, about a quarter more money, just from spreading it out. The best income comes from several small operations that each sell near their steady pace, not one giant farm.
+
+Diversification also protects you. Fair values drift about 2% a day, and any single item can have a bad week. If you sell many things, one weak price hurts less.
+
+There is a limit. Spreading into goods that take ages to gather, or are worth very little, can cost more time than it earns. Diversify across things that each pay their way.
+
+Real world: investors spread their money across many companies so one bad result can't sink them. The old saying is don't put all your eggs in one basket.

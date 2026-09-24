@@ -9,6 +9,7 @@ import com.realisticmarkets.mod.progression.ProgressionService;
 import com.realisticmarkets.mod.registry.ModItems;
 import com.realisticmarkets.progression.ProgressionEvent;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.ContainerLevelAccess;
@@ -137,7 +138,41 @@ public class ProgressionGameTests {
         helper.succeed();
     }
 
+    @GameTest
+    public void guideTearsOutAsAWrittenBookOnlyOnceUnlocked(GameTestHelper helper) {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        ProgressionService prog = ProgressionService.forTest();
+        AlmanacMenu menu = new AlmanacMenu(1, player.getInventory(), ContainerLevelAccess.NULL, prog, null);
+        int spread = guideIndex("spread");
+
+        check(!menu.guideUnlocked(spread), "Spread guide starts locked");
+        check(!menu.clickMenuButton(player, AlmanacMenu.BUTTON_TEAR_OUT_BASE + spread), "locked guide can't be torn out");
+        check(player.getInventory().countItem(Items.WRITTEN_BOOK) == 0, "no book yet");
+
+        prog.emit(player, new ProgressionEvent.Purchase("minecraft:wheat", "farm", 1, 60, 0));
+        prog.emit(player, new ProgressionEvent.Sale("minecraft:wheat", "farm", 1, 40, 1.0, 1.0, 0));
+        check(menu.clickMenuButton(player, AlmanacMenu.BUTTON_TEAR_OUT_BASE + spread), "tear out after Meet the Spread");
+        check(menu.guideUnlocked(spread), "guide shows as unlocked");
+
+        ItemStack book = ItemStack.EMPTY;
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            if (player.getInventory().getItem(i).is(Items.WRITTEN_BOOK)) book = player.getInventory().getItem(i);
+        }
+        var content = book.get(DataComponents.WRITTEN_BOOK_CONTENT);
+        check(content != null, "book should carry written content");
+        check(content.title().raw().equals("The Spread"), "title should be The Spread, got " + content.title().raw());
+        check(content.pages().size() >= 3, "a ~220-word guide spans several pages, got " + content.pages().size());
+        String all = String.join(" ", content.pages().stream().map(p -> p.raw().getString()).toList());
+        check(all.contains("$0.45") && all.contains("Real world:"), "book should contain the guide text");
+        helper.succeed();
+    }
+
     // ------------------------------------------------------------------ helpers
+
+    private static int guideIndex(String id) {
+        for (int i = 0; i < AlmanacMenu.GUIDES.size(); i++) if (AlmanacMenu.GUIDES.get(i).id().equals(id)) return i;
+        throw new IllegalStateException("no guide " + id);
+    }
 
     private static void giveClipMaterials(ServerPlayer player) {
         player.getInventory().add(new ItemStack(Items.LEATHER, 2));

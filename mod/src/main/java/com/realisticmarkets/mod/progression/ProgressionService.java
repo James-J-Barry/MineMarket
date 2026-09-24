@@ -10,6 +10,7 @@ import com.realisticmarkets.mod.dealer.Wallet;
 import com.realisticmarkets.mod.registry.ModItems;
 import com.realisticmarkets.money.Money;
 import com.realisticmarkets.progression.Blueprints;
+import com.realisticmarkets.progression.Guides;
 import com.realisticmarkets.progression.PlayerProgress;
 import com.realisticmarkets.progression.ProgressStateIO;
 import com.realisticmarkets.progression.ProgressionEvent;
@@ -24,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -31,12 +33,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.Filterable;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.WrittenBookContent;
 import net.minecraft.world.level.storage.LevelResource;
 
 /**
@@ -52,6 +58,7 @@ public final class ProgressionService {
     private final UnlockTree tree = UnlockTree.loadDefault();
     private final Quests quests = Quests.loadDefault();
     private final Blueprints blueprints = Blueprints.loadDefault();
+    private final Guides guides = Guides.loadDefault();
     private final Path dir; // null for test instances
     private final Map<UUID, PlayerProgress> players = new HashMap<>();
 
@@ -82,6 +89,7 @@ public final class ProgressionService {
     public UnlockTree tree() { return tree; }
     public Quests quests() { return quests; }
     public Blueprints blueprints() { return blueprints; }
+    public Guides guides() { return guides; }
 
     public PlayerProgress progress(Player player) {
         return players.computeIfAbsent(player.getUUID(), this::load);
@@ -133,6 +141,25 @@ public final class ProgressionService {
             }
         }
         emit(player, new ProgressionEvent.NetWorth(cash, cash + goods, (long) Math.floor(day)));
+    }
+
+    /** Gives the player a written-book copy of an unlocked guide. Free: the guide stays in the Almanac. */
+    public boolean tearOutGuide(Player player, String guideId) {
+        if (!guides.has(guideId) || !progress(player).hasGuide(guideId)) return false;
+        player.getInventory().placeItemBackInInventory(guideBook(guides.guide(guideId)));
+        return true;
+    }
+
+    /** Vanilla pages hold about 14 short lines; 200 characters leaves room for the list line breaks. */
+    public static final int BOOK_PAGE_CHARS = 200;
+
+    public static ItemStack guideBook(Guides.Guide guide) {
+        List<Filterable<Component>> pages = new ArrayList<>();
+        for (String page : guide.pages(BOOK_PAGE_CHARS)) pages.add(Filterable.passThrough(Component.literal(page)));
+        ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
+        book.set(DataComponents.WRITTEN_BOOK_CONTENT,
+                new WrittenBookContent(Filterable.passThrough(guide.title()), "Market Almanac", 0, pages, true));
+        return book;
     }
 
     public boolean licensed(Player player) {
