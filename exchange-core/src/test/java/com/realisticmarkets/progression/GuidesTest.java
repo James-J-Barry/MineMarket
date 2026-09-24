@@ -18,7 +18,8 @@ class GuidesTest {
         assertEquals(List.of("money_and_dealer", "spread", "price_impact", "recovery", "diversification",
                         "cash_on_hand", "reading_a_quote", "transaction_costs", "two_markets",
                         "interest_and_compounding", "term_and_liquidity", "leverage_and_collateral",
-                        "order_books", "limit_and_market_orders", "liquidity_and_market_makers", "news_and_markets", "reading_a_chart"),
+                        "order_books", "limit_and_market_orders", "liquidity_and_market_makers", "news_and_markets", "reading_a_chart", "owning_a_share", "valuing_a_company",
+                        "risk_and_return"),
                 guides.all().stream().map(Guides.Guide::id).toList());
         for (Guides.Guide g : guides.all()) {
             int words = g.wordCount();
@@ -276,6 +277,55 @@ class GuidesTest {
         assertEquals(7, com.realisticmarkets.exchange.PriceChart.DAYS);
         assertEquals(4, com.realisticmarkets.exchange.PriceHistory.PERIODS_PER_DAY);
         assertTrue(text("reading_a_chart").contains("last seven days of trading, four points a day"));
+    }
+
+    static long startEarnings(com.realisticmarkets.equities.Company c) {
+        DealerCatalog cat = DealerCatalog.loadDefault();
+        java.util.function.ToDoubleFunction<String> price = k -> cat.trades(k) ? cat.spec(k).fairValue() : 1.0;
+        double rev = 0, cost = c.fixedCost();
+        for (var e : c.revenue().entrySet()) rev += e.getValue() * price.applyAsDouble(e.getKey());
+        for (var e : c.inputs().entrySet()) cost += e.getValue() * price.applyAsDouble(e.getKey());
+        return Math.round((rev - cost) * 100);
+    }
+
+    @Test
+    void shareGuidesMatchTheCompanies() {
+        var companies = com.realisticmarkets.equities.CompanyCatalog.loadDefault();
+        DealerCatalog cat = DealerCatalog.loadDefault();
+        var eq = new com.realisticmarkets.equities.Equities(companies, k -> cat.trades(k) ? cat.spec(k).fairValue() : 1.0, 1);
+        var owl = companies.company("OWL");
+        long owlEps = Math.round(startEarnings(owl) / (double) owl.shares());
+        long owlDiv = (long) Math.floor(owl.payout() * startEarnings(owl) / owl.shares());
+        String own = text("owning_a_share");
+        assertTrue(own.contains("earning about " + usd(owlEps) + " a share each quarter and pays " + usd(owlDiv)), own);
+        String val = text("valuing_a_company");
+        var dsmc = companies.company("DSMC");
+        long dsmcE = startEarnings(dsmc);
+        double pe = eq.startValueCents("DSMC") / (4.0 * dsmcE / dsmc.shares());
+        assertTrue(val.contains(String.format(java.util.Locale.ROOT, "about %.1f times earnings", pe)), "DSMC P/E " + pe);
+        double owlPe = eq.startValueCents("OWL") / (4.0 * startEarnings(owl) / owl.shares());
+        assertTrue(val.contains(String.format(java.util.Locale.ROOT, "Overworld Utility at about %.0f", owlPe)), "OWL P/E " + owlPe);
+        double yield = 4.0 * owlDiv / eq.startValueCents("OWL");
+        assertTrue(val.contains(String.format(java.util.Locale.ROOT, "about %.1f%% for the utility", yield * 100)), "yield " + yield);
+        double ironSales = 20_000 * 8.0 * 0.2, sales = 20_000 * 8.0 + 4_000 * 15.0 + 400 * 100.0;
+        assertEquals(dsmc.revenue().get("minecraft:iron_ingot"), 20_000L);
+        double salesDrop = ironSales / sales, earningsDrop = ironSales * 100 / dsmcE;
+        assertTrue(val.contains(String.format(java.util.Locale.ROOT, "sales fall about %.0f%% but its earnings fall about %.0f%%",
+                salesDrop * 100, earningsDrop * 100)), salesDrop + " / " + earningsDrop);
+    }
+
+    @Test
+    void riskAndReturnMatchesTheEconomy() {
+        String t = text("risk_and_return");
+        assertEquals(0.001, DealerParams.defaults().inflation(), 0.0);
+        assertEquals(0.003, com.realisticmarkets.contracts.BankParams.loadDefault().interestRate(), 0.0);
+        assertTrue(t.contains("about 0.1% a day") && t.contains("The vault pays 0.3% a day, about 0.2% more"));
+        double lo = 1, hi = 0;
+        for (var c : com.realisticmarkets.equities.CompanyCatalog.loadDefault().all()) {
+            lo = Math.min(lo, c.requiredReturn());
+            hi = Math.max(hi, c.requiredReturn());
+        }
+        assertTrue(t.contains(String.format(java.util.Locale.ROOT, "between %.2f%% and %.2f%% a day", lo * 100, hi * 100)));
     }
 
     @Test

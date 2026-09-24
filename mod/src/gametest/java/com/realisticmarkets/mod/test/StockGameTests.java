@@ -112,6 +112,7 @@ public class StockGameTests {
         check(paper.paidThrough() == 1, "now paid through quarter 1");
         check(!d.menu().clickMenuButton(p, StockExchangeMenu.BUTTON_COLLECT), "nothing more this quarter");
         check(d.prog().progress(p).hasCompleted("shareholder"), "Shareholder");
+        check(d.prog().progress(p).hasGuide("risk_and_return"), "and its guide, Risk and Return");
         helper.succeed();
     }
 

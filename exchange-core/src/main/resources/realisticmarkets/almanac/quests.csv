@@ -21,6 +21,6 @@ name_your_price,limit_filled,1000,guide:liquidity_and_market_makers,Name Your Pr
 beat_the_dealer,beat_dealer,1500,,Beat the Dealer
 two_books,two_books:minecraft:iron_block:minecraft:iron_ingot:9,2500,,Two Books
 read_the_tape,chart_read,1000,,Read the Tape
-shareholder,dividend_collected,1500,,Shareholder
+shareholder,dividend_collected,1500,guide:risk_and_return,Shareholder
 buy_the_business,shares_held:100,2500,,Buy the Business
 beat_the_market,beat_market,3000,,Beat the Market

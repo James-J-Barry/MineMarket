@@ -244,3 +244,38 @@ Look for three things. The trend: are the closes climbing or sliding over the we
 Charts show what happened, not what will. A trend can keep going or stop dead. Use a chart to judge how risky a trade is, not to promise yourself a profit.
 
 Real world: traders have read prices off paper strips since ticker machines printed every trade in the 1870s. A chart shows a market's mood, but no pattern is a promise.
+
+@owning_a_share Owning a Share
+You opened a Stock Exchange. A share is a small piece of a company, and the company's earnings belong to the people who own it.
+
+Every quarter, seven in-game days, each company reports what it earned and pays part of it to every share as a dividend. Overworld Utility & Light starts out earning about $1.14 a share each quarter and pays $1.02 of it. The rest stays in the company and helps it grow, so the share is worth more.
+
+Your shares are Share Certificates: papers for 1, 10 or 100 shares. Whoever holds a certificate owns it, so keep them safe; lose one and those shares are gone. Dividends wait on the paper until you bring it to a Stock Exchange and collect. Shares the exchange holds for you, in an open order or waiting to be collected, earn their dividend too.
+
+To get a quarter's dividend you must own the share when the quarter ends. Once it's paid the company has that much less cash, so the price drops by about the dividend. Buying just before and selling just after gains you nothing.
+
+Real world: companies first sold shares so that many people could fund one venture and share its profits. For centuries the proof of ownership was a paper certificate, and dividends were the reason to hold it.
+
+@valuing_a_company Valuing a Company
+What is a share worth? Whatever the company will earn for its owners from now on, counted in today's money.
+
+The Company tab shows the last four quarters: revenue, costs and earnings. Watch the costs. Much of what a company spends is fixed, so its earnings swing far more than its sales. Deepslate Mining sells iron, gold and diamonds. If iron falls 20%, its sales fall about 12% but its earnings fall about 37%.
+
+Two numbers help you compare companies. Price to earnings (P/E) is the share price divided by a year of earnings, four quarters. At the start Deepslate Mining trades at about 11.5 times earnings and Overworld Utility at about 16: investors pay more for steady earnings. Dividend yield is a year of dividends divided by the price, about 5.6% for the utility.
+
+A low P/E can mean a bargain or a company in trouble. A high one can mean fast growth or too much hope. And earnings react to what you do: flood the iron market and the miner's next report will show it.
+
+Real world: Benjamin Graham taught investors to compare a price with what the business earns and to buy with a margin of safety. In the short run the market is a voting machine; in the long run, a weighing machine.
+
+@risk_and_return Risk and Return
+You collected your first dividend. How do shares compare with everything else you could do with money?
+
+Prices in this world creep up about 0.1% a day, so cash in a chest loses that much buying power every day. Goods roughly keep pace with prices, but they swing with every harvest and strike. The vault pays 0.3% a day, about 0.2% more than prices rise, with no risk at all.
+
+Shares should earn more than the vault, because owners take the risk. Investors here expect between 0.25% and 0.55% a day above rising prices, depending on the company: the least for the steady utility, the most for Redstone Dynamics, whose price can double or halve in a few weeks. That extra is the price of risk.
+
+One company can have a terrible stretch. A spread of several is far calmer, because their bad quarters rarely line up. Diversifying gives up little of the return and removes much of the risk.
+
+So keep money you'll need soon in the vault, and put money you won't touch for weeks into a spread of shares.
+
+Real world: over the last century stocks have beaten bank deposits by a few percent a year, with deep crashes along the way. That gap is called the equity risk premium.

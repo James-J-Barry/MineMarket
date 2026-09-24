@@ -56,6 +56,7 @@ class ProgressionTest {
         assertTrue(tree.node("bank_vault").grants().contains("guide:interest_and_compounding"));
         assertTrue(tree.node("certificate_of_deposit").grants().contains("guide:term_and_liquidity"));
         assertTrue(tree.node("loan_note").grants().contains("guide:leverage_and_collateral"));
+        assertTrue(tree.node("stock_exchange").grants().containsAll(java.util.List.of("guide:owning_a_share", "guide:valuing_a_company")));
     }
 
     @Test
