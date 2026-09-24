@@ -196,7 +196,7 @@ The Almanac Lectern is the progression hub: a lectern holding the Market Almanac
 
 Tier 2 adds three more: **Nest Egg** (earn $10 of interest), **Locked In** (hold a CD to maturity) and **Leverage** (open and fully repay a loan), each worth $10–$25.
 
-Tier 3 adds **Name Your Price** (get a limit order filled), **Beat the Dealer** (sell on the Floor above the Dealer's bid that day), **Two Books** (profit from iron blocks vs iron ingots on the Floor) and **Read the Tape** (print a Price Chart).
+Tier 3 adds **Name Your Price** (get a limit order filled), **Beat the Dealer** (sell on the Floor above the Dealer's bid that day), **Two Books** (profit from iron blocks vs iron ingots on the Floor) and **Read the Tape** (read a chart at the Ticker Tape).
 
 Guides stay short: 150–250 words each, a worked example using the player's own numbers where possible (“You sold 256 wheat for $72.82; at a steady price it would have been $115.20”), and a one-line real-world parallel.
 
