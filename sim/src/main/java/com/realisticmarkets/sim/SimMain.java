@@ -10,6 +10,7 @@ import java.util.Arrays;
  *   ./scripts/dev.sh sim auction [steps] [seed]    batch-auction price discovery demo
  *   ./scripts/dev.sh sim progression [profile]     Tier 1 play time, then Trade Route Crate income uplift
  *   ./scripts/dev.sh sim floor                     Trading Floor liquidity, spreads, impact and no-arbitrage
+ *   ./scripts/dev.sh sim trader                    does the Floor make a player money? gatherer uplift, trading strategies
  * </pre>
  */
 public final class SimMain {
@@ -21,8 +22,9 @@ public final class SimMain {
             case "auction" -> AuctionSim.main(rest);
             case "progression" -> ProgressionSim.main(rest);
             case "floor" -> FloorSim.main(rest);
+            case "trader" -> TraderSim.main(rest);
             default -> {
-                System.err.println("unknown sim '" + mode + "'. Try: farm, auction, progression, floor");
+                System.err.println("unknown sim '" + mode + "'. Try: farm, auction, progression, floor, trader");
                 System.exit(2);
             }
         }

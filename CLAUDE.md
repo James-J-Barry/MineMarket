@@ -20,6 +20,7 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 | `test` | exchange-core unit tests, prints `N tests, M failed` | ~5 s |
 | `sim farm [item] [days]` | Dealer balance: income vs farm size → `build/sim/*.csv` | ~5 s |
 | `sim floor` | Trading Floor: liquidity, spreads, fair-value tracking, sale impact vs the Dealer, no-arbitrage loops | ~10 s |
+| `sim trader [free] [visits=N] [capital=C] [size=D] [cap=C]` | Does the Floor make a player money? Gatherer income uplift + payback; trading strategies vs the vault | ~10 s |
 | `sim progression [profile]` | Tier 1 play time, then Trade Route Crate income uplift, from gathering profiles in `sim/src/main/resources/profiles/` | ~5 s |
 | `build` | compile everything **and run the GameTests** (Loom's `check` includes them) | ~15 s |
 | `gametest` | server GameTests only, in a headless Minecraft server | ~10 s |
