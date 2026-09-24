@@ -18,7 +18,7 @@ class GuidesTest {
         assertEquals(List.of("money_and_dealer", "spread", "price_impact", "recovery", "diversification",
                         "cash_on_hand", "reading_a_quote", "transaction_costs", "two_markets",
                         "interest_and_compounding", "term_and_liquidity", "leverage_and_collateral",
-                        "order_books", "limit_and_market_orders", "liquidity_and_market_makers"),
+                        "order_books", "limit_and_market_orders", "liquidity_and_market_makers", "news_and_markets"),
                 guides.all().stream().map(Guides.Guide::id).toList());
         for (Guides.Guide g : guides.all()) {
             int words = g.wordCount();
@@ -260,6 +260,14 @@ class GuidesTest {
         long[] empty = w.quotes(50, 0);
         assertTrue(t.contains("raises them to " + usd(empty[0]) + " and " + usd(empty[1])));
         assertTrue(t.contains("quotes " + wheat.depth() / 16 + " at a time") && t.contains("quotes " + diamond.depth() / 16 + " at a time"));
+    }
+
+    @Test
+    void newsGuideTimingMatchesTheEvents() {
+        String t = text("news_and_markets");
+        assertEquals(0.5, com.realisticmarkets.dealer.WorldEvents.DELAY_DAYS, 0.0);
+        assertTrue(t.contains("around midday") && t.contains("That half day is your edge"));
+        assertTrue(t.contains("half as much as last time, or half as much again"), "event scale 0.5-1.5");
     }
 
     @Test

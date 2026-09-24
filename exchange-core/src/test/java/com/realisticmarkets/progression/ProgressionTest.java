@@ -63,9 +63,9 @@ class ProgressionTest {
         assertEquals(4, tree.tier(1).size());
         assertEquals(4000, tree.node("bill_clip").costCents());
         assertEquals(14, quests.all().size());
-        assertEquals(6, blueprints.all().size());
+        assertEquals(7, blueprints.all().size());
         assertEquals(32, blueprints.forResult("realisticmarkets:order_slip").resultCount(), "one Ledger Paper makes 32 slips");
-        assertEquals(1, tree.tier(3).size());
+        assertEquals(2, tree.tier(3).size());
         assertEquals(3, tree.tier(2).size());
         blueprints.validateAgainst(tree);
         for (UnlockNode n : tree.all()) {

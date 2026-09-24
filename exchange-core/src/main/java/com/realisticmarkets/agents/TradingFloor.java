@@ -136,9 +136,10 @@ public final class TradingFloor {
         return sum;
     }
 
-    /** Last clearing price, or fair value before the first trade. */
+    /** The book's reference price: its last clearing price, kept near fair value (see {@link AgentPopulation#reference}). */
     public long reference(String item, long fairCents) {
-        return ex.lastPrice(item).orElse(fairCents);
+        AgentPopulation p = pops.get(item);
+        return p != null ? p.reference(fairCents) : ex.lastPrice(item).orElse(fairCents);
     }
 
     /** Cash a buy order must escrow: the limit, or for a market buy, the reach above the reference. */

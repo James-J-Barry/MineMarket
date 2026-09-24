@@ -41,8 +41,8 @@ Each pass through the loop should take longer and pay more than the last, with a
 | 0 | Barter | Basic Exchange, Almanac Lectern, dollars | Money as a medium of exchange; bid/ask spread | Crafted, no cost | First session |
 | 1 | Merchant | Price Board, Bill Clip, Merchant License, Trade Route Crate | Quotes, transaction costs, arbitrage between markets | $40–$300 | \~2 h |
 | 2 | Banking | Bank Vault + Passbook, Certificate of Deposit, Loan Note | Interest, compounding, leverage, collateral | $500–$2,500 | \~5 h |
-| 3 | Exchange | Trading Floor, Order Slips, Ticker Tape, Price Chart | Order books, limit vs market orders, liquidity | $1,500–$8,000 | \~10 h |
-| 4 | Equities | Stock Exchange, Share Certificates, Newspaper Stand, Portfolio Binder, Safe Deposit Box | Ownership, dividends, valuation, news | $5,000–$25,000 | \~15 h |
+| 3 | Exchange | Trading Floor, Order Slips, Newsstand, Ticker Tape, Price Chart | Order books, limit vs market orders, liquidity, news | $1,000–$8,000 | \~10 h |
+| 4 | Equities | Stock Exchange, Share Certificates, Electronic Newsfeed, Portfolio Binder, Safe Deposit Box | Ownership, dividends, valuation, news | $5,000–$25,000 | \~15 h |
 | 5 | Fixed income | Bond Desk, Treasury and Corporate Bonds, Records Terminal | Yield, rate risk, default risk, bookkeeping | $25,000–$60,000 | \~22 h |
 | 6 | Forwards and futures | Forward Contracts, Clearing House, Futures | Hedging, margin, mark-to-market | $40,000–$120,000 | \~30 h |
 | 7 | Options | Options Desk, Call and Put Contracts, Volatility Board | Optionality, payoff asymmetry, Greeks | $80,000–$250,000 | \~40 h |
@@ -113,7 +113,7 @@ Fair value V moves on its own, so prices change even when the player does nothin
 - **Random walk with trends.** Each in-game day log V takes a random step (about 2%) plus a trend that itself wanders and lasts a week or two, so prices can climb or slide for days.
 - **A weak anchor.** Log V is pulled toward the catalog value with a 60-day half-life, so a long save stays sane: 95% of the time within about ±43% of the catalog value. A typical month moves 10%; one month in ten, over 24%.
 - **Supply and demand.** Every depth's worth sold to the Dealer lowers V by 1% for good (buying raises it). The Dealer's inventory still recovers in days (below), so part of a dump's price drop comes back and part never does: a huge single-item farm slowly depresses its own market.
-- **World events.** Bumper harvests, droughts, mine collapses, rich veins, building booms, raids and more (`events.csv`, about one every 3-6 days) hit groups of items. Each has a transient shock (±18-35%) that builds over the first hours after dawn and fades over days, plus a smaller permanent part. Headlines reach Trading Floor owners at dawn and show on the Floor screen, so someone who reads the news can trade before the price has fully moved.
+- **World events.** Bumper harvests, droughts, mine collapses, rich veins, building booms, raids and more (`events.csv`, about one every 3-6 days) hit groups of items. Each has a transient shock (±18-35%, scaled 0.5-1.5× per event, so a headline says which way but not how far) and a smaller permanent part. The news breaks at dawn in the Newsstand's paper (a Tier 3 purchase); the market only hears at midday, when the transient builds over a couple of hours and then fades over days. The permanent part lands the next dawn. That half day is what a reader pays for.
 
 Goods pay no interest while money in a Bank Vault does, so holding goods to sell later is a bet that they rise by more than the vault pays: the time value of money.
 
@@ -207,6 +207,7 @@ What the player can see about markets and their own money is itself a progressio
 | 0 | (start) | The Dealer's quote for the one item in the Exchange slot, or the item in hand near the block. Counting money means counting bills |
 | 1 | Price Board | Live quotes for up to 4 chosen items on a wall |
 | 2 | Passbook | A handwritten-style record of the player's bank balance, deposits, withdrawals and interest; the only place the balance is shown |
+| 3 | Newsstand | A daily Newspaper with the morning's market news (droughts, harvests, mine collapses) and which goods to expect up or down, half a day before the market hears |
 | 3 | Ticker Tape and Price Chart | A 7-day price history (daily close, high, low) for one Trading Floor book per chart, printed as a snapshot |
 | 4 | Portfolio Binder, Safe Deposit Box | Total value of the papers in one binder; safe storage for papers and bills, with no summary of its own |
 | 5 | Digital Record Keeping | A Records Terminal showing net worth, every holding, income by source, and upcoming payments across all linked blocks |
@@ -288,12 +289,14 @@ The mod adds 42 items and blocks plus 10 components (see Crafting) across nine t
 | 3 | Trading Floor | Block | $3,000 | Batch auction every 10 seconds for about 10 commodity books (iron ingot and iron block trade separately), against each other and NPC traders; spreads around 2-6% vs the Dealer's 20%. Goods and bills are dropped in to place orders; fills and refunds are collected from its output | Order books, liquidity |
 | 3 | Order Slip | Item | Drafting Table: 1 Ledger Paper -> 32 slips | One slip per order: a limit order good until the next dawn (repriced for free from the Floor screen), or a market order (filled now or refunded) | Limit vs market orders, transaction costs |
 | 3 | Trade Receipt | Item | One per finished order | Item, side, filled quantity, average price and day; can be recycled to paper | Settlement records |
+| 3 | Newsstand | Block | $1,000 | Once a day, gives its owner the Overworld Gazette: each world event breaking that morning and the goods it should push up or down. The market hears at midday | Information, being early |
+| 3 | Newspaper | Item | From the Newsstand, one a day | Headlines and "expect higher / lower" per story, dated; the tooltip is the paper | Reading the news |
 | 3 | Ticker Tape | Block | $1,500 | Prints a Price Chart for any Trading Floor book, for 1 Ledger Paper + 1 Ink Bottle | Price history |
 | 3 | Price Chart | Item | Produced by Ticker Tape | A snapshot of 7 days: line chart on right-click, sparkline in the tooltip (item-frame display later) | Reading charts, volatility |
 | 4 | Stock Exchange | Block | $10,000 | Buy and sell shares of fictional companies; claim dividends | Equity ownership |
 | 4 | Share Certificate | Item | Bought at Stock Exchange | Bearer certificate for 1, 10 or 100 shares of one company | Ownership, dividends |
 | 4 | Annual Report | Item | Free each earnings period per holding | Book with the company's revenue, costs, earnings and outlook | Fundamental analysis |
-| 4 | Newspaper Stand | Block | $2,000 | Produces a daily newspaper with headlines that move prices | Information, efficient markets |
+| 4 | Electronic Newsfeed | Block | $2,000 | Company news: earnings, dividends and corporate headlines that move share prices, as they happen (the Tier 3 Newsstand covers commodity news) | Information, efficient markets |
 | 4 | Portfolio Binder | Item | $5,000 | Holds up to 27 security items and shows their total value | Portfolio management |
 | 4 | Safe Deposit Box | Block | $4,000 | 54-slot blast-proof storage that accepts only securities and currency; shows no totals by itself | Custody, safekeeping |
 | 5 | Bond Desk | Block | $25,000 | Buy Treasury and Corporate Bonds; claim coupons | Fixed income |
@@ -459,7 +462,7 @@ NPC traders shown in the world as villager merchants around the Trading Floor an
 
 ### Fictional companies
 
-Company earnings are linked to the same commodity prices the player trades, so the player's own actions feed into stock prices: flooding the iron market lowers Deepslate Mining's next earnings. Earnings are reported every 7 in-game days (one quarter) in an Annual Report and the newspaper.
+Company earnings are linked to the same commodity prices the player trades, so the player's own actions feed into stock prices: flooding the iron market lowers Deepslate Mining's next earnings. Earnings are reported every 7 in-game days (one quarter) in an Annual Report and on the Electronic Newsfeed.
 
 | Ticker | Company | Earnings driven by | Profile |
 | --- | --- | --- | --- |
@@ -494,11 +497,11 @@ In single player the Dealer is an unlimited faucet, so its price impact is the m
 
 All of these live in datapack JSON, and difficulty presets (Relaxed, Standard, Realistic) swap whole sets at world creation.
 
-**Trading Floor (`sim floor`, 30 in-game days, no player):** all 14 books (wheat, carrot, potato, beef, oak log, coal, iron ingot, iron block, copper ingot, gold ingot, redstone, emerald, diamond, bone) trade in 62-90% of auctions at spreads of 3.3-5.3%, 1-7% from the Dealer's fair value (world events jump fair value faster than the NPCs follow). Selling 64 on the Floor pays 1.2-2x the Dealer; 1,024 shows heavy impact and thin books (diamond, emerald, iron block) absorb only 100-350 a day. Every Floor-Dealer round trip loses money.
+**Trading Floor (`sim floor`, 30 in-game days, no player):** all 14 books (wheat, carrot, potato, beef, oak log, coal, iron ingot, iron block, copper ingot, gold ingot, redstone, emerald, diamond, bone) trade in 61-90% of auctions at spreads of 3.3-5.3%, 1-2% from the Dealer's fair value (the NPCs' reference price stays within 8% of fair value, so the Floor follows news within hours). Selling 64 on the Floor pays 1.2-2.4x the Dealer; a big seller drains the NPCs' cash: in a day thin books (diamond, emerald, iron block, gold) absorb only 90-270, deep ones 550-1,024, at 87-92% of the starting price. Every Floor-Dealer round trip loses money.
 
-**Trading for a living (`sim trader`, 30 days, 8 worlds, 4 Floor visits a day, Order Slips $0.14):** selling gathered goods on the Floor instead of the Dealer lifts income 20% (early survival) to 57% (farm-heavy), paying back the Floor in 30-90 days. With $1,000 and no gathering, against the vault's $3/day: quoting inside the market maker earns about $6/day (worst week -$44); buying under Normal and selling over it about $13/day; trading the news about $3/day (the NPCs reprice fast and books are shallow); iron block vs ingots about $19/day (worst week -$121, the stock you hold moves); buy-and-hold loses about $2/day with -$82 weeks. Trading pays, and it carries risk.
+**Trading for a living (`sim trader`, 30 days, 8 worlds, 4 Floor visits a day, Order Slips $0.14):** selling gathered goods on the Floor instead of the Dealer lifts income 20% (early survival) to 61% (farm-heavy), paying back the Floor in 28-90 days. With $1,000 and no gathering, against the vault's $3/day: quoting inside the market maker earns about $6/day (worst week -$66); buying under Normal and selling over it about $13/day (it almost never has a losing week: see M5c); trading the Newsstand's news about $8/day from one or two orders a day (worst week -$27); iron block vs ingots about $14/day (worst week -$108, the stock you hold moves); buy-and-hold loses about $2/day with -$99 weeks. Trading pays, and it carries risk.
 
-**Measured so far (`sim progression`, assumed gathering profiles):** Tier 1 complete at 2.0 h (target ~2 h). Tier 3 (Trading Floor built) at 17 h against ~10 h. Tier 2 complete (Bank Vault, CD, Loan Note, vault built) at 9.7-10.3 h against a ~5 h target: Tier 2 costs about 7x Tier 1 while Tier 1's tools add only 11-35% income. Current prices are kept for now; halving Tier 2 prices and a 4-block vault recipe would bring it to about 5.3-6.3 h. Vault savings earn about $4-8 a day against $106-174 of income.
+**Measured so far (`sim progression`, assumed gathering profiles):** Tier 1 complete at 2.0 h (target ~2 h). Tier 3 (Trading Floor and Newsstand built) at 19-20 h against ~10 h. Tier 2 complete (Bank Vault, CD, Loan Note, vault built) at 9.7-10.3 h against a ~5 h target: Tier 2 costs about 7x Tier 1 while Tier 1's tools add only 11-35% income. Current prices are kept for now; halving Tier 2 prices and a 4-block vault recipe would bring it to about 5.3-6.3 h. Vault savings earn about $4-8 a day against $106-174 of income.
 
 ## Technical architecture
 
@@ -584,7 +587,7 @@ Build in tier order, and make each milestone a complete, playable loop before st
 | M4b | Collateral and loans | Loan Note, escrow, `collateral` package, margin calls and liquidation; Leverage quest | The worked loan example matches the table; a margin call liquidates correctly in a GameTest |
 | M5a | Trading Floor | Order Slips, receipts, custody at the Floor, NPC trader population on the existing batch auction, `agents` package, three guides and three quests | Books stay liquid with no player; prices track fair value in sim |
 | M5b | Ticker Tape | Ticker Tape, Price Chart, Reading a Chart guide, Read the Tape quest | A chart holds the last 7 days of a book |
-| M6 | Equities | Stock Exchange, certificates, six companies, Annual Reports, Newspaper Stand, Portfolio Binder, Safe Deposit Box | Dividends pay on presentation; earnings react to commodity prices |
+| M6 | Equities | Stock Exchange, certificates, six companies, Annual Reports, Electronic Newsfeed, Portfolio Binder, Safe Deposit Box | Dividends pay on presentation; earnings react to commodity prices |
 | M7 | Bonds | Bond Desk, Treasury and Corporate Bonds, central-rate events, defaults; Digital Record Keeping (Records Terminal, Record Link) | Bond prices fall when the rate rises; the Records Terminal's net worth equals the sum of linked holdings in a GameTest |
 | M8 | Forwards and futures | Forward Contract, Clearing House, daily mark-to-market | A wheat hedge offsets a price drop in sim |
 | M9 | Options | Options Desk, calls and puts, Greeks in book view, Volatility Board | Covered call pays full premium; naked call pays less with weak collateral |

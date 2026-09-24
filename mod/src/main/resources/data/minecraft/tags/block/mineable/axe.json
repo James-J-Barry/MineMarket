@@ -6,6 +6,7 @@
     "realisticmarkets:drafting_table",
     "realisticmarkets:price_board",
     "realisticmarkets:trade_route_crate",
-    "realisticmarkets:trading_floor"
+    "realisticmarkets:trading_floor",
+    "realisticmarkets:newsstand"
   ]
 }

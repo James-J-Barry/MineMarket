@@ -26,11 +26,15 @@ value"). `docs/design.md` is updated with this milestone.
    later is a bet that they will rise by more than the vault pays. The guides say so.
 3. **World events** from `events.csv`, deterministic from the world seed and the day (no save state): e.g. a
    bumper harvest (farm goods -20%), drought (crops +30%), mine collapse (ores +25%), new vein, building boom,
-   diamond rush, redstone craze. Each has a **transient** shock that builds over the first few hours after dawn
-   and decays (half-life of a few days), plus a smaller **permanent** part. About one event every few days
-   across the catalog. Headlines appear on the **Trading Floor screen** and in chat for players who own the
-   Trading Floor node (the Floor is where news travels; the Tier 4 Newspaper Stand will add forecasts later).
-   Someone who reads the news at dawn can trade before the price has fully moved.
+   diamond rush, redstone craze. Each has a **transient** shock, scaled 0.5-1.5x per event, plus a smaller
+   **permanent** part. About one event every few days across the catalog.
+   **News is a purchase (James, 2026-09-24).** A Tier 3 **Newsstand** ($1,000; blueprint: 6 planks, 2 Ledger Paper,
+   1 Ink Bottle) gives its owner one **Newspaper** a day: the morning's headlines and which goods to expect higher or
+   lower. No news on the Floor screen or in chat. **The market hears at midday** (half a day after dawn): only then
+   does the transient build (over a couple of hours) and fade over days; the permanent part lands the next dawn.
+   That half day is the reader's edge. Company headlines (Tier 4) come later from an **Electronic Newsfeed**, which
+   replaces the design doc's Newspaper Stand. The Floor's NPCs quote around the last trade but never more than 8%
+   from fair value, so once the market hears, the Floor follows within hours.
 4. **Two Books really has two books.** Floor books for compressed items (iron block) get their own supply and
    demand: a *basis* around 9 x the ingot price that wanders (about 4%, half-life 1 day). Crafting links the
    books, so the gap closes, but most days it opens far enough to profit.
@@ -52,31 +56,33 @@ value"). `docs/design.md` is updated with this milestone.
 ## Done when
 
 - [x] Price model: trend walk, weak anchor, permanent supply impact; save format v2 reads v1 saves; unit tests.
-- [x] World events: catalog, deterministic schedule, transient + permanent effects; headlines on the Floor
-      screen and in chat; unit tests + GameTest.
+- [x] World events: catalog, deterministic schedule, transient + permanent effects; unit tests + GameTest.
+      (Headlines first went on the Floor screen and in chat; moved to the Newsstand below.)
 - [x] Floor basis for iron block; unit tests.
 - [x] 32 Order Slips per Ledger Paper; reprice an open order without a slip (core + menu + GameTest).
 - [x] Four new books. Potato, beef, copper ingot, bone; 14 books, so the Floor screen is 212 px wide with a 7x2 grid.
       `sim floor`: all trade in 62-90% of auctions at 3.3-5.3% spreads; every Floor-Dealer loop loses. With world
       events the Floor lags fair value by 1-7% on average (potato 6.7%, redstone 5.1%), so that target is now 8%.
 - [x] Sims meet the targets; design doc, guides and pinned numbers updated.
-      `sim trader` (30 days, 8 worlds, 4 visits a day, slips $0.14; vault = $3/day on $1,000):
+      `sim trader` (30 days, 8 worlds, 4 visits a day, slips $0.14; vault = $3/day on $1,000), after the Newsstand:
 
-      | strategy | $/day | worst world | worst week |
-      | --- | --- | --- | --- |
-      | quote inside the market maker | +$5.81 | +$2.57 | -$44 |
-      | buy under Normal, sell over it | +$13.14 | +$10.29 | +$14 |
-      | trade the news | +$2.94 | +$0.31 | -$6 |
-      | iron block vs ingots (Two Books) | +$18.80 | +$10.88 | -$121 |
-      | buy and hold (benchmark) | -$1.65 | -$3.68 | -$82 |
+      | strategy | $/day | worst world | worst week | orders/day |
+      | --- | --- | --- | --- | --- |
+      | quote inside the market maker | +$6.42 | +$0.70 | -$66 | 65 |
+      | buy under Normal, sell over it | +$12.58 | +$8.82 | +$0.53 | 69 |
+      | trade the Newsstand's news | +$8.23 | +$1.23 | -$27 | 1.3 |
+      | iron block vs ingots (Two Books) | +$13.77 | +$7.25 | -$108 | 2.4 |
+      | buy and hold (benchmark) | -$1.72 | -$4.10 | -$99 | 0.4 |
 
-      Gatherers: Floor-first lifts income +20% (early survival) and +57% (farm-heavy); payback 90 and 30 days.
+      Gatherers: Floor-first lifts income +20% (early survival) and +61% (farm-heavy); payback 90 and 28 days.
       Before M5c the same traders lost $15-18 a day. Misses to note: the market-making strategy earns 2x the vault
-      rather than 3-5x; news trading is weak because NPCs reprice within hours and books are shallow; buying under
-      Normal never had a losing week (Normal is public and the Floor's noise reverts to it within hours).
+      rather than 3-5x; buying under Normal almost never has a losing week (Normal is public and the Floor's noise
+      reverts to it within hours).
       `sim farm`: wheat now peaks at about $19.50/day (was $21) since sales lower V for good.
-      `sim progression`: Tier 1 2.0 h, Tier 2 10 h (unchanged), Tier 3 17 h (was 16); crate uplift +16% / +41%.
+      `sim progression`: Tier 1 2.0 h, Tier 2 10 h (unchanged), Tier 3 with the Newsstand 19-20 h (was 16); crate
+      uplift +16% / +41%.
       Guides: Money & the Dealer, Recovery (part of a drop never comes back; waiting has a cost vs the vault),
       Diversification, Reading a Quote, Limit and Market Orders (repricing) updated.
-- [ ] James's in-game check: news on the Floor, repricing, prices that move.
+- [x] Newsstand and Newspaper (core timing + edition, block, item, guide News and Markets, GameTest).
+- [ ] James's in-game check: the Newsstand's paper and its head start, repricing, prices that move.
 - [ ] `./scripts/dev.sh check` green.

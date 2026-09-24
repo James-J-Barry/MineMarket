@@ -47,6 +47,7 @@ public final class ModCreativeTab {
                             output.accept(ModBlocks.TRADING_FLOOR);
                             output.accept(ModItems.CLOCKWORK_GEAR);
                             output.accept(ModItems.ORDER_SLIP);
+                            output.accept(ModBlocks.NEWSSTAND);
                         })
                         .build());
     }

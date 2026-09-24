@@ -69,9 +69,17 @@ public final class AgentPopulation {
     public List<Long> closes() { return List.copyOf(closes); }
     public FloorCatalog.Book book() { return book; }
 
-    /** Reference price the agents quote around: the last clearing price, or fair value before any trade. */
+    /** How far the reference may sit from fair value: the NPCs hear the news too, so the book can't lag far behind. */
+    public static final double REFERENCE_BAND = 0.08;
+
+    /**
+     * Reference price the agents quote around: the last clearing price, kept within {@link #REFERENCE_BAND} of fair
+     * value (fair value itself before any trade).
+     */
     public long reference(long fairCents) {
-        return ex.lastPrice(book.item()).orElse(fairCents);
+        long last = ex.lastPrice(book.item()).orElse(fairCents);
+        long lo = (long) Math.floor(fairCents * (1 - REFERENCE_BAND)), hi = (long) Math.ceil(fairCents * (1 + REFERENCE_BAND));
+        return Math.max(lo, Math.min(hi, last));
     }
 
     /** Every agent submits its orders for the coming auction. Returns how many were accepted. */

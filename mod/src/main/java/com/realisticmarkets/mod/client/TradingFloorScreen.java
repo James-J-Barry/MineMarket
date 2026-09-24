@@ -5,7 +5,6 @@ import static com.realisticmarkets.mod.client.Panels.GREEN;
 import static com.realisticmarkets.mod.client.Panels.GREY;
 import static com.realisticmarkets.mod.client.Panels.LIGHT_GREY;
 
-import com.realisticmarkets.dealer.WorldEvents;
 import com.realisticmarkets.mod.menu.TradingFloorMenu;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +22,6 @@ import net.minecraft.world.item.ItemStack;
 
 public class TradingFloorScreen extends AbstractContainerScreen<TradingFloorMenu> {
     private static final int BOOK_X = 8, BOOK_Y = 18, COLS = 7, INFO_X = 140;
-    private static final int GOLD = 0xFF8A5A00;
-    private static final List<WorldEvents.Type> NEWS = WorldEvents.loadTypes();
     private Button side, market;
     private final List<Button> priceButtons = new ArrayList<>();
     private final Button[] cancel = new Button[TradingFloorMenu.MAX_SHOWN_ORDERS];
@@ -140,16 +137,6 @@ public class TradingFloorScreen extends AbstractContainerScreen<TradingFloorMenu
         if (m.orderCount() == 0) {
             g.text(font, "No open orders", 84, 107, LIGHT_GREY, false);
         }
-        boolean any = false;
-        for (int i = 0; i < TradingFloorMenu.NEWS_LINES; i++) {
-            int t = m.newsType(i);
-            if (t < 0 || t >= NEWS.size()) continue;
-            any = true;
-            String when = m.newsAge(i) == 0 ? "" : " (" + m.newsAge(i) + "d ago)";
-            g.text(font, Panels.trim(font, NEWS.get(t).headline() + when, imageWidth - 16), 8, TradingFloorMenu.NEWS_Y + i * 9,
-                    m.newsAge(i) == 0 ? GOLD : LIGHT_GREY, false);
-        }
-        if (!any) g.text(font, "Quiet markets: no news.", 8, TradingFloorMenu.NEWS_Y, LIGHT_GREY, false);
         for (int i = 0; i < m.orderCount(); i++) {
             String line = (m.orderSelling(i) ? "S " : "B ") + m.orderFilled(i) + "/" + m.orderQty(i) + " @" + cents(m.orderPrice(i));
             g.item(icon(m.orderBook(i)), 80, 102 + i * 11);

@@ -4,6 +4,7 @@ import com.realisticmarkets.mod.RealisticMarkets;
 import com.realisticmarkets.mod.block.BankVaultBlock;
 import com.realisticmarkets.mod.block.BasicExchangeBlock;
 import com.realisticmarkets.mod.block.MenuBlock;
+import com.realisticmarkets.mod.block.NewsstandBlock;
 import com.realisticmarkets.mod.block.PriceBoardBlock;
 import com.realisticmarkets.mod.block.TradeRouteCrateBlock;
 import com.realisticmarkets.mod.dealer.DealerService;
@@ -34,6 +35,7 @@ public final class ModBlocks {
     public static Block TRADE_ROUTE_CRATE;
     public static Block BANK_VAULT;
     public static Block TRADING_FLOOR;
+    public static Block NEWSSTAND;
 
     public static void init() {
         ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("basic_exchange"));
@@ -85,6 +87,15 @@ public final class ModBlocks {
 
         TRADING_FLOOR = registerMenuBlock("trading_floor", (id, inv, access) ->
                 new TradingFloorMenu(id, inv, access, FloorService.get(), ProgressionService.get(), DealerService.get()));
+
+        ResourceKey<Block> newsKey = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("newsstand"));
+        NEWSSTAND = Registry.register(BuiltInRegistries.BLOCK, newsKey,
+                new NewsstandBlock(BlockBehaviour.Properties.of()
+                        .setId(newsKey)
+                        .mapColor(MapColor.WOOD)
+                        .strength(2.0f)
+                        .sound(SoundType.WOOD)));
+        ModItems.register("newsstand", props -> new BlockItem(NEWSSTAND, props), new Item.Properties().useBlockDescriptionPrefix());
     }
 
     private static Block registerMenuBlock(String name, MenuBlock.Factory factory) {

@@ -18,12 +18,18 @@ import java.util.SplittableRandom;
 /**
  * World events that move fair values (M5c): a bumper harvest, a drought, a mine collapse. Each event type starts on
  * a day with a fixed chance, decided by the world seed and the day alone, so the schedule needs no save state and
- * a world always has the same history. An event has a transient effect on log fair value that builds over the first
- * hours after dawn ({@link #RAMP_DAYS}) and fades with its half-life, plus a smaller permanent effect.
+ * a world always has the same history.
+ *
+ * <p>The news breaks at dawn, in the Newsstand's paper, but the market only hears at midday: prices start to move
+ * {@link #DELAY_DAYS} after dawn. The transient effect then builds over {@link #RAMP_DAYS} and fades with the
+ * type's half-life; the smaller permanent effect lands at the next dawn. Each event's size is its type's size times
+ * a {@link Event#scale()} between 0.5 and 1.5, so a headline says which way, not how far.
  */
 public final class WorldEvents implements Dealer.Shocks {
     public static final String DEFAULT_RESOURCE = "/realisticmarkets/events.csv";
-    /** Most of a transient shock arrives within about a quarter of a day: early readers of the news can act first. */
+    /** The market hears the news this long after dawn: a Newsstand reader's head start. */
+    public static final double DELAY_DAYS = 0.5;
+    /** Once the market hears, most of a transient shock arrives within about a quarter of a day. */
     public static final double RAMP_DAYS = 0.1;
     /** Transient effects older than this are ignored (under 0.1% of the shock at the longest half-life). */
     static final int LOOKBACK_DAYS = 50;
@@ -31,8 +37,8 @@ public final class WorldEvents implements Dealer.Shocks {
     public record Type(int index, String id, List<String> targets, double shock, double halfLifeDays, double permanent,
                        double chancePerDay, String headline) {}
 
-    /** One event: a type starting on a day. */
-    public record Event(Type type, long day) {}
+    /** One event: a type starting on a day, at {@code scale} times the type's size. */
+    public record Event(Type type, long day, double scale) {}
 
     private final List<Type> types;
     private final long seed;
@@ -102,7 +108,8 @@ public final class WorldEvents implements Dealer.Shocks {
             List<Event> out = new ArrayList<>();
             for (Type t : types) {
                 long mix = seed ^ (t.id().hashCode() * 0x9E3779B97F4A7C15L) ^ (d * 0xD6E8FEB86659FD93L);
-                if (new SplittableRandom(mix).nextDouble() < t.chancePerDay()) out.add(new Event(t, d));
+                SplittableRandom r = new SplittableRandom(mix);
+                if (r.nextDouble() < t.chancePerDay()) out.add(new Event(t, d, 0.5 + r.nextDouble()));
             }
             return List.copyOf(out);
         });
@@ -116,11 +123,26 @@ public final class WorldEvents implements Dealer.Shocks {
         return out;
     }
 
+    /** Permanent effects land at the dawn after the event: that is, on {@code day} for events of the day before. */
     @Override
     public double permanent(String baseItem, long day) {
         double sum = 0;
-        for (Event e : startingOn(day)) if (resolved.get(e.type().index()).contains(baseItem)) sum += e.type().permanent();
+        for (Event e : startingOn(day - 1)) {
+            if (resolved.get(e.type().index()).contains(baseItem)) sum += e.type().permanent() * e.scale();
+        }
         return sum;
+    }
+
+    /** One newspaper story: the headline and the goods it should push up or down. */
+    public record Story(String headline, boolean up, List<String> items) {}
+
+    /** The Newsstand's paper for {@code day}: every event breaking that morning. */
+    public List<Story> edition(long day) {
+        List<Story> out = new ArrayList<>();
+        for (Event e : startingOn(day)) {
+            out.add(new Story(e.type().headline(), e.type().shock() > 0, List.copyOf(resolved.get(e.type().index()))));
+        }
+        return out;
     }
 
     @Override
@@ -132,14 +154,15 @@ public final class WorldEvents implements Dealer.Shocks {
         }
         double sum = 0;
         for (Event e : active) {
-            if (resolved.get(e.type().index()).contains(baseItem)) sum += transientEffect(e.type(), day - e.day());
+            if (resolved.get(e.type().index()).contains(baseItem)) sum += e.scale() * transientEffect(e.type(), day - e.day());
         }
         return sum;
     }
 
-    /** Transient log effect {@code age} days after dawn of the start day. */
+    /** Transient log effect of a full-size event {@code age} days after dawn of its day. Zero until midday. */
     public static double transientEffect(Type t, double age) {
-        if (age < 0) return 0;
-        return t.shock() * (1 - Math.exp(-age / RAMP_DAYS)) * Math.pow(0.5, age / t.halfLifeDays());
+        double heard = age - DELAY_DAYS;
+        if (heard < 0) return 0;
+        return t.shock() * (1 - Math.exp(-heard / RAMP_DAYS)) * Math.pow(0.5, heard / t.halfLifeDays());
     }
 }

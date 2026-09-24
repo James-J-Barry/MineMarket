@@ -3,7 +3,6 @@ package com.realisticmarkets.mod.floor;
 import com.realisticmarkets.agents.FloorCatalog;
 import com.realisticmarkets.agents.TradingFloor;
 import com.realisticmarkets.dealer.Dealer;
-import com.realisticmarkets.dealer.WorldEvents;
 import com.realisticmarkets.exchange.Exchange;
 import com.realisticmarkets.exchange.PriceHistory;
 import com.realisticmarkets.exchange.RejectedException;
@@ -30,10 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.Container;
@@ -50,8 +46,6 @@ import net.minecraft.world.level.storage.LevelResource;
  */
 public final class FloorService {
     public static final int AUCTION_TICKS = 200;
-    public static final int NEWS_DAYS = 3;
-    public static final String FLOOR_NODE = "trading_floor";
     private static final long SEED_SALT = 0x466C6F6F72L; // "Floor"
 
     private static FloorService instance;
@@ -146,7 +140,6 @@ public final class FloorService {
         if (whole > instance.lastDay) {
             instance.dawn(whole);
             instance.lastDay = whole;
-            instance.announce(server, whole);
         }
         if (instance.ticks % AUCTION_TICKS == 0) instance.runAuctions(day);
         if (instance.ticks % DealerService.SAVE_INTERVAL_TICKS == 0) instance.save();
@@ -158,32 +151,6 @@ public final class FloorService {
         for (FloorCatalog.Book b : floor.catalog().all()) {
             for (TradingFloor.Receipt r : floor.auction(b.item(), fairCents(b.item(), day), AUCTION_TICKS / 24_000.0, whole)) {
                 receipts.computeIfAbsent(r.account(), k -> new ArrayList<>()).add(r);
-            }
-        }
-    }
-
-    /** Events still in the news at {@code day} (started in the last {@link #NEWS_DAYS} days), newest first. */
-    public List<WorldEvents.Event> news(double day) {
-        WorldEvents ev = dealer.events();
-        return ev == null ? List.of() : ev.recent(day, NEWS_DAYS);
-    }
-
-    /** At dawn, today's headlines go to every player who owns the Trading Floor: the Floor is where news travels. */
-    private void announce(MinecraftServer server, long day) {
-        WorldEvents ev = dealer.events();
-        if (ev == null) return;
-        List<WorldEvents.Event> today = ev.startingOn(day);
-        if (today.isEmpty()) return;
-        ProgressionService prog;
-        try {
-            prog = ProgressionService.get();
-        } catch (IllegalStateException notRunning) {
-            return;
-        }
-        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-            if (!prog.progress(p).hasNode(FLOOR_NODE)) continue;
-            for (WorldEvents.Event e : today) {
-                p.sendSystemMessage(Component.literal("Floor news: " + e.type().headline()).withStyle(ChatFormatting.GOLD));
             }
         }
     }

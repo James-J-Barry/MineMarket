@@ -227,25 +227,27 @@ public final class TraderSim {
     }
 
     /**
-     * Trade the Floor news. At dawn, when an event will push a book up, buy before the NPCs catch up; when one has
-     * knocked a book down, buy the next day, once the fall is in the price, for the part that fades. Sell once the
-     * position is 8% up, or at the bid after 3 days.
+     * Trade the Newsstand's paper. At dawn, when a story will push a book up, buy at the ask before the market
+     * hears at midday; when one has knocked a book down, buy the next dawn, after the fall, for the part that fades.
+     * Sell at 60% of the event type's usual move (40% for a dip), or at the bid after 3 days.
      */
     static Strategy news() {
-        Map<String, double[]> held = new LinkedHashMap<>(); // item -> {entry cents, entry day}
+        Map<String, double[]> held = new LinkedHashMap<>(); // item -> {entry cents, entry day, target gain}
         return (w, me, dawn) -> {
             if (dawn) {
                 long today = (long) Math.floor(w.day + 1e-9);
-                for (WorldEvents.Event e : w.events.recent(w.day, 2)) {
+                for (WorldEvents.Event e : w.events.recent(today + 0.5, 2)) { // (w.day can sit a hair before dawn)
                     boolean up = e.type().shock() > 0 && e.day() == today;
                     boolean dip = e.type().shock() < 0 && e.day() == today - 1;
                     if (!up && !dip) continue;
                     for (String item : w.events.affects(e.type())) {
                         if (!w.floor.catalog().trades(item) || held.containsKey(item)) continue;
                         long[] q = w.quotes(item);
-                        long price = up ? Math.round(q[1] * 1.06) : q[0] + 1; // pay up to beat the NPCs to the move
+                        long price = up ? q[1] + 1 : q[0] + 1;
                         w.order(me, item, Side.BUY, Math.min(30_000, me.cash / 3) / price, price);
-                        held.put(item, new double[] {price, w.day});
+                        // Aim for 60% of this kind of event's usual move (a dip only recovers part of it).
+                        double gain = up ? 0.6 * e.type().shock() : 0.4 * -e.type().shock();
+                        held.put(item, new double[] {price, w.day, gain});
                     }
                 }
             }
@@ -261,7 +263,7 @@ public final class TraderSim {
                     continue;
                 }
                 w.cancel(item, Side.BUY);
-                long target = stale ? q[0] : Math.max(q[1] - 1, Math.round(h.getValue()[0] * 1.08));
+                long target = stale ? q[0] : Math.max(q[1] - 1, Math.round(h.getValue()[0] * (1 + h.getValue()[2])));
                 w.order(me, item, Side.SELL, me.have(item), target);
             }
             held.keySet().removeIf(item -> me.have(item) == 0 && w.open(item, Side.SELL) == null

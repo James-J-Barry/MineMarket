@@ -236,25 +236,38 @@ public class FloorGameTests {
     }
 
     @GameTest
-    public void worldEventsShowOnTheFloorAndMoveTheDealer(GameTestHelper helper) {
+    public void newsstandPaperGivesAHeadStartBeforeTheMarketMoves(GameTestHelper helper) {
         ServerPlayer p = helper.makeMockServerPlayerInLevel();
+        ServerPlayer stranger = helper.makeMockServerPlayerInLevel();
         DealerService dealer = DealerService.forTest(1234L);
         dealer.useEvents(77L);
-        FloorService floor = FloorService.forTest(dealer, 99L);
+        ProgressionService prog = ProgressionService.forTest();
+        Wallet.give(p, 661_500); // bill clip + price board + vault + loan note + newsstand ($1,000)
+        for (String node : new String[] {"bill_clip", "price_board", "bank_vault", "loan_note", "newsstand"}) {
+            check(prog.buyNode(p, node).isEmpty(), "buy " + node);
+        }
+        check(prog.progress(p).hasGuide("news_and_markets"), "the Newsstand grants its guide");
         com.realisticmarkets.dealer.WorldEvents ev = dealer.events();
         long day = 1;
         while (ev.startingOn(day).isEmpty()) day++;
         com.realisticmarkets.dealer.WorldEvents.Event e = ev.startingOn(day).getFirst();
-        double now = dealer.day(helper.getLevel().getGameTime());
-        dealer.shiftDays(day + 0.5 - now); // the middle of the event's first day
-        TradingFloorMenu menu = new TradingFloorMenu(1, p.getInventory(), ContainerLevelAccess.NULL, floor,
-                ProgressionService.forTest(), dealer);
-        check(menu.newsType(0) == e.type().index() && menu.newsAge(0) == 0, "today's headline is first: " + e.type().id()
-                + ", menu shows " + menu.newsType(0));
+        com.realisticmarkets.mod.news.NewsService news = com.realisticmarkets.mod.news.NewsService.forTest();
+
+        check(news.collect(stranger, prog, dealer, day + 0.1).isPresent(), "no paper without the upgrade");
+        check(news.collect(p, prog, dealer, day + 0.1).isEmpty(), "the morning paper");
+        check(news.collect(p, prog, dealer, day + 0.3).isPresent(), "one paper a day");
+        ItemStack paper = BankGameTests.find(p, ModItems.NEWSPAPER);
+        String text = paper.get(DataComponents.LORE).lines().stream().map(c -> c.getString()).reduce("", (a, b) -> a + "\n" + b);
+        check(text.contains(e.type().headline()), "the paper carries today's headline: " + text);
+        check(text.contains(e.type().shock() > 0 ? "Expect higher" : "Expect lower"), "and says which way");
+
         String item = ev.affects(e.type()).iterator().next();
-        double moved = dealer.dealer().fairValue(item, day + 0.5) / dealer.dealer().fairValue(item, day);
-        check(Math.signum(moved - 1) == Math.signum(e.type().shock()) && Math.abs(moved - 1) > 0.1,
-                e.type().id() + " moved " + item + " by " + moved);
+        double dawn = dealer.dealer().fairValue(item, day + 0.1), morning = dealer.dealer().fairValue(item, day + 0.45);
+        double evening = dealer.dealer().fairValue(item, day + 0.95);
+        check(Math.abs(morning / dawn - 1) < 0.03, "the market hasn't heard by mid-morning: " + morning / dawn);
+        check(Math.signum(evening / morning - 1) == Math.signum(e.type().shock()) && Math.abs(evening / morning - 1) > 0.05,
+                e.type().id() + " moved " + item + " after midday: " + evening / morning);
+        check(news.collect(p, prog, dealer, day + 1.1).isEmpty(), "a new paper the next dawn");
         helper.succeed();
     }
 

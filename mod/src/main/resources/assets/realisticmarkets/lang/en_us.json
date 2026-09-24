@@ -32,5 +32,7 @@
   "container.realisticmarkets.trading_floor": "Trading Floor",
   "item.realisticmarkets.clockwork_gear": "Clockwork Gear",
   "item.realisticmarkets.order_slip": "Order Slip",
-  "item.realisticmarkets.trade_receipt": "Trade Receipt"
+  "item.realisticmarkets.trade_receipt": "Trade Receipt",
+  "block.realisticmarkets.newsstand": "Newsstand",
+  "item.realisticmarkets.newspaper": "Newspaper"
 }

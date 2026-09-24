@@ -220,3 +220,16 @@ The NPCs also run out. A big seller drains their cash, and they take about two d
 Check the bid and ask before you trade. If they're wide, the book is thin or was just hit hard: use a limit order.
 
 Real world: market makers are paid through the spread for standing ready to trade. In a panic they widen their quotes or step away, and liquidity vanishes when people need it most.
+
+@news_and_markets News and Markets
+You built a Newsstand. Each morning it prints a Newspaper with the day's news, a drought or a bumper harvest or a mine collapse, and which goods each story should push up or down.
+
+The paper is out at dawn, but the rest of the market only hears around midday. Until then, prices on the Floor and at the Dealer still ignore the news. That half day is your edge.
+
+Read about a drought at dawn and you can buy wheat, carrots and potatoes at the old price. Once the market hears, prices jump within a couple of hours, then fade over the following days as the shock passes; a small part of the move stays for good. Sell into the jump, not after it has faded.
+
+Bad news works too. A bumper harvest means farm goods will fall, so sell what you hold before midday.
+
+Headlines say which way, not how far. The same kind of event can move prices half as much as last time, or half as much again. Don't bet everything on one story, and remember the books are shallow: buying a lot moves the price against you.
+
+Real world: news moves prices within seconds today, so traders pay to hear it first. Before the telegraph, whoever carried news from a battle could make a fortune before anyone else knew.
