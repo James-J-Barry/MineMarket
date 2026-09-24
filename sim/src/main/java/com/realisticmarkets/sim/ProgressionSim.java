@@ -122,6 +122,18 @@ public final class ProgressionSim {
                     Money.format(r.recentIncomePerDay()), Money.format(r.recentInterestPerDay()));
         }
         System.out.println("Design target: all of Tier 2 by about 5 h (parked: James kept current prices, 2026-09-24).");
+
+        System.out.println();
+        System.out.println("Tier 3 (M5a): all of Tiers 1-3 owned, Trading Floor built and Order Slips crafted; cumulative play time.");
+        System.out.println("  Components include materials this profile never gathers (gold), bought from the Dealer.");
+        System.out.printf(Locale.ROOT, "%-16s  %6s  %7s  %12s  %14s%n", "profile", "days", "hours", "total spend", "quest rewards");
+        for (String name : new LinkedHashSet<>(List.of(profile, "farm_heavy"))) {
+            Result r = run(loadProfile(name), 1.0, null, 3);
+            System.out.printf(Locale.ROOT, "%-16s  %6s  %7s  %12s  %14s%n", name,
+                    r.done() ? String.valueOf(r.day()) : ">" + MAX_DAYS, r.done() ? String.format(Locale.ROOT, "%.1f", r.hours()) : "-",
+                    Money.format(r.nodeCents() + r.componentCents()), Money.format(r.questCents()));
+        }
+        System.out.println("Design target: Tier 3 by about 10 h (the doc's pacing; Tier 2 already runs long).");
     }
 
     static final int CRATE_DAYS = 30;
@@ -303,11 +315,18 @@ public final class ProgressionSim {
                 for (Blueprint.Material m : bp.materials()) {
                     if (catalog.trades(m.item()) && "components".equals(catalog.spec(m.item()).group())) {
                         need += dealer.quoteBuy(m.item(), m.count(), day, p.hasPerk("merchant_license")).cents();
+                    } else if (buysFromDealer(m, stock, catalog)) {
+                        need += dealer.quoteBuy(m.item(), m.count(), day, p.hasPerk("merchant_license")).cents();
                     }
                 }
                 if (need > cash[0] || !haveVanilla(bp, stock, catalog)) continue;
                 for (Blueprint.Material m : bp.materials()) {
-                    if (catalog.trades(m.item()) && "components".equals(catalog.spec(m.item()).group())) {
+                    if (buysFromDealer(m, stock, catalog)) { // a material this player never gathers (gold)
+                        long c = dealer.buy(m.item(), m.count(), day, p.hasPerk("merchant_license")).cents();
+                        cash[0] -= c;
+                        componentCents += c;
+                        emit.accept(new ProgressionEvent.Purchase(m.item(), catalog.spec(m.item()).group(), m.count(), c, day));
+                    } else if (catalog.trades(m.item()) && "components".equals(catalog.spec(m.item()).group())) {
                         long c = dealer.buy(m.item(), m.count(), day, p.hasPerk("merchant_license")).cents();
                         cash[0] -= c;
                         componentCents += c;
@@ -402,9 +421,16 @@ public final class ProgressionSim {
         return r;
     }
 
+    /** A vanilla material the profile never produces, bought from the Dealer when a blueprint needs it. */
+    private static boolean buysFromDealer(Blueprint.Material m, Map<String, Double> stock, DealerCatalog catalog) {
+        return !m.item().startsWith("realisticmarkets:") && !m.item().startsWith("#") && catalog.trades(m.item())
+                && !"components".equals(catalog.spec(m.item()).group()) && !stock.containsKey(vanillaSource(m.item()));
+    }
+
     private static boolean haveVanilla(Blueprint bp, Map<String, Double> stock, DealerCatalog catalog) {
         for (Blueprint.Material m : bp.materials()) {
             if (m.item().startsWith("realisticmarkets:") || m.item().equals("minecraft:glass_pane")) continue;
+            if (buysFromDealer(m, stock, catalog)) continue;
             if (stock.getOrDefault(vanillaSource(m.item()), 0.0) < vanillaUnits(m.item(), m.count())) return false;
         }
         return true;

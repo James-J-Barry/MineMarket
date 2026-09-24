@@ -158,6 +158,7 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
 - `sim progression` rests on assumed gathering rates (`sim/src/main/resources/profiles/early_survival.csv`).
 - Tier 2 balance: full Tier 2 projects to ~10 h vs the design's ~5 h (see `docs/milestones/M4.md`). James chose
   to keep current prices for now; revisit later.
+- Tier 3 balance: the Trading Floor lands at ~16 h vs the design's ~10 h (`sim progression`, M5). Same decision pending.
 - `capital_catalog.csv` loads from the jar only (not copied to `config/` like the Dealer's files yet).
 - Floating price above the Basic Exchange (design doc) skipped; the screen covers it.
 - Placeholder art: currency, block and GUI textures are generated; James may repaint.
