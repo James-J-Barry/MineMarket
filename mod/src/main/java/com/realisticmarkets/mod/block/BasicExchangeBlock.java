@@ -2,6 +2,7 @@ package com.realisticmarkets.mod.block;
 
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.menu.BasicExchangeMenu;
+import com.realisticmarkets.mod.progression.ProgressionService;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
@@ -37,7 +38,8 @@ public class BasicExchangeBlock extends Block {
     protected MenuProvider getMenuProvider(BlockState state, Level level, BlockPos pos) {
         return new SimpleMenuProvider(
                 (containerId, inventory, player) -> new BasicExchangeMenu(
-                        containerId, inventory, ContainerLevelAccess.create(level, pos), DealerService.get()),
+                        containerId, inventory, ContainerLevelAccess.create(level, pos), DealerService.get(),
+                        ProgressionService.get()),
                 TITLE);
     }
 }

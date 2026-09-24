@@ -67,3 +67,8 @@ minecraft:stone,0.15,512,wood_and_stone,,
 minecraft:sand,0.10,512,wood_and_stone,,
 minecraft:gravel,0.10,512,wood_and_stone,,
 minecraft:glass,0.40,256,wood_and_stone,,
+
+# ---- Components: buy-only (no recipes, loot or trades). Shown in the Buy tab once a blueprint uses them.
+realisticmarkets:ledger_paper,4.00,64,components,,,0.40
+realisticmarkets:ink_bottle,6.00,48,components,,,0.40
+realisticmarkets:brass_fittings,10.00,32,components,,,0.40

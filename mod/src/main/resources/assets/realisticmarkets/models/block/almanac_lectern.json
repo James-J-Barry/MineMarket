@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "realisticmarkets:block/almanac_lectern_top",
+    "bottom": "minecraft:block/oak_planks",
+    "side": "realisticmarkets:block/almanac_lectern_side"
+  }
+}

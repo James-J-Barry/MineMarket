@@ -1,6 +1,8 @@
 {
   "replace": false,
   "values": [
-    "realisticmarkets:basic_exchange"
+    "realisticmarkets:basic_exchange",
+    "realisticmarkets:almanac_lectern",
+    "realisticmarkets:drafting_table"
   ]
 }

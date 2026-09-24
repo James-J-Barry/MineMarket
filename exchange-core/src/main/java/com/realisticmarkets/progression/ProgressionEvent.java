@@ -4,8 +4,10 @@ package com.realisticmarkets.progression;
 public sealed interface ProgressionEvent {
 
     /**
-     * A sale to the Dealer. Ratios are bid ÷ fair value for the item: {@code ratioBefore} when the sale started
-     * (after any recovery), {@code ratioAfter} once this sale's impact is applied.
+     * A sale to the Dealer. Ratios are the Dealer's market (mid) price ÷ fair value, the "Market" and "Normal"
+     * rows on the Basic Exchange: {@code ratioBefore} when the sale started (after any recovery),
+     * {@code ratioAfter} once this sale's impact is applied. Mid rather than bid, because an untouched bid
+     * already sits half a spread below fair value.
      */
     record Sale(String item, String group, int qty, long proceedsCents, double ratioBefore, double ratioAfter, long day)
             implements ProgressionEvent {}

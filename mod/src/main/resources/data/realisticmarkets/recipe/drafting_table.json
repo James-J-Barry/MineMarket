@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:crafting_table",
+    "minecraft:paper",
+    "minecraft:paper",
+    "minecraft:paper",
+    "minecraft:iron_ingot"
+  ],
+  "result": {
+    "id": "realisticmarkets:drafting_table",
+    "count": 1
+  }
+}

@@ -28,10 +28,18 @@ public final class ModCreativeTab {
                         .icon(() -> new ItemStack(ModItems.CURRENCY.get(Denomination.HUNDRED)))
                         .displayItems((params, output) -> {
                             output.accept(ModBlocks.BASIC_EXCHANGE);
+                            output.accept(ModBlocks.ALMANAC_LECTERN);
+                            output.accept(ModBlocks.DRAFTING_TABLE);
                             output.accept(ModItems.CURRENCY.get(Denomination.DIME));
                             output.accept(ModItems.CURRENCY.get(Denomination.ONE));
                             output.accept(ModItems.CURRENCY.get(Denomination.TEN));
                             output.accept(ModItems.CURRENCY.get(Denomination.HUNDRED));
+                            output.accept(ModItems.LEDGER_PAPER);
+                            output.accept(ModItems.INK_BOTTLE);
+                            output.accept(ModItems.BRASS_FITTINGS);
+                            output.accept(ModItems.BILL_CLIP);
+                            output.accept(ModItems.PRICE_BOARD);
+                            output.accept(ModItems.TRADE_ROUTE_CRATE);
                         })
                         .build());
     }

@@ -8,5 +8,15 @@
   "gui.realisticmarkets.sell": "Sell",
   "gui.realisticmarkets.tab_sell": "Sell",
   "gui.realisticmarkets.tab_buy": "Buy",
-  "itemGroup.realisticmarkets": "Realistic Markets"
+  "itemGroup.realisticmarkets": "Realistic Markets",
+  "block.realisticmarkets.almanac_lectern": "Almanac Lectern",
+  "container.realisticmarkets.almanac_lectern": "Almanac",
+  "block.realisticmarkets.drafting_table": "Drafting Table",
+  "container.realisticmarkets.drafting_table": "Drafting Table",
+  "item.realisticmarkets.ledger_paper": "Ledger Paper",
+  "item.realisticmarkets.ink_bottle": "Ink Bottle",
+  "item.realisticmarkets.brass_fittings": "Brass Fittings",
+  "item.realisticmarkets.bill_clip": "Bill Clip",
+  "item.realisticmarkets.price_board": "Price Board",
+  "item.realisticmarkets.trade_route_crate": "Trade Route Crate"
 }

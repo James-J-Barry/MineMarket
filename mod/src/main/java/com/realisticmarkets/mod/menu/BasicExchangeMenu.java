@@ -4,14 +4,17 @@ import com.realisticmarkets.dealer.Dealer;
 import com.realisticmarkets.exchange.RejectedException;
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.dealer.Wallet;
+import com.realisticmarkets.mod.progression.ProgressionService;
 import com.realisticmarkets.mod.registry.ModBlocks;
 import com.realisticmarkets.mod.registry.ModItems;
 import com.realisticmarkets.mod.registry.ModMenus;
 import com.realisticmarkets.money.Denomination;
 import com.realisticmarkets.money.Money;
+import com.realisticmarkets.progression.ProgressionEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.Container;
@@ -102,6 +105,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
     private final ContainerLevelAccess access;
     private final Player player;
     private final DealerService dealer;          // null on the client
+    private final ProgressionService progression; // null on the client and in M1 tests
     private final List<String> buyList = new ArrayList<>(); // server only
     private int ticks;
     private boolean inputChanged = true;
@@ -111,12 +115,19 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         this(containerId, playerInventory, ContainerLevelAccess.NULL, null);
     }
 
-    /** Server-side constructor. */
+    /** Server-side constructor without progression: no license, no components, no quest events. */
     public BasicExchangeMenu(int containerId, Inventory playerInventory, ContainerLevelAccess access, DealerService dealer) {
+        this(containerId, playerInventory, access, dealer, null);
+    }
+
+    /** Server-side constructor. */
+    public BasicExchangeMenu(int containerId, Inventory playerInventory, ContainerLevelAccess access, DealerService dealer,
+                             ProgressionService progression) {
         super(ModMenus.BASIC_EXCHANGE, containerId);
         this.access = access;
         this.player = playerInventory.player;
         this.dealer = dealer;
+        this.progression = progression;
 
         addSlot(new Slot(input, 0, INPUT_X, INPUT_Y) {
             @Override
@@ -146,13 +157,23 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         addStandardInventorySlots(playerInventory, 8, INVENTORY_Y);
         addDataSlots(data);
 
-        if (dealer != null) {
-            for (String id : dealer.dealer().catalog().all().keySet()) {
-                if (buyList.size() == MAX_ITEMS) break;
-                if (itemFor(id) != Items.AIR) buyList.add(id);
-            }
-            refresh();
+        if (dealer != null) refresh();
+    }
+
+    /** The catalog minus components this player hasn't unlocked a blueprint for. */
+    private void rebuildBuyList() {
+        Set<String> visible = progression == null ? Set.of() : progression.visibleComponents(player, dealer.dealer().catalog());
+        buyList.clear();
+        for (var e : dealer.dealer().catalog().all().entrySet()) {
+            if (buyList.size() == MAX_ITEMS) break;
+            String id = e.getKey();
+            if (ProgressionService.COMPONENTS_GROUP.equals(e.getValue().group()) && !visible.contains(id)) continue;
+            if (itemFor(id) != Items.AIR) buyList.add(id);
         }
+    }
+
+    private boolean licensed() {
+        return progression != null && progression.licensed(player);
     }
 
     // ================================================================== reads (client and server)
@@ -178,7 +199,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
     public int buyGroup(int i) { return data.get(D_ITEMS + i * ITEM_STRIDE + 8); }
 
     /** Catalog groups in display order; anything else is shown under "Other". */
-    public static final String[] GROUPS = {"farm", "mining", "mobs", "wood_and_stone"};
+    public static final String[] GROUPS = {"farm", "mining", "mobs", "wood_and_stone", ProgressionService.COMPONENTS_GROUP};
     public static final int GROUP_OTHER = GROUPS.length;
 
     private static int groupIndex(String group) {
@@ -227,7 +248,9 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
     private void refresh() {
         double day = day();
         Dealer d = dealer.dealer();
-        refreshSell(d, day);
+        boolean licensed = licensed();
+        rebuildBuyList();
+        refreshSell(d, day, licensed);
         setPair(D_CASH, Wallet.count(player.getInventory()) + drawerCents());
 
         data.set(D_COUNT, buyList.size());
@@ -237,7 +260,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
             setPair(base, BuiltInRegistries.ITEM.getId(itemFor(id)));
             setPair(base + 2, mills(d.fairValue(id, day)));
             setPair(base + 4, mills(d.mid(id, day)));
-            setPair(base + 6, mills(d.ask(id, day, false)));
+            setPair(base + 6, mills(d.ask(id, day, licensed)));
             data.set(base + 8, groupIndex(d.catalog().spec(id).group()));
         }
         int sel = selected();
@@ -245,7 +268,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
             long total = 0;
             if (sel >= 0 && sel < buyList.size()) {
                 try {
-                    total = d.quoteBuy(buyList.get(sel), BUY_QUANTITIES[q], day, false).cents();
+                    total = d.quoteBuy(buyList.get(sel), BUY_QUANTITIES[q], day, licensed).cents();
                 } catch (RejectedException e) {
                     total = 0;
                 }
@@ -254,7 +277,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         }
     }
 
-    private void refreshSell(Dealer d, double day) {
+    private void refreshSell(Dealer d, double day, boolean licensed) {
         ItemStack stack = input.getItem(0);
         int status;
         long total = 0, normal = 0, market = 0, pays = 0;
@@ -268,9 +291,9 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
             String id = DealerService.itemId(stack);
             normal = mills(d.fairValue(id, day));
             market = mills(d.mid(id, day));
-            pays = mills(d.bid(id, day, false));
+            pays = mills(d.bid(id, day, licensed));
             try {
-                total = d.quoteSell(id, stack.getCount(), day, false).cents();
+                total = d.quoteSell(id, stack.getCount(), day, licensed).cents();
                 status = STATUS_OK;
             } catch (RejectedException e) {
                 status = STATUS_COLLAPSED;
@@ -309,14 +332,27 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
     private boolean sell(Player p) {
         ItemStack stack = input.getItem(0);
         if (stack.isEmpty() || ModItems.denominationOf(stack) != null) return false;
+        String id = DealerService.itemId(stack);
+        int qty = stack.getCount();
+        double day = day();
+        Dealer d = dealer.dealer();
+        long cents;
+        double before;
         try {
-            long cents = dealer.sellStack(stack, day(), false);
-            input.setItem(0, ItemStack.EMPTY);
-            payIntoDrawer(p, cents);
-            return true;
+            before = d.mid(id, day) / d.fairValue(id, day);
+            cents = dealer.sellStack(stack, day, licensed());
         } catch (RejectedException e) {
             return false;
         }
+        input.setItem(0, ItemStack.EMPTY);
+        payIntoDrawer(p, cents);
+        if (progression != null) {
+            double after = d.mid(id, day) / d.fairValue(id, day);
+            String group = d.catalog().spec(id).group();
+            progression.emit(p, new ProgressionEvent.Sale(id, group, qty, cents, before, after, (long) Math.floor(day)));
+            progression.emitNetWorth(p, dealer, day, drawerCents());
+        }
+        return true;
     }
 
     /**
@@ -331,7 +367,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         double day = day();
         long cost;
         try {
-            cost = dealer.dealer().quoteBuy(id, quantity, day, false).cents();
+            cost = dealer.dealer().quoteBuy(id, quantity, day, licensed()).cents();
         } catch (RejectedException e) {
             return false;
         }
@@ -343,7 +379,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         for (int i = 0; i < inv.getContainerSize(); i++) {
             if (ModItems.denominationOf(inv.getItem(i)) != null) inv.setItem(i, ItemStack.EMPTY);
         }
-        dealer.dealer().buy(id, quantity, day, false);
+        dealer.dealer().buy(id, quantity, day, licensed());
         Wallet.give(p, available - cost);
 
         int left = quantity;
@@ -351,6 +387,11 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
             int n = Math.min(left, item.getDefaultMaxStackSize());
             inv.placeItemBackInInventory(new ItemStack(item, n));
             left -= n;
+        }
+        if (progression != null) {
+            String group = dealer.dealer().catalog().spec(id).group();
+            progression.emit(p, new ProgressionEvent.Purchase(id, group, quantity, cost, (long) Math.floor(day)));
+            progression.emitNetWorth(p, dealer, day, 0);
         }
         return true;
     }

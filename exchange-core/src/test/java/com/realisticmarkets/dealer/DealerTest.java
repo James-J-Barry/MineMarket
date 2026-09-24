@@ -189,6 +189,9 @@ class DealerTest {
         String ok = "wheat,0.5,256,farm,,\nhay_block,,,farm,wheat,9\n";
         DealerCatalog c = DealerCatalog.parseCsv(new StringReader(ok));
         assertEquals("minecraft:wheat", c.pool("hay_block").itemId());
-        assertEquals(40, DealerCatalog.loadDefault().basePools().size());
+        DealerCatalog def = DealerCatalog.loadDefault();
+        assertEquals(43, def.basePools().size()); // 40 M1 items + 3 Tier 1 components
+        assertEquals(0.40, def.spec("realisticmarkets:brass_fittings").spread());
+        assertEquals(null, def.spec("minecraft:wheat").spread());
     }
 }

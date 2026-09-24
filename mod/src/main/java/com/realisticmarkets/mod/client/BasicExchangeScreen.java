@@ -41,7 +41,7 @@ public class BasicExchangeScreen extends AbstractContainerScreen<BasicExchangeMe
     private static final int LIST_W = GRID_W + 6;            // grid + gap + scrollbar
     private static final int LIST_H = 108;
     private static final int DETAIL_X = 102, DETAIL_RIGHT = 171;
-    private static final String[] GROUP_LABELS = {"Farm", "Mining", "Mobs", "Wood & Stone", "Other"};
+    private static final String[] GROUP_LABELS = {"Farm", "Mining", "Mobs", "Wood & Stone", "Components", "Other"};
 
     /** One visual line of the buy grid: a group header (items == null) or up to COLS item indices. */
     private record Line(int group, int[] items) {
