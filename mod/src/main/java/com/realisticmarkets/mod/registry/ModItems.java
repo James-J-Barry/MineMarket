@@ -34,6 +34,9 @@ public final class ModItems {
     /** Tier 4: the Engraved Plate component and Share Certificates (bearer papers, 1/10/100 shares of one company). */
     public static Item ENGRAVED_PLATE, SHARE_CERTIFICATE, PORTFOLIO_BINDER;
 
+    /** Tier 5: bond papers (Treasury and company bonds, one $100 bond a paper). */
+    public static Item BOND;
+
     /** Bank papers: the Passbook (balance and history) and Certificates of Deposit (bearer papers). */
     public static Item PASSBOOK, CERTIFICATE_OF_DEPOSIT, LOAN_NOTE;
 
@@ -54,6 +57,7 @@ public final class ModItems {
         TRADE_RECEIPT = register("trade_receipt", Item::new, new Item.Properties().stacksTo(1));
         ENGRAVED_PLATE = register("engraved_plate", Item::new, new Item.Properties());
         SHARE_CERTIFICATE = register("share_certificate", Item::new, new Item.Properties());
+        BOND = register("bond", Item::new, new Item.Properties());
         PORTFOLIO_BINDER = register("portfolio_binder", com.realisticmarkets.mod.item.PortfolioBinderItem::new,
                 new Item.Properties().stacksTo(1).component(DataComponents.CONTAINER, ItemContainerContents.EMPTY));
         PASSBOOK = register("passbook", PassbookItem::new, new Item.Properties().stacksTo(1));

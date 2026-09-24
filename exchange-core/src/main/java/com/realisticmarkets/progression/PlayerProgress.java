@@ -99,6 +99,9 @@ public final class PlayerProgress {
             case ProgressionEvent.SharesHeld e -> e.day();
             case ProgressionEvent.StockSold e -> e.day();
             case ProgressionEvent.CompaniesHeld e -> e.day();
+            case ProgressionEvent.CouponCollected e -> e.day();
+            case ProgressionEvent.BondRedeemed e -> e.day();
+            case ProgressionEvent.BondSold e -> e.day();
         };
         if (day != trackedDay) {
             trackedDay = day;
@@ -166,6 +169,15 @@ public final class PlayerProgress {
         }
         if (event instanceof ProgressionEvent.SharesHeld h) {
             return goal instanceof QuestGoal.SharesHeld g && h.shares() >= g.shares();
+        }
+        if (event instanceof ProgressionEvent.CouponCollected c) {
+            return goal instanceof QuestGoal.CouponCollected && c.cents() > 0;
+        }
+        if (event instanceof ProgressionEvent.BondRedeemed r) {
+            return goal instanceof QuestGoal.HeldToMaturity && r.atFace() && r.bonds() > 0;
+        }
+        if (event instanceof ProgressionEvent.BondSold b) {
+            return goal instanceof QuestGoal.RateWatcher && b.rateCutSince() && b.costCents() >= 0 && b.proceedsCents() > b.costCents();
         }
         if (event instanceof ProgressionEvent.CompaniesHeld h) {
             return goal instanceof QuestGoal.CompaniesHeld g && h.companies() >= g.companies();

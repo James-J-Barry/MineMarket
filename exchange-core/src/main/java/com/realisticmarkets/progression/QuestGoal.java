@@ -21,6 +21,9 @@ package com.realisticmarkets.progression;
  * shares_held:<n>             (hold at least n shares of one company at once)
  * beat_market                 (sell shares at the Stock Exchange for more than you paid there)
  * companies_held:<n>          (hold shares of at least n companies at once)
+ * coupon_collected            (a bond coupon paid on presentation)
+ * held_to_maturity            (a bond redeemed at face at maturity)
+ * rate_watcher                (a bond sold for more than you paid, after the rate was cut)
  * chart_read               (a book's chart read at the Ticker Tape)
  * </pre>
  */
@@ -44,6 +47,9 @@ public sealed interface QuestGoal {
     record SharesHeld(long shares) implements QuestGoal {}
     record BeatMarket() implements QuestGoal {}
     record CompaniesHeld(int companies) implements QuestGoal {}
+    record CouponCollected() implements QuestGoal {}
+    record HeldToMaturity() implements QuestGoal {}
+    record RateWatcher() implements QuestGoal {}
 
     static QuestGoal parse(String s) {
         String[] p = s.strip().split(":");
@@ -64,6 +70,9 @@ public sealed interface QuestGoal {
             case "shares_held" -> new SharesHeld(Long.parseLong(p[1]));
             case "beat_market" -> new BeatMarket();
             case "companies_held" -> new CompaniesHeld(Integer.parseInt(p[1]));
+            case "coupon_collected" -> new CouponCollected();
+            case "held_to_maturity" -> new HeldToMaturity();
+            case "rate_watcher" -> new RateWatcher();
             case "limit_filled" -> new LimitFilled();
             case "beat_dealer" -> new BeatDealer();
             case "two_books" -> new TwoBooks(p[1] + ":" + p[2], p[3] + ":" + p[4], Integer.parseInt(p[5]));

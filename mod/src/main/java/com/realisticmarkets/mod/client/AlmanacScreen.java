@@ -309,6 +309,9 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             case QuestGoal.SharesHeld g -> "Hold " + g.shares() + " shares of one company at once.";
             case QuestGoal.BeatMarket() -> "Sell shares at the Stock Exchange for more than you paid for them there.";
             case QuestGoal.CompaniesHeld g -> "Hold shares of " + g.companies() + " different companies at once.";
+            case QuestGoal.CouponCollected() -> "Collect a bond coupon at the Bond Desk.";
+            case QuestGoal.HeldToMaturity() -> "Hold a bond until it matures and redeem it at the Bond Desk.";
+            case QuestGoal.RateWatcher() -> "Sell a bond for more than you paid after the central bank cuts its rate.";
         };
     }
 }

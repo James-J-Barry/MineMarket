@@ -50,12 +50,14 @@ public final class RealisticMarkets implements ModInitializer {
         ServerLifecycleEvents.SERVER_STARTED.register(BankService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(FloorService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(StockService::start);
+        ServerLifecycleEvents.SERVER_STARTED.register(com.realisticmarkets.mod.bonds.BondService::start);
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> DealerService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> ProgressionService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> CapitalService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> BankService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> FloorService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> StockService.stop());
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> com.realisticmarkets.mod.bonds.BondService.stop());
 
         LOGGER.info("Realistic Markets loaded");
     }

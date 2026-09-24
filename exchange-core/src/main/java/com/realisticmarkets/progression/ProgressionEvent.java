@@ -61,4 +61,13 @@ public sealed interface ProgressionEvent {
 
     /** How many companies the player holds shares of right now. */
     record CompaniesHeld(int companies, long day) implements ProgressionEvent {}
+
+    /** Bond coupons paid on presentation at the Bond Desk. */
+    record CouponCollected(long cents, long day) implements ProgressionEvent {}
+
+    /** Bonds paid back at the desk: at face on maturity, or the recovery after a default. */
+    record BondRedeemed(long bonds, long cents, boolean atFace, long day) implements ProgressionEvent {}
+
+    /** Bonds sold back to the desk. {@code costCents} is what the account paid, -1 if unknown. */
+    record BondSold(long bonds, long proceedsCents, long costCents, boolean rateCutSince, long day) implements ProgressionEvent {}
 }

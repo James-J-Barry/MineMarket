@@ -247,6 +247,11 @@ public final class Equities {
         return startValue.get(ticker);
     }
 
+    /** A company's normal quarterly earnings (cents) at the starting prices: the yardstick for credit stress. */
+    public long normalEarnings(String ticker) {
+        return expectedEarnings(catalog.company(ticker));
+    }
+
     public List<Report> reports(String ticker) {
         return List.copyOf(states.get(ticker).reports);
     }

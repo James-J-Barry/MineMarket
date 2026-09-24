@@ -46,5 +46,8 @@
   "block.realisticmarkets.safe_deposit_box": "Safe Deposit Box",
   "container.realisticmarkets.safe_deposit_box": "Safe Deposit Box",
   "item.realisticmarkets.portfolio_binder": "Portfolio Binder",
-  "container.realisticmarkets.portfolio_binder": "Portfolio Binder"
+  "container.realisticmarkets.portfolio_binder": "Portfolio Binder",
+  "block.realisticmarkets.bond_desk": "Bond Desk",
+  "container.realisticmarkets.bond_desk": "Bond Desk",
+  "item.realisticmarkets.bond": "Bond"
 }

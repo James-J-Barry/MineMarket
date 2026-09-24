@@ -41,7 +41,7 @@ public class PortfolioBinderScreen extends AbstractContainerScreen<PortfolioBind
             if (q == 0) continue;
             any = true;
             String kind = PortfolioBinderMenu.KINDS.get(k);
-            String qty = kind.equals(Securities.CDS) || kind.equals(Securities.LOAN_NOTES) ? q + "" : q + " shares";
+            String qty = kind.equals(Securities.BONDS) ? q + " bonds" : kind.equals(Securities.CDS) || kind.equals(Securities.LOAN_NOTES) ? q + "" : q + " shares";
             g.text(font, kind, 8, y, GREY, false);
             g.text(font, qty, col2, y, LIGHT_GREY, false);
             String v = kind.equals(Securities.LOAN_NOTES) ? "(debt)" : Money.format(m.valueCents(k));

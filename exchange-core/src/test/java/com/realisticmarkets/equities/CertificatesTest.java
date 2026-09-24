@@ -65,5 +65,10 @@ class CertificatesTest {
         assertEquals("beat_the_market", p.apply(new ProgressionEvent.StockSold("DSMC", 10, 70_000, 60_000, 3), q).getFirst().id());
         assertTrue(p.apply(new ProgressionEvent.CompaniesHeld(2, 3), q).isEmpty());
         assertEquals("diversified", p.apply(new ProgressionEvent.CompaniesHeld(3, 3), q).getFirst().id());
+        assertEquals("coupon_clipper", p.apply(new ProgressionEvent.CouponCollected(211, 4), q).getFirst().id());
+        assertTrue(p.apply(new ProgressionEvent.BondRedeemed(1, 4_000, false, 4), q).isEmpty(), "a default's recovery isn't maturity");
+        assertEquals("held_to_maturity", p.apply(new ProgressionEvent.BondRedeemed(1, 10_000, true, 4), q).getFirst().id());
+        assertTrue(p.apply(new ProgressionEvent.BondSold(1, 10_100, 10_025, false, 5), q).isEmpty(), "no cut: not Rate Watcher");
+        assertEquals("rate_watcher", p.apply(new ProgressionEvent.BondSold(1, 10_100, 10_025, true, 5), q).getFirst().id());
     }
 }

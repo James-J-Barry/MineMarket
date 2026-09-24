@@ -40,6 +40,21 @@ public final class CreditModel {
         return Optional.empty();
     }
 
+    /**
+     * Every quarter the company defaulted in: the second of two losing quarters in a row, then again only after a
+     * fresh pair (a restructured company starts over).
+     */
+    public static List<Long> defaultQuarters(List<Equities.Report> reports) {
+        List<Long> out = new java.util.ArrayList<>();
+        for (int i = 1; i < reports.size(); i++) {
+            if (reports.get(i - 1).earnings() < 0 && reports.get(i).earnings() < 0) {
+                out.add(reports.get(i).quarter());
+                i++; // the next default needs two new losses
+            }
+        }
+        return out;
+    }
+
     /** What one defaulted bond pays back, in cents. */
     public static long recoveryCents() {
         return Math.round(Bond.FACE_CENTS * RECOVERY);
