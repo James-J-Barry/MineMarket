@@ -95,6 +95,9 @@ public final class PlayerProgress {
             case ProgressionEvent.LoanRepaid e -> e.day();
             case ProgressionEvent.FloorOrderDone e -> e.day();
             case ProgressionEvent.ChartRead e -> e.day();
+            case ProgressionEvent.DividendCollected e -> e.day();
+            case ProgressionEvent.SharesHeld e -> e.day();
+            case ProgressionEvent.StockSold e -> e.day();
         };
         if (day != trackedDay) {
             trackedDay = day;
@@ -156,6 +159,15 @@ public final class PlayerProgress {
         }
         if (event instanceof ProgressionEvent.ChartRead) {
             return goal instanceof QuestGoal.ChartRead;
+        }
+        if (event instanceof ProgressionEvent.DividendCollected d) {
+            return goal instanceof QuestGoal.DividendCollected && d.cents() > 0;
+        }
+        if (event instanceof ProgressionEvent.SharesHeld h) {
+            return goal instanceof QuestGoal.SharesHeld g && h.shares() >= g.shares();
+        }
+        if (event instanceof ProgressionEvent.StockSold s) {
+            return goal instanceof QuestGoal.BeatMarket && s.costCents() >= 0 && s.proceedsCents() > s.costCents();
         }
         if (event instanceof ProgressionEvent.CdRedeemed r) {
             return goal instanceof QuestGoal.CdMatured && r.matured();

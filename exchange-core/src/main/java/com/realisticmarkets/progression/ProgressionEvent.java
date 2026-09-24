@@ -49,4 +49,13 @@ public sealed interface ProgressionEvent {
 
     /** A book's chart read at the Ticker Tape. */
     record ChartRead(String item, long day) implements ProgressionEvent {}
+
+    /** Dividends paid out on certificates presented at the Stock Exchange. */
+    record DividendCollected(String ticker, long cents, long day) implements ProgressionEvent {}
+
+    /** How many shares of a company the player holds right now (certificates in their inventory). */
+    record SharesHeld(String ticker, long shares, long day) implements ProgressionEvent {}
+
+    /** Shares sold at the Stock Exchange; {@code costCents} is what the account paid for them there, -1 if unknown. */
+    record StockSold(String ticker, long shares, long proceedsCents, long costCents, long day) implements ProgressionEvent {}
 }

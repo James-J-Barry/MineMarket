@@ -13,3 +13,4 @@ loan_note,2,200000,bank_vault,,perk:loans;component:realisticmarkets:security_pa
 trading_floor,3,300000,,,blueprint:realisticmarkets:trading_floor;blueprint:realisticmarkets:order_slip;guide:order_books;guide:limit_and_market_orders,Trading Floor
 newsstand,3,100000,,,blueprint:realisticmarkets:newsstand;guide:news_and_markets,Newsstand
 ticker_tape,3,150000,trading_floor,,blueprint:realisticmarkets:ticker_tape;guide:reading_a_chart,Ticker Tape
+stock_exchange,4,1000000,,,blueprint:realisticmarkets:stock_exchange;component:realisticmarkets:engraved_plate,Stock Exchange

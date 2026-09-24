@@ -8,6 +8,7 @@ import com.realisticmarkets.mod.menu.BillClipMenu;
 import com.realisticmarkets.mod.menu.DraftingTableMenu;
 import com.realisticmarkets.mod.menu.TradeRouteCrateMenu;
 import com.realisticmarkets.mod.menu.NewsstandMenu;
+import com.realisticmarkets.mod.menu.StockExchangeMenu;
 import com.realisticmarkets.mod.menu.TickerTapeMenu;
 import com.realisticmarkets.mod.menu.TradingFloorMenu;
 import net.minecraft.core.Registry;
@@ -29,6 +30,7 @@ public final class ModMenus {
     public static MenuType<TradingFloorMenu> TRADING_FLOOR;
     public static MenuType<NewsstandMenu> NEWSSTAND;
     public static MenuType<TickerTapeMenu> TICKER_TAPE;
+    public static MenuType<StockExchangeMenu> STOCK_EXCHANGE;
 
     public static void init() {
         ResourceKey<MenuType<?>> key = ResourceKey.create(Registries.MENU, RealisticMarkets.id("basic_exchange"));
@@ -58,5 +60,8 @@ public final class ModMenus {
         TICKER_TAPE = Registry.register(BuiltInRegistries.MENU,
                 ResourceKey.create(Registries.MENU, RealisticMarkets.id("ticker_tape")),
                 new MenuType<>(TickerTapeMenu::new, FeatureFlags.VANILLA_SET));
+        STOCK_EXCHANGE = Registry.register(BuiltInRegistries.MENU,
+                ResourceKey.create(Registries.MENU, RealisticMarkets.id("stock_exchange")),
+                new MenuType<>(StockExchangeMenu::new, FeatureFlags.VANILLA_SET));
     }
 }

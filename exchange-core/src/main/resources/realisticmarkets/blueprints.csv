@@ -9,3 +9,4 @@ realisticmarkets:trading_floor,trading_floor,minecraft:gold_ingot*4,realisticmar
 realisticmarkets:order_slip*32,trading_floor,realisticmarkets:ledger_paper*1
 realisticmarkets:newsstand,newsstand,#minecraft:planks*6,realisticmarkets:ledger_paper*2,realisticmarkets:ink_bottle*1
 realisticmarkets:ticker_tape,ticker_tape,realisticmarkets:clockwork_gear*1,minecraft:iron_ingot*4,realisticmarkets:ink_bottle*1
+realisticmarkets:stock_exchange,stock_exchange,realisticmarkets:engraved_plate*2,minecraft:gold_ingot*4,realisticmarkets:ledger_paper*1,#minecraft:planks*8

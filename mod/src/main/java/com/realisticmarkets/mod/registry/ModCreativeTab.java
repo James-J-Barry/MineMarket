@@ -49,6 +49,8 @@ public final class ModCreativeTab {
                             output.accept(ModItems.ORDER_SLIP);
                             output.accept(ModBlocks.NEWSSTAND);
                             output.accept(ModBlocks.TICKER_TAPE);
+                            output.accept(ModBlocks.STOCK_EXCHANGE);
+                            output.accept(ModItems.ENGRAVED_PLATE);
                         })
                         .build());
     }

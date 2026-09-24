@@ -21,8 +21,12 @@ public final class TradeReceiptItem {
     private TradeReceiptItem() {}
 
     public static ItemStack create(TradingFloor.Receipt r) {
+        return create(r, new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.parse(r.item()))).getHoverName().getString());
+    }
+
+    /** A receipt naming what traded as {@code name} (e.g. "DSMC shares" at the Stock Exchange). */
+    public static ItemStack create(TradingFloor.Receipt r, String name) {
         ItemStack s = new ItemStack(ModItems.TRADE_RECEIPT);
-        String name = new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.parse(r.item()))).getHoverName().getString();
         String verb = r.side() == Side.BUY ? "Bought" : "Sold";
         String ending = switch (r.ending()) {
             case FILLED -> "Filled";

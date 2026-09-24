@@ -31,6 +31,9 @@ public final class ModItems {
     /** Tier 3: the Clockwork Gear component, Order Slips (spent per Floor order) and Trade Receipts. */
     public static Item CLOCKWORK_GEAR, ORDER_SLIP, TRADE_RECEIPT;
 
+    /** Tier 4: the Engraved Plate component and Share Certificates (bearer papers, 1/10/100 shares of one company). */
+    public static Item ENGRAVED_PLATE, SHARE_CERTIFICATE;
+
     /** Bank papers: the Passbook (balance and history) and Certificates of Deposit (bearer papers). */
     public static Item PASSBOOK, CERTIFICATE_OF_DEPOSIT, LOAN_NOTE;
 
@@ -49,6 +52,8 @@ public final class ModItems {
         CLOCKWORK_GEAR = register("clockwork_gear", Item::new, new Item.Properties());
         ORDER_SLIP = register("order_slip", Item::new, new Item.Properties());
         TRADE_RECEIPT = register("trade_receipt", Item::new, new Item.Properties().stacksTo(1));
+        ENGRAVED_PLATE = register("engraved_plate", Item::new, new Item.Properties());
+        SHARE_CERTIFICATE = register("share_certificate", Item::new, new Item.Properties());
         PASSBOOK = register("passbook", PassbookItem::new, new Item.Properties().stacksTo(1));
         CERTIFICATE_OF_DEPOSIT = register("certificate_of_deposit", Item::new, new Item.Properties().stacksTo(1));
         LOAN_NOTE = register("loan_note", Item::new, new Item.Properties().stacksTo(1));

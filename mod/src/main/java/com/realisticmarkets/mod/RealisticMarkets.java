@@ -5,6 +5,7 @@ import com.realisticmarkets.mod.dealer.CapitalService;
 import com.realisticmarkets.mod.dealer.DealerCommands;
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.floor.FloorService;
+import com.realisticmarkets.mod.stocks.StockService;
 import com.realisticmarkets.mod.progression.ProgressionService;
 import com.realisticmarkets.mod.registry.ModBlockEntities;
 import com.realisticmarkets.mod.registry.ModBlocks;
@@ -42,16 +43,19 @@ public final class RealisticMarkets implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(CapitalService::tick);
         ServerTickEvents.END_SERVER_TICK.register(BankService::tick);
         ServerTickEvents.END_SERVER_TICK.register(FloorService::tick);
+        ServerTickEvents.END_SERVER_TICK.register(StockService::tick);
         ServerLifecycleEvents.SERVER_STARTED.register(DealerService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(ProgressionService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(CapitalService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(BankService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(FloorService::start);
+        ServerLifecycleEvents.SERVER_STARTED.register(StockService::start);
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> DealerService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> ProgressionService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> CapitalService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> BankService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> FloorService.stop());
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> StockService.stop());
 
         LOGGER.info("Realistic Markets loaded");
     }

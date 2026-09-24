@@ -305,6 +305,9 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             case QuestGoal.ShipBeatsLocal() ->
                     "Ship goods with a Trade Route Crate and get more, after freight, than the local Dealer would pay.";
             case QuestGoal.ChartRead() -> "Read a book's chart at the Ticker Tape.";
+            case QuestGoal.DividendCollected() -> "Collect a dividend: present Share Certificates at the Stock Exchange.";
+            case QuestGoal.SharesHeld g -> "Hold " + g.shares() + " shares of one company at once.";
+            case QuestGoal.BeatMarket() -> "Sell shares at the Stock Exchange for more than you paid for them there.";
         };
     }
 }

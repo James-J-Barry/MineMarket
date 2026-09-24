@@ -36,5 +36,9 @@
   "block.realisticmarkets.newsstand": "Newsstand",
   "container.realisticmarkets.newsstand": "Newsstand",
   "block.realisticmarkets.ticker_tape": "Ticker Tape",
-  "container.realisticmarkets.ticker_tape": "Ticker Tape"
+  "container.realisticmarkets.ticker_tape": "Ticker Tape",
+  "block.realisticmarkets.stock_exchange": "Stock Exchange",
+  "container.realisticmarkets.stock_exchange": "Stock Exchange",
+  "item.realisticmarkets.engraved_plate": "Engraved Plate",
+  "item.realisticmarkets.share_certificate": "Share Certificate"
 }

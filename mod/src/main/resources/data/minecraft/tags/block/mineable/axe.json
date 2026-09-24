@@ -8,6 +8,7 @@
     "realisticmarkets:trade_route_crate",
     "realisticmarkets:trading_floor",
     "realisticmarkets:newsstand",
-    "realisticmarkets:ticker_tape"
+    "realisticmarkets:ticker_tape",
+    "realisticmarkets:stock_exchange"
   ]
 }
