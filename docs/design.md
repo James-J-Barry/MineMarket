@@ -187,6 +187,8 @@ The Almanac Lectern is the progression hub: a lectern holding the Market Almanac
 
 Tier 2 adds three more: **Nest Egg** (earn $10 of interest), **Locked In** (hold a CD to maturity) and **Leverage** (open and fully repay a loan), each worth $10–$25.
 
+Tier 3 adds **Name Your Price** (get a limit order filled), **Beat the Dealer** (sell on the Floor above the Dealer's bid that day), **Two Books** (profit from iron blocks vs iron ingots on the Floor) and **Read the Tape** (print a Price Chart).
+
 Guides stay short: 150–250 words each, a worked example using the player's own numbers where possible (“You sold 256 wheat for $72.82; at a steady price it would have been $115.20”), and a one-line real-world parallel.
 
 ## Information as progression
@@ -198,7 +200,7 @@ What the player can see about markets and their own money is itself a progressio
 | 0 | (start) | The Dealer's quote for the one item in the Exchange slot, or the item in hand near the block. Counting money means counting bills |
 | 1 | Price Board | Live quotes for up to 4 chosen items on a wall |
 | 2 | Passbook | A handwritten-style record of the player's bank balance, deposits, withdrawals and interest; the only place the balance is shown |
-| 3 | Ticker Tape and Price Chart | A 7-day price history for one item per chart |
+| 3 | Ticker Tape and Price Chart | A 7-day price history (daily close, high, low) for one Trading Floor book per chart, printed as a snapshot |
 | 4 | Portfolio Binder, Safe Deposit Box | Total value of the papers in one binder; safe storage for papers and bills, with no summary of its own |
 | 5 | Digital Record Keeping | A Records Terminal showing net worth, every holding, income by source, and upcoming payments across all linked blocks |
 | 7 | Risk Report Module | Terminal add-on: collateral coverage, distance to margin calls, portfolio Greeks, simple stress tests |
@@ -276,11 +278,11 @@ The mod adds 42 items and blocks plus 10 components (see Crafting) across nine t
 | 2 | Passbook | Item | Free with Bank Vault | Book showing balance and every transaction; not needed to withdraw; replaced for 1 Ledger Paper | Record keeping |
 | 2 | Certificate of Deposit | Item | $1,200 | Bearer paper funded from the vault: 7 days at 0.45%/day or 21 days at 0.60%/day, compounded daily, minimum $100, 1 Security Paper each; early redemption returns principal only | Term premium, liquidity |
 | 2 | Loan Note | Item | $2,000 | Borrow against item collateral; cash goes to the vault balance; floating rate reset each dawn from collateral quality. The note is the borrower's statement (the debt is on the account); replaced for 1 Security Paper | Leverage, collateral, margin calls |
-| 3 | Trading Floor | Block | $3,000 | Batch-auction order book for commodities, trading against NPC traders; tighter prices than the Dealer | Order books, liquidity |
-| 3 | Order Slip | Item | Free with Trading Floor | A physical limit order: fill in item, side, quantity and price, drop it in the Floor; filled slips return as receipts | Limit vs market orders |
-| 3 | Trade Receipt | Item | Produced by fills | Proof of a trade with price and time; can be recycled to paper | Settlement records |
-| 3 | Ticker Tape | Block | $1,500 | Prints a Price Chart item for any traded item | Price history |
-| 3 | Price Chart | Item | Produced by Ticker Tape | Map-style item rendering a 7-day price line; hang it in an item frame | Reading charts, volatility |
+| 3 | Trading Floor | Block | $3,000 | Batch auction every 10 seconds for about 10 commodity books (iron ingot and iron block trade separately), against each other and NPC traders; spreads around 2-6% vs the Dealer's 20%. Goods and bills are dropped in to place orders; fills and refunds are collected from its output | Order books, liquidity |
+| 3 | Order Slip | Item | Drafting Table: 1 Ledger Paper -> 8 slips | One slip per order: a limit order good until the next dawn, or a market order (filled now or refunded) | Limit vs market orders, transaction costs |
+| 3 | Trade Receipt | Item | One per finished order | Item, side, filled quantity, average price and day; can be recycled to paper | Settlement records |
+| 3 | Ticker Tape | Block | $1,500 | Prints a Price Chart for any Trading Floor book, for 1 Ledger Paper + 1 Ink Bottle | Price history |
+| 3 | Price Chart | Item | Produced by Ticker Tape | A snapshot of 7 days: line chart on right-click, sparkline in the tooltip (item-frame display later) | Reading charts, volatility |
 | 4 | Stock Exchange | Block | $10,000 | Buy and sell shares of fictional companies; claim dividends | Equity ownership |
 | 4 | Share Certificate | Item | Bought at Stock Exchange | Bearer certificate for 1, 10 or 100 shares of one company | Ownership, dividends |
 | 4 | Annual Report | Item | Free each earnings period per holding | Book with the company's revenue, costs, earnings and outlook | Fundamental analysis |
@@ -444,7 +446,9 @@ With these values `sim progression` (licensed player, selling each day's output,
 
 The crate pays off for farmers and barely matters for miners, which is the intended lesson: arbitrage only works where the price gap beats freight and spreads.
 
-NPC traders are shown in the world as villager merchants standing around the Trading Floor and Stock Exchange; the busier the market, the more of them appear. They are cosmetic, and the simulation runs whether or not they are loaded.
+Every NPC trader has finite cash and stock that drift back to a baseline over in-game days, like the Dealer's recovery, so the Floor can be exhausted by a big enough seller and recovers over days: nothing prints unlimited money. The fundamentalists' anchor is the Dealer's drifting fair value.
+
+NPC traders shown in the world as villager merchants around the Trading Floor and Stock Exchange (more of them when the market is busy) are cosmetic and parked for later; the simulation runs regardless.
 
 ### Fictional companies
 
@@ -567,7 +571,8 @@ Build in tier order, and make each milestone a complete, playable loop before st
 | M3 | Tier 1 content | Bill Clip, Price Board, Trade Route Crate and Capital dealer, four Tier 1 guides (the Merchant License perk shipped in M2) | Quest 7 (arbitrage) completable in play |
 | M4a | Banking | Bank Vault, Passbook, interest, CD; `registry` package; Nest Egg and Locked In quests | Interest compounds correctly; a CD settles once and a copy is VOID |
 | M4b | Collateral and loans | Loan Note, escrow, `collateral` package, margin calls and liquidation; Leverage quest | The worked loan example matches the table; a margin call liquidates correctly in a GameTest |
-| M5 | Trading Floor | Order Slips, receipts, NPC trader population on the existing batch auction, Ticker Tape and Price Chart | Books stay liquid with no player; prices track fair value in sim |
+| M5a | Trading Floor | Order Slips, receipts, custody at the Floor, NPC trader population on the existing batch auction, `agents` package, three guides and three quests | Books stay liquid with no player; prices track fair value in sim |
+| M5b | Ticker Tape | Ticker Tape, Price Chart, Reading a Chart guide, Read the Tape quest | A chart holds the last 7 days of a book |
 | M6 | Equities | Stock Exchange, certificates, six companies, Annual Reports, Newspaper Stand, Portfolio Binder, Safe Deposit Box | Dividends pay on presentation; earnings react to commodity prices |
 | M7 | Bonds | Bond Desk, Treasury and Corporate Bonds, central-rate events, defaults; Digital Record Keeping (Records Terminal, Record Link) | Bond prices fall when the rate rises; the Records Terminal's net worth equals the sum of linked holdings in a GameTest |
 | M8 | Forwards and futures | Forward Contract, Clearing House, daily mark-to-market | A wheat hedge offsets a price drop in sim |
