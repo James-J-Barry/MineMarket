@@ -4,6 +4,7 @@
     "realisticmarkets:basic_exchange",
     "realisticmarkets:almanac_lectern",
     "realisticmarkets:drafting_table",
-    "realisticmarkets:price_board"
+    "realisticmarkets:price_board",
+    "realisticmarkets:trade_route_crate"
   ]
 }

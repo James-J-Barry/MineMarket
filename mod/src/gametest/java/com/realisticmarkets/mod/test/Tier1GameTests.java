@@ -2,15 +2,19 @@ package com.realisticmarkets.mod.test;
 
 import com.realisticmarkets.mod.block.PriceBoardBlock;
 import com.realisticmarkets.mod.block.PriceBoardBlockEntity;
+import com.realisticmarkets.mod.block.TradeRouteCrateBlockEntity;
 import com.realisticmarkets.mod.dealer.BillClip;
+import com.realisticmarkets.mod.dealer.CapitalService;
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.dealer.Wallet;
 import com.realisticmarkets.mod.menu.BasicExchangeMenu;
 import com.realisticmarkets.mod.menu.BillClipMenu;
+import com.realisticmarkets.mod.menu.TradeRouteCrateMenu;
 import com.realisticmarkets.mod.progression.ProgressionService;
 import com.realisticmarkets.mod.registry.ModBlocks;
 import com.realisticmarkets.mod.registry.ModItems;
 import com.realisticmarkets.money.Denomination;
+import java.util.UUID;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -134,6 +138,100 @@ public class Tier1GameTests {
         check(board.tryAdd(new ItemStack(Items.STRING), catalog) != null, "a fifth item doesn't fit");
         check(board.removeLast().is(Items.BONE), "take back the last one");
         check(board.count() == 3, "three left");
+        helper.succeed();
+    }
+
+    // ------------------------------------------------------------------ Trade Route Crate
+
+    record Crate(TradeRouteCrateBlockEntity be, DealerService dealer, CapitalService capital, ProgressionService prog) {}
+
+    static Crate crate(GameTestHelper helper, ServerPlayer owner) {
+        BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.TRADE_ROUTE_CRATE);
+        TradeRouteCrateBlockEntity be = helper.getBlockEntity(pos, TradeRouteCrateBlockEntity.class);
+        be.setOwner(owner);
+        DealerService dealer = DealerService.forTest(1234L);
+        return new Crate(be, dealer, CapitalService.forTest(dealer, 99L), ProgressionService.forTest());
+    }
+
+    static TradeRouteCrateMenu menu(Crate c, ServerPlayer player) {
+        return new TradeRouteCrateMenu(1, player.getInventory(), c.be(), ContainerLevelAccess.NULL, c.dealer(), c.capital(), c.prog());
+    }
+
+    @GameTest
+    public void crateRefusesNonOwners(GameTestHelper helper) {
+        ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+        ServerPlayer stranger = helper.makeMockServerPlayerInLevel();
+        stranger.setUUID(UUID.randomUUID());
+        Crate c = crate(helper, owner);
+        c.be().cargo().setItem(0, new ItemStack(Items.WHEAT, 64));
+
+        check(!c.be().isOwner(stranger), "stranger isn't the owner");
+        check(!menu(c, stranger).stillValid(stranger), "a stranger's crate screen closes");
+        check(!menu(c, stranger).clickMenuButton(stranger, TradeRouteCrateMenu.BUTTON_SHIP), "stranger can't ship");
+        check(c.be().cargo().getItem(0).getCount() == 64, "cargo untouched");
+        check(c.capital().inTransitAt(c.be().location()).isEmpty(), "nothing on the road");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void crateShipsAndSettlesIntoTheDrawerAfterOneDay(GameTestHelper helper) {
+        ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+        Crate c = crate(helper, owner);
+        c.be().cargo().setItem(0, new ItemStack(Items.WHEAT, 64));
+        c.be().cargo().setItem(4, new ItemStack(Items.WHEAT, 64));
+        TradeRouteCrateMenu menu = menu(c, owner);
+
+        check(menu.status() == TradeRouteCrateMenu.STATUS_READY, "ready to ship, status " + menu.status());
+        check(menu.localCents() == 4530, "local Dealer would pay $45.30, shows " + menu.localCents());
+        check(menu.estimateCents() == 5740, "Capital estimate $57.40 after freight, shows " + menu.estimateCents());
+        check(menu.clickMenuButton(owner, TradeRouteCrateMenu.BUTTON_SHIP), "ship");
+        check(c.be().cargo().isEmpty(), "cargo left the world");
+        check(menu.status() == TradeRouteCrateMenu.STATUS_IN_TRANSIT, "on the road");
+        check(menu.minutesLeft() == 20, "arrives in one in-game day = 20 min, shows " + menu.minutesLeft());
+
+        c.be().cargo().setItem(0, new ItemStack(Items.CARROT, 8));
+        check(!menu.clickMenuButton(owner, TradeRouteCrateMenu.BUTTON_SHIP), "one shipment per crate at a time");
+
+        double shipped = c.dealer().day(helper.getLevel().getGameTime());
+        check(c.capital().settle(loc -> c.be(), id -> owner, c.prog(), shipped + 0.99) == 0, "not there yet");
+        check(c.capital().settle(loc -> c.be(), id -> owner, c.prog(), shipped + 1.0) == 1, "arrives after one day");
+        check(c.be().drawerCents() == 5740, "payout in the drawer: $57.40, got " + c.be().drawerCents());
+        check(c.prog().progress(owner).hasCompleted("two_markets"), "quest 7: beat the local Dealer");
+        check(Wallet.count(owner.getInventory()) == 4000, "$40 quest reward, got " + Wallet.count(owner.getInventory()));
+        helper.succeed();
+    }
+
+    @GameTest
+    public void losingShipmentsDontCompleteQuestSeven(GameTestHelper helper) {
+        ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+        Crate c = crate(helper, owner);
+        c.be().cargo().setItem(0, new ItemStack(Items.IRON_INGOT, 16));
+        TradeRouteCrateMenu menu = menu(c, owner);
+        check(menu.estimateCents() < menu.localCents(), "iron pays less at the Capital");
+        check(menu.clickMenuButton(owner, TradeRouteCrateMenu.BUTTON_SHIP), "ship anyway");
+        double shipped = c.dealer().day(helper.getLevel().getGameTime());
+        c.capital().settle(loc -> c.be(), id -> owner, c.prog(), shipped + 1);
+        check(!c.prog().progress(owner).hasCompleted("two_markets"), "a loss isn't arbitrage");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void payoutWaitsForAnOfflineOwnerWhoseCrateIsGone(GameTestHelper helper) {
+        ServerPlayer owner = helper.makeMockServerPlayerInLevel();
+        Crate c = crate(helper, owner);
+        c.be().cargo().setItem(0, new ItemStack(Items.WHEAT, 64));
+        check(menu(c, owner).clickMenuButton(owner, TradeRouteCrateMenu.BUTTON_SHIP), "ship");
+        double shipped = c.dealer().day(helper.getLevel().getGameTime());
+
+        c.capital().settle(loc -> null, id -> null, c.prog(), shipped + 1); // crate broken, owner offline
+        check(Wallet.count(owner.getInventory()) == 0, "nothing delivered while offline");
+        check(!c.prog().progress(owner).hasCompleted("two_markets"), "quest waits too");
+
+        c.capital().settle(loc -> null, id -> owner, c.prog(), shipped + 1.1); // owner logs in
+        long got = Wallet.count(owner.getInventory());
+        check(got > 4000, "payout plus the $40 quest reward in the inventory, got " + got);
+        check(c.prog().progress(owner).hasCompleted("two_markets"), "quest completes on delivery");
         helper.succeed();
     }
 

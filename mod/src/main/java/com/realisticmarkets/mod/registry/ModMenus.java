@@ -5,6 +5,7 @@ import com.realisticmarkets.mod.menu.AlmanacMenu;
 import com.realisticmarkets.mod.menu.BasicExchangeMenu;
 import com.realisticmarkets.mod.menu.BillClipMenu;
 import com.realisticmarkets.mod.menu.DraftingTableMenu;
+import com.realisticmarkets.mod.menu.TradeRouteCrateMenu;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -19,6 +20,7 @@ public final class ModMenus {
     public static MenuType<AlmanacMenu> ALMANAC;
     public static MenuType<DraftingTableMenu> DRAFTING_TABLE;
     public static MenuType<BillClipMenu> BILL_CLIP;
+    public static MenuType<TradeRouteCrateMenu> TRADE_ROUTE_CRATE;
 
     public static void init() {
         ResourceKey<MenuType<?>> key = ResourceKey.create(Registries.MENU, RealisticMarkets.id("basic_exchange"));
@@ -33,5 +35,8 @@ public final class ModMenus {
         BILL_CLIP = Registry.register(BuiltInRegistries.MENU,
                 ResourceKey.create(Registries.MENU, RealisticMarkets.id("bill_clip")),
                 new MenuType<>(BillClipMenu::new, FeatureFlags.VANILLA_SET));
+        TRADE_ROUTE_CRATE = Registry.register(BuiltInRegistries.MENU,
+                ResourceKey.create(Registries.MENU, RealisticMarkets.id("trade_route_crate")),
+                new MenuType<>(TradeRouteCrateMenu::new, FeatureFlags.VANILLA_SET));
     }
 }

@@ -4,6 +4,7 @@ import com.realisticmarkets.mod.RealisticMarkets;
 import com.realisticmarkets.mod.block.BasicExchangeBlock;
 import com.realisticmarkets.mod.block.MenuBlock;
 import com.realisticmarkets.mod.block.PriceBoardBlock;
+import com.realisticmarkets.mod.block.TradeRouteCrateBlock;
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.menu.AlmanacMenu;
 import com.realisticmarkets.mod.menu.DraftingTableMenu;
@@ -27,6 +28,7 @@ public final class ModBlocks {
     public static Block ALMANAC_LECTERN;
     public static Block DRAFTING_TABLE;
     public static Block PRICE_BOARD;
+    public static Block TRADE_ROUTE_CRATE;
 
     public static void init() {
         ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("basic_exchange"));
@@ -54,6 +56,16 @@ public final class ModBlocks {
                         .noOcclusion()));
         ModItems.register("price_board", props -> new BlockItem(PRICE_BOARD, props),
                 new Item.Properties().useBlockDescriptionPrefix().stacksTo(16));
+
+        ResourceKey<Block> crateKey = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("trade_route_crate"));
+        TRADE_ROUTE_CRATE = Registry.register(BuiltInRegistries.BLOCK, crateKey,
+                new TradeRouteCrateBlock(BlockBehaviour.Properties.of()
+                        .setId(crateKey)
+                        .mapColor(MapColor.WOOD)
+                        .strength(2.5f)
+                        .sound(SoundType.WOOD)));
+        ModItems.register("trade_route_crate", props -> new BlockItem(TRADE_ROUTE_CRATE, props),
+                new Item.Properties().useBlockDescriptionPrefix());
     }
 
     private static Block registerMenuBlock(String name, MenuBlock.Factory factory) {

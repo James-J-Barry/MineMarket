@@ -13,6 +13,7 @@ public final class RealisticMarketsClient implements ClientModInitializer {
         MenuScreens.register(ModMenus.ALMANAC, AlmanacScreen::new);
         MenuScreens.register(ModMenus.DRAFTING_TABLE, DraftingTableScreen::new);
         MenuScreens.register(ModMenus.BILL_CLIP, BillClipScreen::new);
+        MenuScreens.register(ModMenus.TRADE_ROUTE_CRATE, TradeRouteCrateScreen::new);
         BlockEntityRenderers.register(ModBlockEntities.PRICE_BOARD, PriceBoardRenderer::new);
     }
 }

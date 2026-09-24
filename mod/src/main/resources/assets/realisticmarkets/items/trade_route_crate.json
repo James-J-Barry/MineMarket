@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "realisticmarkets:item/trade_route_crate"
+    "model": "realisticmarkets:block/trade_route_crate"
   }
 }
