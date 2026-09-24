@@ -308,6 +308,7 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             case QuestGoal.DividendCollected() -> "Collect a dividend: present Share Certificates at the Stock Exchange.";
             case QuestGoal.SharesHeld g -> "Hold " + g.shares() + " shares of one company at once.";
             case QuestGoal.BeatMarket() -> "Sell shares at the Stock Exchange for more than you paid for them there.";
+            case QuestGoal.CompaniesHeld g -> "Hold shares of " + g.companies() + " different companies at once.";
         };
     }
 }

@@ -55,14 +55,28 @@ public final class ShareCertificates {
         return Optional.of(new Paper(ticker, shares, tag.getLongOr("paid_through", -1)));
     }
 
-    /** Shares of each company held in {@code c}. */
+    /** Shares of each company held in {@code c}, counting certificates loose and inside Portfolio Binders. */
     public static Map<String, Long> holdings(Container c) {
         Map<String, Long> out = new LinkedHashMap<>();
         for (int i = 0; i < c.getContainerSize(); i++) {
             ItemStack s = c.getItem(i);
-            read(s).ifPresent(p -> out.merge(p.ticker(), (long) p.denomination() * s.getCount(), Long::sum));
+            count(s, out);
+            if (s.is(ModItems.PORTFOLIO_BINDER)) {
+                for (ItemStack inside : com.realisticmarkets.mod.item.PortfolioBinderItem.contents(s)) count(inside, out);
+            }
         }
         return out;
+    }
+
+    /** Certificates loose in {@code c} only (the ones a player can present or sell). */
+    public static Map<String, Long> loose(Container c) {
+        Map<String, Long> out = new LinkedHashMap<>();
+        for (int i = 0; i < c.getContainerSize(); i++) count(c.getItem(i), out);
+        return out;
+    }
+
+    private static void count(ItemStack s, Map<String, Long> out) {
+        read(s).ifPresent(p -> out.merge(p.ticker(), (long) p.denomination() * s.getCount(), Long::sum));
     }
 
     /** The fewest certificates for {@code shares} of {@code ticker}, as stacks of at most 64. */

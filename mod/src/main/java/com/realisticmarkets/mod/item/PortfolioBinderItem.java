@@ -46,6 +46,13 @@ public class PortfolioBinderItem extends Item {
             BankService b = bank;
             long day = b == null ? 0 : BankService.day(((net.minecraft.server.level.ServerLevel) level).getServer());
             player.openMenu(new SimpleMenuProvider((id, inv, p) -> new PortfolioBinderMenu(id, inv, hand, binder, s, b, day), TITLE));
+            if (s != null) { // opening your binder is looking at your portfolio: the holding quests notice
+                try {
+                    s.reportHoldings(player, null, com.realisticmarkets.mod.progression.ProgressionService.get(), day);
+                } catch (IllegalStateException notRunning) {
+                    // no progression service
+                }
+            }
         }
         return InteractionResult.SUCCESS;
     }

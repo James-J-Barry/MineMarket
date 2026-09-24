@@ -58,4 +58,7 @@ public sealed interface ProgressionEvent {
 
     /** Shares sold at the Stock Exchange; {@code costCents} is what the account paid for them there, -1 if unknown. */
     record StockSold(String ticker, long shares, long proceedsCents, long costCents, long day) implements ProgressionEvent {}
+
+    /** How many companies the player holds shares of right now. */
+    record CompaniesHeld(int companies, long day) implements ProgressionEvent {}
 }

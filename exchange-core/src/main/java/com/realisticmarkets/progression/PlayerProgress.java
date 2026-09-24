@@ -98,6 +98,7 @@ public final class PlayerProgress {
             case ProgressionEvent.DividendCollected e -> e.day();
             case ProgressionEvent.SharesHeld e -> e.day();
             case ProgressionEvent.StockSold e -> e.day();
+            case ProgressionEvent.CompaniesHeld e -> e.day();
         };
         if (day != trackedDay) {
             trackedDay = day;
@@ -165,6 +166,9 @@ public final class PlayerProgress {
         }
         if (event instanceof ProgressionEvent.SharesHeld h) {
             return goal instanceof QuestGoal.SharesHeld g && h.shares() >= g.shares();
+        }
+        if (event instanceof ProgressionEvent.CompaniesHeld h) {
+            return goal instanceof QuestGoal.CompaniesHeld g && h.companies() >= g.companies();
         }
         if (event instanceof ProgressionEvent.StockSold s) {
             return goal instanceof QuestGoal.BeatMarket && s.costCents() >= 0 && s.proceedsCents() > s.costCents();

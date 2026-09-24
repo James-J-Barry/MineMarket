@@ -1,7 +1,6 @@
 package com.realisticmarkets.equities;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.realisticmarkets.progression.PlayerProgress;
@@ -64,6 +63,7 @@ class CertificatesTest {
         assertTrue(p.apply(new ProgressionEvent.StockSold("DSMC", 10, 50_000, -1, 2), q).isEmpty(), "unknown cost doesn't count");
         assertTrue(p.apply(new ProgressionEvent.StockSold("DSMC", 10, 50_000, 60_000, 2), q).isEmpty(), "a loss doesn't");
         assertEquals("beat_the_market", p.apply(new ProgressionEvent.StockSold("DSMC", 10, 70_000, 60_000, 3), q).getFirst().id());
-        assertFalse(p.hasCompleted("diversified"));
+        assertTrue(p.apply(new ProgressionEvent.CompaniesHeld(2, 3), q).isEmpty());
+        assertEquals("diversified", p.apply(new ProgressionEvent.CompaniesHeld(3, 3), q).getFirst().id());
     }
 }

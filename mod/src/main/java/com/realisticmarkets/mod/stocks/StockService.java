@@ -238,7 +238,7 @@ public final class StockService {
         long limit = side == Side.BUY ? market.buyLimit(ticker, fair, marketOrder, limitCents) : market.sellLimit(ticker, fair, marketOrder, limitCents);
         if (limit <= 0) return Optional.of("Set a price");
         long payCents = side == Side.BUY ? Money.roundUpToDime(shares * limit) : 0;
-        if (side == Side.SELL && ShareCertificates.holdings(inv).getOrDefault(ticker, 0L) < shares) {
+        if (side == Side.SELL && ShareCertificates.loose(inv).getOrDefault(ticker, 0L) < shares) {
             return Optional.of("You don't hold " + shares + " " + ticker + " shares");
         }
         if (side == Side.BUY && Wallet.count(inv) < payCents) return Optional.of("Not enough cash: this order needs " + Money.format(payCents));
@@ -362,6 +362,7 @@ public final class StockService {
         Map<String, Long> held = new LinkedHashMap<>(ShareCertificates.holdings(player.getInventory()));
         if (extra != null) ShareCertificates.holdings(extra).forEach((k, v) -> held.merge(k, v, Long::sum));
         held.forEach((t, n) -> prog.emit(player, new ProgressionEvent.SharesHeld(t, n, day)));
+        prog.emit(player, new ProgressionEvent.CompaniesHeld((int) held.values().stream().filter(n -> n > 0).count(), day));
     }
 
     public boolean hasWaiting(Player player) {
@@ -370,30 +371,43 @@ public final class StockService {
 
     // ------------------------------------------------------------------ certificates
 
-    /** Dividends (cents) the certificates in the player's inventory would pay if presented now. */
+    /** Dividends (cents) the certificates the player carries (loose or in Portfolio Binders) would pay if presented now. */
     public long dividendsWaiting(Player player) {
         long sum = 0;
-        Inventory inv = player.getInventory();
-        for (int i = 0; i < inv.getContainerSize(); i++) {
-            ItemStack s = inv.getItem(i);
+        for (ItemStack s : carriedPapers(player.getInventory())) {
             Optional<ShareCertificates.Paper> p = ShareCertificates.read(s);
             if (p.isPresent()) sum += (long) p.get().denomination() * s.getCount() * equities.dividendsSince(p.get().ticker(), p.get().paidThrough());
         }
         return sum;
     }
 
-    /** Presents every certificate in the inventory: pays their dividends in bills and marks them paid up. */
+    private static List<ItemStack> carriedPapers(Inventory inv) {
+        List<ItemStack> out = new ArrayList<>();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack s = inv.getItem(i);
+            out.add(s);
+            if (s.is(ModItems.PORTFOLIO_BINDER)) out.addAll(com.realisticmarkets.mod.item.PortfolioBinderItem.contents(s));
+        }
+        return out;
+    }
+
+    /**
+     * Presents every certificate the player carries, loose or in a Portfolio Binder: pays their dividends in bills and
+     * marks them paid up.
+     */
     public long collectDividends(Player player, ProgressionService prog, long day) {
         Inventory inv = player.getInventory();
         long latest = equities.lastReportedQuarter();
         Map<String, Long> byTicker = new LinkedHashMap<>();
         for (int i = 0; i < inv.getContainerSize(); i++) {
             ItemStack s = inv.getItem(i);
-            Optional<ShareCertificates.Paper> p = ShareCertificates.read(s);
-            if (p.isEmpty() || p.get().paidThrough() >= latest) continue;
-            long owed = (long) p.get().denomination() * s.getCount() * equities.dividendsSince(p.get().ticker(), p.get().paidThrough());
-            byTicker.merge(p.get().ticker(), owed, Long::sum);
-            inv.setItem(i, ShareCertificates.create(p.get().ticker(), p.get().denomination(), latest, s.getCount()));
+            if (s.is(ModItems.PORTFOLIO_BINDER)) {
+                var inside = com.realisticmarkets.mod.item.PortfolioBinderItem.contents(s);
+                for (int j = 0; j < inside.size(); j++) inside.set(j, present(inside.get(j), latest, byTicker));
+                com.realisticmarkets.mod.item.PortfolioBinderItem.setContents(s, inside);
+            } else {
+                inv.setItem(i, present(s, latest, byTicker));
+            }
         }
         long total = 0;
         for (Map.Entry<String, Long> e : byTicker.entrySet()) {
@@ -406,11 +420,20 @@ public final class StockService {
         return paid;
     }
 
+    /** A certificate stack marked paid through {@code latest}, adding what it was owed to {@code byTicker}. */
+    private ItemStack present(ItemStack s, long latest, Map<String, Long> byTicker) {
+        Optional<ShareCertificates.Paper> p = ShareCertificates.read(s);
+        if (p.isEmpty() || p.get().paidThrough() >= latest) return s;
+        long owed = (long) p.get().denomination() * s.getCount() * equities.dividendsSince(p.get().ticker(), p.get().paidThrough());
+        byTicker.merge(p.get().ticker(), owed, Long::sum);
+        return ShareCertificates.create(p.get().ticker(), p.get().denomination(), latest, s.getCount());
+    }
+
     /** Pays dividends, then swaps every company's certificates for the fewest (100s, 10s, 1s). */
     public void merge(Player player, ProgressionService prog, long day) {
         collectDividends(player, prog, day);
         Inventory inv = player.getInventory();
-        Map<String, Long> held = ShareCertificates.holdings(inv);
+        Map<String, Long> held = ShareCertificates.loose(inv);
         for (int i = 0; i < inv.getContainerSize(); i++) {
             if (ShareCertificates.read(inv.getItem(i)).isPresent()) inv.setItem(i, ItemStack.EMPTY);
         }

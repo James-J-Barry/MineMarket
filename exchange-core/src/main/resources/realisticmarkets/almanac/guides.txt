@@ -279,3 +279,14 @@ One company can have a terrible stretch. A spread of several is far calmer, beca
 So keep money you'll need soon in the vault, and put money you won't touch for weeks into a spread of shares.
 
 Real world: over the last century stocks have beaten bank deposits by a few percent a year, with deep crashes along the way. That gap is called the equity risk premium.
+
+@custody Custody
+Your papers are bearer papers: whoever holds a Share Certificate or a CD owns it. The exchange doesn't know your name. Die with a stack of certificates in your pocket and whoever picks them up owns those shares; drop them in lava and they're simply gone.
+
+A Portfolio Binder holds 27 papers in one item and, when you open it, adds up what they're all worth at today's prices. The papers themselves never show a value, so the binder is how you see your whole portfolio at once. It is still one item you can lose, so don't carry more in it than you need.
+
+A Safe Deposit Box is for the rest. It holds 54 slots of papers and money, explosions can't touch it, only you can open it, and it can't be broken while anything is inside. Keep long-term holdings there and carry only what you're about to trade or present.
+
+Shares in the box still earn their dividends. Bring the certificates to a Stock Exchange whenever it suits you and everything that built up is paid.
+
+Real world: investors once kept paper stock certificates in bank safe deposit boxes. Today almost all shares are held electronically by brokers and custodians, so nobody loses a fortune with a piece of paper.

@@ -192,7 +192,7 @@ public class StockExchangeMenu extends AbstractContainerMenu {
             setPair(base + 4, tk.filledQty());
             setPair(base + 6, tk.limitCents());
         }
-        setPair(D_HELD, ShareCertificates.holdings(player.getInventory()).getOrDefault(t, 0L));
+        setPair(D_HELD, ShareCertificates.loose(player.getInventory()).getOrDefault(t, 0L));
         setPair(D_WAITING, stocks.dividendsWaiting(player));
         List<Equities.Report> reports = stocks.equities().reports(t);
         int n = Math.min(REPORT_QUARTERS, reports.size());
