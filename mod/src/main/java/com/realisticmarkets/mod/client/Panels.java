@@ -36,8 +36,13 @@ final class Panels {
     }
 
     static void inventory(GuiGraphicsExtractor g, int left, int top, int invY) {
-        for (int r = 0; r < 3; r++) for (int c = 0; c < 9; c++) slot(g, left + 8 + c * 18, top + invY + r * 18);
-        for (int c = 0; c < 9; c++) slot(g, left + 8 + c * 18, top + invY + 58);
+        inventory(g, left, top, 8, invY);
+    }
+
+    /** Player inventory frames with the first slot at panel-relative ({@code invX}, {@code invY}). */
+    static void inventory(GuiGraphicsExtractor g, int left, int top, int invX, int invY) {
+        for (int r = 0; r < 3; r++) for (int c = 0; c < 9; c++) slot(g, left + invX + c * 18, top + invY + r * 18);
+        for (int c = 0; c < 9; c++) slot(g, left + invX + c * 18, top + invY + 58);
     }
 
     static String trim(Font font, String s, int maxWidth) {

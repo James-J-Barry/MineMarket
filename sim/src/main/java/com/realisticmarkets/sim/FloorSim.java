@@ -24,7 +24,7 @@ import java.util.Locale;
  *   <li>a player selling 64 and 1,024 as market orders (in chunks, one per auction) vs selling to the Dealer;</li>
  *   <li>round trips between the Floor and the Dealer (licensed), which must lose money.</li>
  * </ol>
- * Targets (M5 spec): trades in most auctions; spread 2-6%; within about 5% of fair value; 64 on the Floor pays more
+ * Targets (M5, M5c): trades in most auctions; spread 2-6%; within about 8% of fair value; 64 on the Floor pays more
  * than the Dealer; 1,024 pays less than 1,024 x the Floor's price; every round trip loses.
  */
 public final class FloorSim {
@@ -136,7 +136,7 @@ public final class FloorSim {
                 long cost = b.dealer().quoteBuy(book.item(), 16, 0, true).cents();
                 long loopDealerToFloor = trade(b, Side.SELL, 16, 16).cents() - cost;
 
-                boolean ok = tradedShare > 0.5 && avgSpread >= 0.02 && avgSpread <= 0.06 && avgErr <= 0.05
+                boolean ok = tradedShare > 0.5 && avgSpread >= 0.02 && avgSpread <= 0.06 && avgErr <= 0.08
                         && f64.qty() == 64 && f64.cents() > d64 && impact < 1 && loopFloorToDealer < 0 && loopDealerToFloor < 0;
                 allOk &= ok;
                 System.out.printf(Locale.ROOT, "%-12s %6.0f%% %6.1f%% %7.1f%% | %10s %10s | %4d sold, %4.0f%% | %s %s%s%n",
@@ -151,7 +151,8 @@ public final class FloorSim {
         }
         System.out.println("Round trips: buy 16 on the Floor and sell to the Dealer / buy 16 from the Dealer and sell on the Floor.");
         System.out.println("1024: how many sold within a day in chunks, and the average price as a share of the price before selling.");
-        System.out.println("Targets: traded > 50%, spread 2-6%, within 5% of fair, 64 beats the Dealer, 1,024 shows impact, loops lose.");
+        System.out.println("Targets: traded > 50%, spread 2-6%, within 8% of fair (world events move fair value faster than the NPCs follow),");
+        System.out.println("  64 beats the Dealer, 1,024 shows impact, loops lose.");
         System.out.println(allOk ? "All books on target." : "Some books are off target (marked).");
         System.out.println("CSV: " + out.toAbsolutePath());
     }

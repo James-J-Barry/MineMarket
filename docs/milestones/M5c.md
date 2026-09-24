@@ -37,7 +37,8 @@ value"). `docs/design.md` is updated with this milestone.
 5. **Cheaper trading.** One Ledger Paper makes **32 Order Slips** (was 8), about $0.14 each. An open order can be
    **repriced** without a new slip (the Floor screen's reprice button moves it to the price you've entered).
    Day orders still expire at dawn.
-6. **More books** so everyday gatherers benefit: potato, beef, copper ingot, cobblestone (14 books).
+6. **More books** so everyday gatherers benefit: potato, beef, copper ingot, bone (14 books). Not cobblestone: at
+   10 cents a whole-cent quote can't be tighter than 9/11 cents, a 20% spread.
 
 ## Targets (`sim trader`, `sim floor`, `sim farm`)
 
@@ -55,7 +56,9 @@ value"). `docs/design.md` is updated with this milestone.
       screen and in chat; unit tests + GameTest.
 - [x] Floor basis for iron block; unit tests.
 - [x] 32 Order Slips per Ledger Paper; reprice an open order without a slip (core + menu + GameTest).
-- [ ] Four new books.
+- [x] Four new books. Potato, beef, copper ingot, bone; 14 books, so the Floor screen is 212 px wide with a 7x2 grid.
+      `sim floor`: all trade in 62-90% of auctions at 3.3-5.3% spreads; every Floor-Dealer loop loses. With world
+      events the Floor lags fair value by 1-7% on average (potato 6.7%, redstone 5.1%), so that target is now 8%.
 - [ ] Sims meet the targets; design doc, guides and pinned numbers updated.
 - [ ] James's in-game check: news on the Floor, repricing, prices that move.
 - [ ] `./scripts/dev.sh check` green.

@@ -22,7 +22,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
 public class TradingFloorScreen extends AbstractContainerScreen<TradingFloorMenu> {
-    private static final int BOOK_X = 8, BOOK_Y = 18, INFO_X = 104;
+    private static final int BOOK_X = 8, BOOK_Y = 18, COLS = 7, INFO_X = 140;
     private static final int GOLD = 0xFF8A5A00;
     private static final List<WorldEvents.Type> NEWS = WorldEvents.loadTypes();
     private Button side, market;
@@ -33,6 +33,7 @@ public class TradingFloorScreen extends AbstractContainerScreen<TradingFloorMenu
     public TradingFloorScreen(TradingFloorMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title, TradingFloorMenu.WIDTH, TradingFloorMenu.HEIGHT);
         inventoryLabelY = TradingFloorMenu.INVENTORY_Y - 11;
+        inventoryLabelX = TradingFloorMenu.INVENTORY_X;
     }
 
     private Button button(String label, int id, int x, int y, int w) {
@@ -56,9 +57,9 @@ public class TradingFloorScreen extends AbstractContainerScreen<TradingFloorMenu
         priceButtons.add(button("+10%", TradingFloorMenu.BUTTON_PRICE_PLUS_10PCT, 80, 88, 26));
         button("Place order", TradingFloorMenu.BUTTON_PLACE, 8, 104, 70);
         for (int i = 0; i < cancel.length; i++) {
-            reprice[i] = button("=", TradingFloorMenu.BUTTON_REPRICE_BASE + i, 145, 104 + i * 11, 12);
+            reprice[i] = button("=", TradingFloorMenu.BUTTON_REPRICE_BASE + i, 181, 104 + i * 11, 12);
             reprice[i].setTooltip(Tooltip.create(Component.literal("Move this order to the price you've set (no new slip)")));
-            cancel[i] = button("x", TradingFloorMenu.BUTTON_CANCEL_BASE + i, 158, 104 + i * 11, 12);
+            cancel[i] = button("x", TradingFloorMenu.BUTTON_CANCEL_BASE + i, 194, 104 + i * 11, 12);
             cancel[i].setTooltip(Tooltip.create(Component.literal("Cancel: goods or cash come back")));
         }
         updateWidgets();
@@ -90,8 +91,8 @@ public class TradingFloorScreen extends AbstractContainerScreen<TradingFloorMenu
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         double x = event.x() - leftPos - BOOK_X, y = event.y() - topPos - BOOK_Y;
-        if (x >= 0 && y >= 0 && x < 5 * 18 && y < 2 * 18) {
-            int i = (int) (y / 18) * 5 + (int) (x / 18);
+        if (x >= 0 && y >= 0 && x < COLS * 18 && y < 2 * 18) {
+            int i = (int) (y / 18) * COLS + (int) (x / 18);
             if (i < TradingFloorMenu.BOOKS.size()) {
                 click(TradingFloorMenu.BUTTON_BOOK_BASE + i);
                 return true;
@@ -113,21 +114,21 @@ public class TradingFloorScreen extends AbstractContainerScreen<TradingFloorMenu
         super.extractBackground(g, mouseX, mouseY, partialTick);
         int x = leftPos, y = topPos;
         Panels.panel(g, x, y, imageWidth, imageHeight);
-        Panels.well(g, x + BOOK_X, y + BOOK_Y, 5 * 18, 2 * 18);
+        Panels.well(g, x + BOOK_X, y + BOOK_Y, COLS * 18, 2 * 18);
         int sel = getMenu().book();
-        g.fill(x + BOOK_X + (sel % 5) * 18, y + BOOK_Y + (sel / 5) * 18, x + BOOK_X + (sel % 5) * 18 + 18,
-                y + BOOK_Y + (sel / 5) * 18 + 18, 0xFFC6D7F0);
+        g.fill(x + BOOK_X + (sel % COLS) * 18, y + BOOK_Y + (sel / COLS) * 18, x + BOOK_X + (sel % COLS) * 18 + 18,
+                y + BOOK_Y + (sel / COLS) * 18 + 18, 0xFFC6D7F0);
         for (int i = 0; i < TradingFloorMenu.OUTPUT_SLOTS; i++) {
             Panels.slot(g, x + TradingFloorMenu.OUTPUT_X + i * 18, y + TradingFloorMenu.OUTPUT_Y);
         }
-        Panels.inventory(g, x, y, TradingFloorMenu.INVENTORY_Y);
+        Panels.inventory(g, x, y, TradingFloorMenu.INVENTORY_X, TradingFloorMenu.INVENTORY_Y);
     }
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor g, int mouseX, int mouseY) {
         super.extractLabels(g, mouseX, mouseY);
         TradingFloorMenu m = getMenu();
-        for (int i = 0; i < TradingFloorMenu.BOOKS.size(); i++) g.item(icon(i), BOOK_X + (i % 5) * 18 + 1, BOOK_Y + (i / 5) * 18 + 1);
+        for (int i = 0; i < TradingFloorMenu.BOOKS.size(); i++) g.item(icon(i), BOOK_X + (i % COLS) * 18 + 1, BOOK_Y + (i / COLS) * 18 + 1);
         String name = icon(m.book()).getHoverName().getString();
         g.text(font, Panels.trim(font, name, imageWidth - INFO_X - 6), INFO_X, 18, BLUE, false);
         g.text(font, "Bid " + cents(m.bidCents()), INFO_X, 29, GREY, false);
@@ -152,7 +153,7 @@ public class TradingFloorScreen extends AbstractContainerScreen<TradingFloorMenu
         for (int i = 0; i < m.orderCount(); i++) {
             String line = (m.orderSelling(i) ? "S " : "B ") + m.orderFilled(i) + "/" + m.orderQty(i) + " @" + cents(m.orderPrice(i));
             g.item(icon(m.orderBook(i)), 80, 102 + i * 11);
-            g.text(font, Panels.trim(font, line, 48), 96, 107 + i * 11, GREEN, false);
+            g.text(font, Panels.trim(font, line, 82), 96, 107 + i * 11, GREEN, false);
         }
     }
 }

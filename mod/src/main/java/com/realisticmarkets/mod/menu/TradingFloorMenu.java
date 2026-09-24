@@ -29,7 +29,7 @@ import net.minecraft.world.item.ItemStack;
  * Order Slip, watch your open orders, and collect fills, refunds and receipts from the output slots.
  */
 public class TradingFloorMenu extends AbstractContainerMenu {
-    public static final int WIDTH = 176, HEIGHT = 254, INVENTORY_Y = 172, NEWS_Y = 143, NEWS_LINES = 2;
+    public static final int WIDTH = 212, HEIGHT = 254, INVENTORY_X = 26, INVENTORY_Y = 172, NEWS_Y = 143, NEWS_LINES = 2;
     public static final int OUTPUT_X = 8, OUTPUT_Y = 122, OUTPUT_SLOTS = 6;
     public static final int INV_START = OUTPUT_SLOTS, INV_END = INV_START + 36;
     public static final int MAX_SHOWN_ORDERS = 3;
@@ -78,7 +78,7 @@ public class TradingFloorMenu extends AbstractContainerMenu {
                 }
             });
         }
-        addStandardInventorySlots(inv, 8, INVENTORY_Y);
+        addStandardInventorySlots(inv, INVENTORY_X, INVENTORY_Y);
         addDataSlots(data);
         if (floor != null) {
             setPair(D_QTY, 16);
