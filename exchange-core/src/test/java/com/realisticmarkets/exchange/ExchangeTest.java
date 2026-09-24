@@ -159,4 +159,19 @@ class ExchangeTest {
     void clearingPriceHelperHandlesEmptySides() {
         assertEquals(OptionalLong.empty(), ClearingPrice.compute(List.of(), List.of(), OptionalLong.empty()));
     }
+
+    @Test
+    void anAggressiveSellCantDragThePriceBelowEveryBuyersLimit() {
+        Exchange ex = new Exchange();
+        ex.listInstrument(DIA);
+        ex.deposit("b1", 100_000);
+        ex.deposit("b2", 100_000);
+        ex.depositPosition("seller", DIA, 100);
+        ex.submit(OrderRequest.ioc("b1", DIA, Side.BUY, 10, 98));
+        ex.submit(OrderRequest.ioc("b2", DIA, Side.BUY, 10, 95));
+        ex.submit(OrderRequest.ioc("seller", DIA, Side.SELL, 100, 1)); // a "market" sell far bigger than demand
+        AuctionResult r = ex.runAuction(DIA);
+        assertEquals(20, r.volume(), "all demand is filled");
+        assertEquals(95, r.clearingPrice().getAsLong(), "at the last buyer's limit, not at 1");
+    }
 }

@@ -487,6 +487,8 @@ In single player the Dealer is an unlimited faucet, so its price impact is the m
 
 All of these live in datapack JSON, and difficulty presets (Relaxed, Standard, Realistic) swap whole sets at world creation.
 
+**Trading Floor (`sim floor`, 30 in-game days, no player):** all 10 books trade in 62-90% of auctions at spreads of 3.3-5.4%, 0.8-4.8% from the Dealer's fair value. Selling 64 on the Floor pays 1.2-2x the Dealer; 1,024 shows heavy impact and thin books (diamond, emerald, iron block) absorb only 100-350 a day. Every Floor-Dealer round trip loses money.
+
 **Measured so far (`sim progression`, assumed gathering profiles):** Tier 1 complete at 2.0 h (target ~2 h). Tier 2 complete (Bank Vault, CD, Loan Note, vault built) at 9.7-10.3 h against a ~5 h target: Tier 2 costs about 7x Tier 1 while Tier 1's tools add only 11-35% income. Current prices are kept for now; halving Tier 2 prices and a 4-block vault recipe would bring it to about 5.3-6.3 h. Vault savings earn about $4-8 a day against $106-174 of income.
 
 ## Technical architecture

@@ -5,12 +5,12 @@
 # noise, fundamentalists, momentum: how many of each trader type (plus one market maker per book).
 # Iron ingots and iron blocks are separate books on purpose: the price gap between them is real arbitrage.
 item,half_spread,depth,noise,fundamentalists,momentum
-minecraft:wheat,0.02,512,6,3,2
-minecraft:carrot,0.02,512,6,3,2
+minecraft:wheat,0.012,512,6,3,2
+minecraft:carrot,0.012,512,6,3,2
 minecraft:oak_log,0.02,384,6,3,2
 minecraft:coal,0.015,384,6,3,2
-minecraft:iron_ingot,0.015,256,6,3,2
-minecraft:iron_block,0.02,32,4,2,1
+minecraft:iron_ingot,0.015,256,6,5,2
+minecraft:iron_block,0.02,48,8,3,1
 minecraft:gold_ingot,0.015,128,6,3,2
 minecraft:redstone,0.02,384,6,3,2
 minecraft:emerald,0.015,64,5,3,2

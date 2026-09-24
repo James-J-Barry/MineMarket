@@ -9,6 +9,7 @@ import java.util.Arrays;
  *   ./scripts/dev.sh sim farm [item] [days]        farm income vs daily sale size (Dealer balance)
  *   ./scripts/dev.sh sim auction [steps] [seed]    batch-auction price discovery demo
  *   ./scripts/dev.sh sim progression [profile]     Tier 1 play time, then Trade Route Crate income uplift
+ *   ./scripts/dev.sh sim floor                     Trading Floor liquidity, spreads, impact and no-arbitrage
  * </pre>
  */
 public final class SimMain {
@@ -19,8 +20,9 @@ public final class SimMain {
             case "farm" -> FarmSim.main(rest);
             case "auction" -> AuctionSim.main(rest);
             case "progression" -> ProgressionSim.main(rest);
+            case "floor" -> FloorSim.main(rest);
             default -> {
-                System.err.println("unknown sim '" + mode + "'. Try: farm, auction, progression");
+                System.err.println("unknown sim '" + mode + "'. Try: farm, auction, progression, floor");
                 System.exit(2);
             }
         }

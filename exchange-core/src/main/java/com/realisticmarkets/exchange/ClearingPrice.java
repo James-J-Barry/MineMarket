@@ -11,10 +11,17 @@ import java.util.TreeSet;
  * <ol>
  *   <li>maximises executable volume, min(demand(p), supply(p));</li>
  *   <li>then minimises imbalance, |demand(p) - supply(p)|;</li>
+ *   <li>then follows market pressure: with more selling than buying, the higher price (the last buyer's limit);
+ *       with more buying than selling, the lower price;</li>
  *   <li>then is closest to the reference price (last clearing price), if there is one;</li>
  *   <li>then is the lower price (deterministic final tie-break).</li>
  * </ol>
  * demand(p) = total bid quantity with limit >= p; supply(p) = total ask quantity with limit <= p.
+ *
+ * <p>Prices are only considered between the lowest bid limit and the highest ask limit. Clearing outside that
+ * range can never add volume, and without the bound an aggressive order (a "market" sell priced at 1) that
+ * outweighs the other side would drag the price to its own extreme limit: every buyer willing to pay far more
+ * would get the goods at 1. With it, the price stops at the last buyer's limit, as in real call auctions.
  *
  * <p>Complexity is O(k * n) for k distinct prices and n orders, which is plenty for game-scale
  * books. A prefix-sum sweep makes it O(n log n) if it ever matters.
@@ -32,9 +39,13 @@ public final class ClearingPrice {
     public static Result computeDetailed(List<Order> bids, List<Order> asks, OptionalLong reference) {
         if (bids.isEmpty() || asks.isEmpty()) return null;
 
+        long lowestBid = Long.MAX_VALUE, highestAsk = 0;
+        for (Order o : bids) lowestBid = Math.min(lowestBid, o.limitPrice());
+        for (Order o : asks) highestAsk = Math.max(highestAsk, o.limitPrice());
+        long lo = Math.min(lowestBid, highestAsk), hi = Math.max(lowestBid, highestAsk);
         TreeSet<Long> candidates = new TreeSet<>();
-        for (Order o : bids) candidates.add(o.limitPrice());
-        for (Order o : asks) candidates.add(o.limitPrice());
+        for (Order o : bids) if (o.limitPrice() >= lo && o.limitPrice() <= hi) candidates.add(o.limitPrice());
+        for (Order o : asks) if (o.limitPrice() >= lo && o.limitPrice() <= hi) candidates.add(o.limitPrice());
 
         Result best = null;
         for (long p : candidates) {
@@ -54,6 +65,10 @@ public final class ClearingPrice {
         long imbA = Math.abs(a.demand() - a.supply());
         long imbB = Math.abs(b.demand() - b.supply());
         if (imbA != imbB) return imbA < imbB;
+        long pressure = Long.signum(a.supply() - a.demand());
+        if (pressure != 0 && pressure == Long.signum(b.supply() - b.demand()) && a.price() != b.price()) {
+            return pressure > 0 ? a.price() > b.price() : a.price() < b.price();
+        }
         if (ref.isPresent()) {
             long dA = Math.abs(a.price() - ref.getAsLong());
             long dB = Math.abs(b.price() - ref.getAsLong());
