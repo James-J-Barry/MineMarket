@@ -140,7 +140,7 @@ That sounds tiny, but the interest itself earns interest. Put in $1,000 and afte
 
 The bank credits interest in whole dimes. The fractions carry over to the next day, so nothing is lost; you just see it a dime at a time.
 
-Keep the vault in perspective, though. $1,000 earns about $3 a day, while a good farm earns $20 or more. The vault is for keeping money safe and letting spare cash grow, not a way to get rich.
+Prices creep up too, about 0.1% a day, so cash in a chest slowly buys less. In the vault it still grows faster than prices. Keep it in perspective, though: $1,000 earns about $3 a day, while a good farm earns $20 or more.
 
 To see your balance you need your Passbook in the vault's slot. The vault can only be broken once it's empty, so a vault is a place, not something you carry.
 

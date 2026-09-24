@@ -23,7 +23,9 @@ import java.util.SplittableRandom;
  * (half-life {@link DealerParams#anchorHalfLifeDays()}). Selling to the Dealer lowers the level for good and
  * buying raises it ({@link DealerParams#supplyImpact()} per depth's worth); the Dealer's inventory, which recovers
  * in days, is separate. World {@link Shocks} add a permanent step on the day they happen plus a transient effect
- * that fades. Random shocks are derived from the world seed and the day, so a world's history is reproducible.
+ * that fades. On top, everything is scaled by the general {@link #priceLevel price level}, which rises at the
+ * inflation rate, so goods hold their value against cash. Random shocks are derived from the world seed and the day,
+ * so a world's history is reproducible.
  *
  * <p>Time is passed in as fractional in-game days by the caller; the Dealer never reads a clock.
  * Not thread-safe; call from the server thread.
@@ -145,7 +147,7 @@ public final class Dealer {
         Pool p = advance(base, day);
         double close = Math.floor(day) - 1e-6; // the last moment of yesterday
         double t = shocks == null ? 0 : shocks.fading(base.itemId(), close);
-        return base.fairValue() * Math.exp(p.yesterdayLog + t) * spec.baseUnits();
+        return base.fairValue() * Math.exp(p.yesterdayLog + t) * priceLevel(close) * spec.baseUnits();
     }
 
     public double fairValue(String itemId, double day) {
@@ -258,7 +260,12 @@ public final class Dealer {
 
     private double fair(MarketSpec base, Pool p, double day) {
         double t = shocks == null ? 0 : shocks.fading(base.itemId(), day);
-        return base.fairValue() * Math.exp(p.logDev + t);
+        return base.fairValue() * Math.exp(p.logDev + t) * priceLevel(day);
+    }
+
+    /** The general price level at {@code day}: 1.0 at day 0, rising at the inflation rate. */
+    public double priceLevel(double day) {
+        return Math.exp(params.inflation() * day);
     }
 
     /** Brings a pool's inventory decay and fair-value drift up to {@code day}. */

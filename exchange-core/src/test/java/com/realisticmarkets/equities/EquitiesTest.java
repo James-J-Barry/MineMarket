@@ -40,7 +40,7 @@ class EquitiesTest {
         for (Company c : CATALOG.all()) {
             long v = e.startValueCents(c.ticker());
             assertTrue(v >= 2_000 && v <= 10_000, c.ticker() + " starts at " + v + " cents");
-            assertTrue(c.requiredReturn() > 0.003, c.ticker() + " asks more than the vault pays");
+            assertTrue(c.requiredReturn() + 0.001 > 0.003, c.ticker() + " asks more than the vault pays (real return plus inflation)");
         }
         assertTrue(CATALOG.company("RSD").requiredReturn() > CATALOG.company("OWL").requiredReturn(), "risk costs more");
     }
@@ -95,12 +95,12 @@ class EquitiesTest {
         Equities e = new Equities(CATALOG, EquitiesTest::base, 1);
         Company owl = CATALOG.company("OWL");
         double expected = (100_000 - 30_500 - 12_000 * base("minecraft:coal")) * 100;
-        double r = Math.pow(1.0035, 7) - 1, g = 0.002;
+        double r = Math.pow(1 + owl.requiredReturn(), 7) - 1, g = 0.002;
         assertEquals(Math.round(expected * (1 + g) / (r - g) / owl.shares()), e.startValueCents("OWL"));
         assertEquals(e.startValueCents("OWL"), e.fairValueCents("OWL"), "before any report: the starting value");
         // A higher required return for the same earnings means a lower price.
         Company risky = new Company("X", "X", owl.revenue(), owl.fixedCost(), owl.inputs(), owl.growth(), owl.outputVol(),
-                owl.payout(), owl.shares(), 0.006, owl.events());
+                owl.payout(), owl.shares(), 0.005, owl.events());
         Equities e2 = new Equities(new CompanyCatalog(List.of(risky)), EquitiesTest::base, 1);
         assertTrue(e2.startValueCents("X") < e.startValueCents("OWL"));
         // Deep losses can't push the price below the floor.
@@ -203,5 +203,24 @@ class EquitiesTest {
             double perQuarter = Math.pow((e.fairValueCents(t) + (double) paid.get(t)) / start.get(t), 1 / 20.0) - 1;
             assertEquals(calm.quarterReturn(), perQuarter, 0.004, t + ": price growth plus dividends");
         }
+    }
+
+    @Test
+    void withInflationOwnersEarnTheRealReturnPlusInflation() {
+        Company owl = CATALOG.company("OWL");
+        Company calm = new Company("CALM", "Calm", owl.revenue(), owl.fixedCost(), owl.inputs(), owl.growth(), 0, owl.payout(),
+                owl.shares(), owl.requiredReturn(), owl.events());
+        Equities e = new Equities(new CompanyCatalog(List.of(calm)), EquitiesTest::base, 1);
+        double pi = 0.001;
+        java.util.function.LongFunction<ToDoubleFunction<String>> prices = d -> k -> base(k) * Math.exp(pi * d);
+        for (long d = 0; d <= 28; d++) e.observe(d, prices.apply(d), List.of());
+        long start = e.fairValueCents("CALM"), paid = 0;
+        for (long d = 29; d <= 29 + 7 * 20; d++) {
+            for (Equities.Report r : e.observe(d, prices.apply(d), List.of())) paid += r.dividend();
+        }
+        double perQuarter = Math.pow((e.fairValueCents("CALM") + (double) paid) / start, 1 / 20.0) - 1;
+        double expected = (1 + calm.quarterReturn()) * Math.exp(pi * 7) - 1;
+        assertEquals(expected, perQuarter, 0.004, "real return plus inflation, in dollars");
+        assertTrue(perQuarter > Math.pow(1.003, 7) - 1, "beats the vault's 0.3% a day");
     }
 }

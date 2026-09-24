@@ -117,7 +117,9 @@ Fair value V moves on its own, so prices change even when the player does nothin
 
 The Basic Exchange and Price Board show **Normal** as the Dealer's published fair value at yesterday's close, not the live value: it lags by a day's moves, trades and news, so buying "under Normal" is a judgment call, not a sure thing.
 
-Goods pay no interest while money in a Bank Vault does, so holding goods to sell later is a bet that they rise by more than the vault pays: the time value of money.
+- **Inflation.** The general price level rises about 0.1% a day (about 3% a month of in-game days) and scales every fair value, so goods hold their value against cash, and company earnings (revenue, fixed costs, regulated fees) rise with it. Almanac costs stay fixed in dollars, so upgrades get slightly cheaper in real terms as a world ages.
+
+This gives the classic ordering of investments (`sim equities`, 140 days, 8 worlds): cash in a chest loses about 0.1% a day of buying power; goods held at fair value earn about inflation (0.13% a day) with real risk; the vault pays 0.3% (about 0.2% above inflation) with none; a spread of shares earns about 0.5% a day with losing weeks. Holding goods to sell later is a bet that they rise by more than the vault pays: the time value of money.
 
 ### Why farms can't break it
 
@@ -473,7 +475,7 @@ Company earnings are linked to the same commodity prices the player trades, so t
 | RSD | Redstone Dynamics | Long-run growth story; no dividend | High volatility, high expected return |
 | OWL | Overworld Utility & Light | Stable fees; highly regulated | Bond-like, high dividend |
 
-Each company has shares outstanding, a payout ratio and a growth rate. Quarterly revenue is output times the quarter's average commodity prices; fixed and input costs make earnings swing more than revenue; dividends are payout × earnings. Fundamentalist traders estimate fair value by discounting expected dividends at a required return a little above the vault's rate, so shares earn more than the vault on average but can lose; there is no short selling in Tier 4; noise and momentum traders pull the price around it. Corporate Bonds from a company default when its earnings stay negative for two quarters, paying back a recovery fraction of face value.
+Each company has shares outstanding, a payout ratio and a growth rate. Quarterly revenue is output times the quarter's average commodity prices; fixed and input costs make earnings swing more than revenue; dividends are payout × earnings. Fundamentalist traders estimate fair value by discounting expected dividends at a real required return (0.25-0.55% a day above inflation), so shares earn more than the vault on average but can lose; there is no short selling in Tier 4; noise and momentum traders pull the price around it. Corporate Bonds from a company default when its earnings stay negative for two quarters, paying back a recovery fraction of face value.
 
 ## Economy balance
 
@@ -491,6 +493,7 @@ In single player the Dealer is an unlimited faucet, so its price impact is the m
 | Depth L per item | Reference table | Let farms earn more | Punish single-item farms harder |
 | Recovery time τ | 2 in-game days | Slow repeat selling | Allow more frequent selling |
 | Fair-value moves | 2% a day, trends, 60-day anchor, 1% per depth sold, events | Make prices livelier | Make prices calmer |
+| Inflation | 0.1% a day | Reward holding goods and shares over cash | Make the vault more attractive |
 | Bank Vault rate | 0.3% per day | Reward saving | Push players toward riskier tools |
 | Advance rate and haircuts | 80%; 10/20/40% | — | Make borrowing easier |
 | Almanac costs | Catalog table | Lengthen the game | Shorten the game |
@@ -501,9 +504,9 @@ All of these live in datapack JSON, and difficulty presets (Relaxed, Standard, R
 
 **Trading for a living (`sim trader`, 30 days, 8 worlds, 4 Floor visits a day, Order Slips $0.14):** selling gathered goods on the Floor instead of the Dealer lifts income 20% (early survival) to 63% (farm-heavy), paying back the Floor in 27-90 days. With $1,000 and no gathering, against the vault's $3/day: buying under Normal and selling over it about $7/day, but some worlds lose money and the worst week lost $197 (Normal is yesterday's close, so it lags); trading the Newsstand's news about $12/day from about three orders a day (worst week -$51); iron block vs ingots about $14/day (worst week -$143, the stock you hold moves); buy-and-hold loses about $2/day with -$108 weeks. Quoting inside the market maker: about $7/day (worst week -$99). Trading pays, and it carries risk.
 
-**Stock Exchange (`sim equities`, 20 quarters, 8 worlds, no player):** every company beats the vault on average (compounded 0.34-0.46% a day vs 0.30%), an even six-company portfolio 0.51% (1.7x) with a typical worst week of -9%. Single stocks swing about 7% (OWL) to 29% (RSD) a quarter and can lose most of their value in a long slump. Kept earnings stay in the company as cash reinvested at its required return, so a no-dividend company still pays its owners through the price.
+**Stock Exchange (`sim equities`, 20 quarters, 8 worlds, no player):** every company beats the vault on average (compounded 0.33-0.46% a day vs 0.30%), an even six-company portfolio 0.49% (1.6x) with a typical worst week of -9%. Single stocks swing about 7% (OWL) to 29% (RSD) a quarter and can lose most of their value in a long slump. Kept earnings stay in the company as cash reinvested at its required return, so a no-dividend company still pays its owners through the price.
 
-**Measured so far (`sim progression`, assumed gathering profiles):** Tier 1 complete at 2.0 h (target ~2 h). Tier 3 (Trading Floor and Newsstand built) at 19-20 h against ~10 h. Tier 2 complete (Bank Vault, CD, Loan Note, vault built) at 9.7-10.3 h against a ~5 h target: Tier 2 costs about 7x Tier 1 while Tier 1's tools add only 11-35% income. Current prices are kept for now; halving Tier 2 prices and a 4-block vault recipe would bring it to about 5.3-6.3 h. Vault savings earn about $4-8 a day against $106-174 of income.
+**Measured so far (`sim progression`, assumed gathering profiles):** Tier 1 complete at 2.0 h (target ~2 h). Tier 3 (Trading Floor, Newsstand and Ticker Tape built) at 22-23 h against ~10 h. Tier 2 complete (Bank Vault, CD, Loan Note, vault built) at 9.7-10.3 h against a ~5 h target: Tier 2 costs about 7x Tier 1 while Tier 1's tools add only 11-35% income. Current prices are kept for now; halving Tier 2 prices and a 4-block vault recipe would bring it to about 5.3-6.3 h. Vault savings earn about $4-8 a day against $106-174 of income.
 
 ## Technical architecture
 

@@ -307,18 +307,28 @@ public final class TraderSim {
         };
     }
 
-    /** Benchmark: spend it all on the first day, a basket across every book, and hold. No edge; all risk. */
+    /**
+     * Benchmark: a patient investor. Spends it all on an even basket across every book with limit orders at the middle
+     * of the market maker's quotes (repriced each visit until filled), then holds. No edge beyond inflation.
+     */
     static Strategy buyAndHold() {
-        boolean[] done = {false};
+        Map<String, Long> budget = new LinkedHashMap<>();
         return (w, me, dawn) -> {
-            if (done[0]) return;
-            done[0] = true;
             List<FloorCatalog.Book> books = w.floor.catalog().all();
-            long each = me.cash / books.size();
+            if (budget.isEmpty()) for (FloorCatalog.Book b : books) budget.put(b.item(), (me.cash - books.size() * w.slipCents) / books.size());
             for (FloorCatalog.Book b : books) {
+                long left = budget.get(b.item());
                 long[] q = w.quotes(b.item());
-                long price = q[1] + Math.max(1, q[1] / 50);
-                w.order(me, b.item(), Side.BUY, (each - w.slipCents) / price, price);
+                long mid = (q[0] + q[1]) / 2;
+                TradingFloor.Ticket open = w.open(b.item(), Side.BUY);
+                if (open != null) {
+                    w.order(me, b.item(), Side.BUY, 0, mid); // reprice
+                } else if (left >= mid && me.have(b.item()) * mid < left / 2) {
+                    long qty = left / mid;
+                    long before = me.cash;
+                    w.order(me, b.item(), Side.BUY, qty, mid);
+                    budget.put(b.item(), left - (before - me.cash));
+                }
             }
         };
     }

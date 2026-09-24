@@ -192,7 +192,8 @@ public final class StockService {
     }
 
     private double price(String key, long day) {
-        return dealer.dealer().catalog().trades(key) ? dealer.dealer().fairValue(key, day) : 1.0;
+        // Items at the Dealer's fair value; "cpi", "fees" and "shipping" follow the general price level.
+        return dealer.dealer().catalog().trades(key) ? dealer.dealer().fairValue(key, day) : dealer.dealer().priceLevel(day);
     }
 
     private void creditCustodyDividends(Equities.Report r) {

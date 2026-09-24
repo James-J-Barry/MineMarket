@@ -15,6 +15,8 @@ import java.util.Properties;
  * @param trendHalfLifeDays  how long a trend persists
  * @param supplyImpact       permanent change in log fair value per depth's worth sold to (-) or bought from (+)
  *                           the Dealer
+ * @param inflation          how fast the general price level rises a day (0.001 = 0.1%): every fair value is scaled
+ *                           by e^(inflation x day), so goods hold their value against cash
  */
 public record DealerParams(
         double spread,
@@ -25,7 +27,8 @@ public record DealerParams(
         double anchorHalfLifeDays,
         double trendSigma,
         double trendHalfLifeDays,
-        double supplyImpact) {
+        double supplyImpact,
+        double inflation) {
 
     public DealerParams {
         if (spread < 0 || spread >= 2) throw new IllegalArgumentException("spread out of range");
@@ -35,23 +38,24 @@ public record DealerParams(
         if (driftSigma < 0 || trendSigma < 0) throw new IllegalArgumentException("volatilities must be >= 0");
         if (anchorHalfLifeDays <= 0 || trendHalfLifeDays <= 0) throw new IllegalArgumentException("half-lives must be positive");
         if (supplyImpact < 0) throw new IllegalArgumentException("supplyImpact must be >= 0");
+        if (inflation < 0 || inflation > 0.05) throw new IllegalArgumentException("inflation out of range");
     }
 
     public static DealerParams defaults() {
-        return new DealerParams(0.20, 0.12, 1.0, 2.0, 0.02, 60.0, 0.0025, 7.0, 0.01);
+        return new DealerParams(0.20, 0.12, 1.0, 2.0, 0.02, 60.0, 0.0025, 7.0, 0.01, 0.001);
     }
 
-    /** Same as defaults but fair value never moves (no drift, trends or supply impact). For exact-number tests. */
+    /** Same as defaults but fair value never moves (no drift, trends, supply impact or inflation). For exact-number tests. */
     public static DealerParams noDrift() {
         DealerParams d = defaults();
         return new DealerParams(d.spread, d.licensedSpread, d.k, d.recoveryDays, 0.0, d.anchorHalfLifeDays, 0.0,
-                d.trendHalfLifeDays, 0.0);
+                d.trendHalfLifeDays, 0.0, 0.0);
     }
 
     /** A copy with a different spread (the Capital's). */
     public DealerParams withSpread(double s) {
         return new DealerParams(s, s, k, recoveryDays, driftSigma, anchorHalfLifeDays, trendSigma, trendHalfLifeDays,
-                supplyImpact);
+                supplyImpact, inflation);
     }
 
     /**
@@ -70,7 +74,8 @@ public record DealerParams(
                 num(p, "anchor_half_life_days", d.anchorHalfLifeDays),
                 num(p, "trend_sigma", d.trendSigma),
                 num(p, "trend_half_life_days", d.trendHalfLifeDays),
-                num(p, "supply_impact", d.supplyImpact));
+                num(p, "supply_impact", d.supplyImpact),
+                num(p, "inflation", d.inflation));
     }
 
     private static double num(Properties p, String key, double fallback) {

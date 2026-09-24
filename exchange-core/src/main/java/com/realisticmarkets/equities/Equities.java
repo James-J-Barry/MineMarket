@@ -15,7 +15,9 @@ import java.util.function.ToDoubleFunction;
 
 /**
  * The companies' businesses, quarter by quarter. Each dawn the caller passes in today's prices (Dealer fair values for
- * items, 1.0 for "fees", the trade-route index for "shipping") and the world events that started today. Every
+ * items; for {@link #CPI}, "fees" and "shipping", the general price level, with shipping scaled by how busy the trade
+ * routes are) and the world events that started today. Fixed costs rise with the price level, so earnings keep up
+ * with inflation; required returns are real (above inflation). Every
  * {@link Company#QUARTER_DAYS} days each company reports:
  * <pre>
  *   output   = last output x (1 + growth) x e^(vol x shock)        (the business's own luck, seeded)
@@ -34,6 +36,8 @@ import java.util.function.ToDoubleFunction;
  */
 public final class Equities {
     public static final String HEADER = "# Realistic Markets equities v1";
+    /** The general price level (1.0 at the start); every company tracks it for its fixed costs. */
+    public static final String CPI = "cpi";
     public static final int NORMALIZE_QUARTERS = 4;
     /** Fair value never drops below this share of the starting value (the company's assets are worth something). */
     public static final double VALUE_FLOOR = 0.1;
@@ -43,7 +47,8 @@ public final class Equities {
 
     private static final class State {
         double logOutput;
-        double cash; // cents: retained earnings, reinvested at the required return
+        double cash; // cents: retained earnings, reinvested at the required return (plus inflation)
+        double lastCpi; // the price level averaged over the last reported quarter
         final Map<String, double[]> sums = new LinkedHashMap<>(); // key -> {sum, samples}
         final Map<String, Integer> events = new LinkedHashMap<>();
         final List<Report> reports = new ArrayList<>();
@@ -100,6 +105,7 @@ public final class Equities {
     private static List<String> keys(Company c) {
         List<String> k = new ArrayList<>(c.revenue().keySet());
         for (String i : c.inputs().keySet()) if (!k.contains(i)) k.add(i);
+        if (!k.contains(CPI)) k.add(CPI);
         return k;
     }
 
@@ -112,7 +118,9 @@ public final class Equities {
             long[] rc = results(c, s, quarter, Math.exp(s.logOutput));
             long earn = rc[0] - rc[1];
             long div = earn > 0 ? (long) Math.floor(c.payout() * earn / c.shares()) : 0;
-            s.cash = s.cash * (1 + c.quarterReturn()) + earn - (double) div * c.shares();
+            double cpi = average(s, CPI), inflation = s.lastCpi > 0 ? cpi / s.lastCpi : 1;
+            s.lastCpi = cpi;
+            s.cash = s.cash * (1 + c.quarterReturn()) * inflation + earn - (double) div * c.shares();
             Report r = new Report(c.ticker(), quarter, rc[0], rc[1], earn, div);
             s.reports.add(r);
             s.sums.clear();
@@ -133,7 +141,7 @@ public final class Equities {
         for (Map.Entry<String, Long> e : c.revenue().entrySet()) revenue += e.getValue() * average(s, e.getKey());
         for (Map.Entry<String, Integer> e : s.events.entrySet()) revenue *= Math.pow(1 + c.events().get(e.getKey()), e.getValue());
         revenue *= scale;
-        double costs = c.fixedCost() * Math.pow(1 + c.growth(), quarter + 1);
+        double costs = c.fixedCost() * Math.pow(1 + c.growth(), quarter + 1) * average(s, CPI);
         for (Map.Entry<String, Long> e : c.inputs().entrySet()) costs += scale * e.getValue() * average(s, e.getKey());
         return new long[] {Math.round(revenue * 100), Math.round(costs * 100)};
     }
@@ -225,7 +233,7 @@ public final class Equities {
         for (Map.Entry<String, Double> e : lastAverage.entrySet()) w.write("avg\t" + e.getKey() + "\t" + e.getValue() + "\n");
         for (Map.Entry<String, State> e : states.entrySet()) {
             State s = e.getValue();
-            w.write("company\t" + e.getKey() + "\t" + s.logOutput + "\t" + s.cash + "\n");
+            w.write("company\t" + e.getKey() + "\t" + s.logOutput + "\t" + s.cash + "\t" + s.lastCpi + "\n");
             for (Map.Entry<String, double[]> a : s.sums.entrySet()) {
                 w.write("sum\t" + e.getKey() + "\t" + a.getKey() + "\t" + a.getValue()[0] + "\t" + a.getValue()[1] + "\n");
             }
@@ -257,6 +265,7 @@ public final class Equities {
                         if (s != null) {
                             s.logOutput = Double.parseDouble(c[2]);
                             s.cash = c.length > 3 ? Double.parseDouble(c[3]) : 0;
+                            s.lastCpi = c.length > 4 ? Double.parseDouble(c[4]) : 0;
                         }
                     }
                     case "sum" -> {

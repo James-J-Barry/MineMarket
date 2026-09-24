@@ -32,6 +32,7 @@ public final class EquitySim {
     static final int AUCTIONS_PER_DAY = 120;
     static final int SEEDS = 8;
     static final double VAULT = 0.003;
+    static final String GOODS = "goods", CPI = "prices";
 
     record Path(double[] close, double[] dividend, double[] fair) {} // per day, dollars a share
 
@@ -45,11 +46,21 @@ public final class EquitySim {
         TradingFloor market = new TradingFloor(new Exchange(), new PriceHistory(), FloorCatalog.loadStocks(), eq::fairValueCents, seed);
         Map<String, Path> paths = new LinkedHashMap<>();
         for (Company c : companies.all()) paths.put(c.ticker(), new Path(new double[DAYS + 1], new double[DAYS + 1], new double[DAYS + 1]));
+        // Benchmarks: the Floor's 14 goods held at fair value (no trading costs), and the price level (cash in a chest
+        // loses what it rises).
+        paths.put(GOODS, new Path(new double[DAYS + 1], new double[DAYS + 1], new double[DAYS + 1]));
+        paths.put(CPI, new Path(new double[DAYS + 1], new double[DAYS + 1], new double[DAYS + 1]));
+        List<String> goods = new ArrayList<>();
+        Map<String, Double> start = new LinkedHashMap<>();
+        for (FloorCatalog.Book b : FloorCatalog.loadDefault().all()) {
+            goods.add(b.item());
+            start.put(b.item(), dealer.fairValue(b.item(), 0));
+        }
         for (int day = 0; day <= DAYS; day++) {
             final int d = day;
             List<String> today = new ArrayList<>();
             for (WorldEvents.Event e : events.startingOn(day)) today.add(e.type().id());
-            for (Equities.Report r : eq.observe(day, k -> cat.trades(k) ? dealer.fairValue(k, d + 0.5) : 1.0, today)) {
+            for (Equities.Report r : eq.observe(day, k -> cat.trades(k) ? dealer.fairValue(k, d + 0.5) : dealer.priceLevel(d + 0.5), today)) {
                 paths.get(r.ticker()).dividend()[day] = r.dividend() / 100.0;
             }
             for (int a = 0; a < AUCTIONS_PER_DAY; a++) {
@@ -59,6 +70,12 @@ public final class EquitySim {
                     market.auction(c.ticker(), eq.fairValueCents(c.ticker()), 1.0 / AUCTIONS_PER_DAY, now);
                 }
             }
+            double basket = 0;
+            for (String g : goods) basket += dealer.fairValue(g, day + 0.5) / start.get(g) / goods.size();
+            paths.get(GOODS).close()[day] = basket;
+            paths.get(GOODS).fair()[day] = basket;
+            paths.get(CPI).close()[day] = dealer.priceLevel(day + 0.5);
+            paths.get(CPI).fair()[day] = dealer.priceLevel(day + 0.5);
             for (Company c : companies.all()) {
                 long last = market.exchange().lastPrice(c.ticker()).orElse(eq.fairValueCents(c.ticker()));
                 paths.get(c.ticker()).close()[day] = last / 100.0;
@@ -125,7 +142,9 @@ public final class EquitySim {
                 double[] r = returns(e.getValue());
                 byCompany.computeIfAbsent(e.getKey(), k -> new ArrayList<>()).add(r);
                 fairBy.computeIfAbsent(e.getKey(), k -> new ArrayList<>()).add(fairReturns(e.getValue()));
-                for (int i = 0; i < r.length; i++) port[i] += r[i] / paths.size();
+                if (!e.getKey().equals(GOODS) && !e.getKey().equals(CPI)) {
+                    for (int i = 0; i < r.length; i++) port[i] += r[i] / companies.all().size();
+                }
                 if (seed == 1) startEnd.put(e.getKey(), new double[] {e.getValue().close()[7], e.getValue().close()[DAYS]});
             }
             portfolio.add(port);
@@ -136,6 +155,10 @@ public final class EquitySim {
             print(e.getKey(), e.getValue(), fairBy.get(e.getKey()), startEnd.get(e.getKey()));
         }
         print("even 6", portfolio, null, null);
+        System.out.printf(Locale.ROOT, "%-6s %9.2f%% %8.1fx   (no risk; about %.2f%% a day after rising prices)%n", "vault",
+                VAULT * 100, 1.0, (VAULT - 0.001) * 100);
+        System.out.println("goods: the Floor's 14 goods held at fair value, no trading costs. prices: the general price level");
+        System.out.println("  (cash kept in a chest loses this much a day of buying power).");
         System.out.println("* worst week in the typical (median) world; worst 4 quarters in any world.");
         System.out.println("Targets (M6): the even portfolio beats the vault about 1.5-2x on average and has losing weeks;");
         System.out.println("  at least one company loses a third in a bad stretch; OWL steadiest, RSD most volatile.");

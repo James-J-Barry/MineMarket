@@ -43,14 +43,13 @@ public class StockGameTests {
     @GameTest
     public void buyingSharesPaysOutCertificates(GameTestHelper helper) {
         ServerPlayer p = helper.makeMockServerPlayerInLevel();
-        Wallet.give(p, 100_000);
+        Wallet.give(p, 300_000); // a market buy escrows up to 1.5x the price
         p.getInventory().add(new ItemStack(ModItems.ORDER_SLIP));
         Desk d = desk(helper, p);
         press(d, p, StockExchangeMenu.BUTTON_BOOK_BASE + book("DSMC"), 1);
         press(d, p, StockExchangeMenu.BUTTON_MARKET, 1);
         check(d.menu().qty() == 10, "10 shares");
         check(d.menu().clickMenuButton(p, StockExchangeMenu.BUTTON_PLACE), "place a market buy");
-        long afterPlace = Wallet.count(p.getInventory());
         d.stocks().runAuctions(d.day());
         press(d, p, StockExchangeMenu.BUTTON_TAB_TRADE, 1); // any click refreshes and delivers
         check(shares(p, d.menu().output(), "DSMC") == 10, "10 DSMC shares as certificates, got " + shares(p, d.menu().output(), "DSMC"));
@@ -58,7 +57,12 @@ public class StockGameTests {
         var paper = ShareCertificates.read(cert).orElseThrow();
         check(paper.denomination() == 10 && cert.getCount() == 1, "one 10-share certificate: " + cert);
         check(paper.paidThrough() == d.stocks().equities().lastReportedQuarter(), "paid up to date");
-        long spent = 100_000 - afterPlace;
+        long refund = 0;
+        for (int i = 0; i < d.menu().output().getContainerSize(); i++) {
+            var den = ModItems.denominationOf(d.menu().output().getItem(i));
+            if (den != null) refund += den.cents() * d.menu().output().getItem(i).getCount();
+        }
+        long spent = 300_000 - Wallet.count(p.getInventory()) - refund; // escrow not used comes back as bills
         check(spent > 10 * 2_000 && spent < 10 * 12_000, "paid about 10 x the share price: " + spent);
         check(d.stocks().costBasis().shares(StockService.account(p), "DSMC") == 10, "cost basis recorded");
         helper.succeed();

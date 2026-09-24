@@ -85,7 +85,8 @@ docs/            design.md, milestones/
 
 - **Dealer pricing:** `m(I) = V·e^(−kI/L)`; bid/ask = m·(1∓s/2); sale proceeds integrate the price walk;
   inventory decays `I·e^(−t/τ)`. Fair value V (M5c): daily random step + a wandering trend, weak 60-day anchor,
-  permanent supply impact (1% per depth sold), and world events (`WorldEvents`, `events.csv`, seeded, no save state).
+  permanent supply impact (1% per depth sold), world events (`WorldEvents`, `events.csv`, seeded, no save state),
+  and inflation (`priceLevel`, 0.1%/day) on top. `noDrift()` turns all of it off for exact-number tests.
   Compressed items (iron block) trade through their base pool × units; on the Floor they get their own basis.
 - **Config:** `mod/run/config/realisticmarkets/dealer_catalog.csv` + `dealer_params.properties` are copied
   from the defaults on first launch; `/mkt dealer reload` re-reads them live. Both are applied **on top of** the
@@ -167,7 +168,7 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
 - `sim progression` rests on assumed gathering rates (`sim/src/main/resources/profiles/early_survival.csv`).
 - Tier 2 balance: full Tier 2 projects to ~10 h vs the design's ~5 h (see `docs/milestones/M4.md`). James chose
   to keep current prices for now; revisit later.
-- Tier 3 balance: Trading Floor + Newsstand land at ~19-20 h vs the design's ~10 h (`sim progression`, M5c). Deferred by James.
+- Tier 3 balance: Trading Floor + Newsstand + Ticker Tape land at ~22 h vs the design's ~10 h (`sim progression`). Deferred by James.
 - `capital_catalog.csv` loads from the jar only (not copied to `config/` like the Dealer's files yet).
 - Floating price above the Basic Exchange (design doc) skipped; the screen covers it.
 - Placeholder art: currency, block and GUI textures are generated; James may repaint.

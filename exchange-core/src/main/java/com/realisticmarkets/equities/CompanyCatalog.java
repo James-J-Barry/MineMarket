@@ -85,13 +85,14 @@ public final class CompanyCatalog {
         return List.copyOf(byTicker.values());
     }
 
-    /** Every price key any company needs (Dealer items, "fees", "shipping"). */
+    /** Every price key any company needs (Dealer items, "fees", "shipping", and the price level "cpi"). */
     public List<String> priceKeys() {
         List<String> keys = new ArrayList<>();
         for (Company c : byTicker.values()) {
             for (String k : c.revenue().keySet()) if (!keys.contains(k)) keys.add(k);
             for (String k : c.inputs().keySet()) if (!keys.contains(k)) keys.add(k);
         }
+        if (!keys.contains(Equities.CPI)) keys.add(Equities.CPI);
         return keys;
     }
 }

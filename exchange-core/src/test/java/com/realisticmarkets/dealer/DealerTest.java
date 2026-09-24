@@ -150,8 +150,8 @@ class DealerTest {
         b.fairValue(WHEAT, 10);
         assertEquals(a.fairValue(WHEAT, 400), b.fairValue(WHEAT, 400), 0.0);
         for (int d = 0; d < 2000; d += 10) {
-            double v = a.fairValue(WHEAT, d);
-            assertTrue(v > 0.2 && v < 1.25, "day " + d + " fair value " + v); // the weak anchor keeps it in range
+            double v = a.fairValue(WHEAT, d) / a.priceLevel(d); // in today's money
+            assertTrue(v > 0.2 && v < 1.25, "day " + d + " real fair value " + v); // the weak anchor keeps it in range
         }
     }
 
@@ -170,6 +170,19 @@ class DealerTest {
         }
         assertTrue(n >= 10, "prices move: " + n + " of 40 seeds are over 8% away after 30 days");
         assertTrue(stillAway >= n * 0.7, "and mostly stay away a week later: " + stillAway + " of " + n);
+    }
+
+    @Test
+    void pricesCreepUpWithInflation() {
+        DealerParams d = DealerParams.defaults();
+        assertEquals(0.001, d.inflation(), 0.0, "0.1% a day, about 3% a month");
+        DealerParams onlyInflation = new DealerParams(d.spread(), d.licensedSpread(), d.k(), d.recoveryDays(), 0, d.anchorHalfLifeDays(),
+                0, d.trendHalfLifeDays(), 0, d.inflation());
+        Dealer dealer = new Dealer(DealerCatalog.loadDefault(), onlyInflation, 1L);
+        assertEquals(0.50, dealer.fairValue(WHEAT, 0), 1e-12);
+        assertEquals(0.50 * Math.exp(0.1), dealer.fairValue(WHEAT, 100), 1e-12, "100 days later, about 10.5% dearer");
+        assertEquals(0.50 * Math.exp(0.1) * 0.9, dealer.bid(WHEAT, 100, false), 1e-12, "and so is what the Dealer pays");
+        assertTrue(DealerParams.noDrift().inflation() == 0, "exact-number tests stay put");
     }
 
     @Test
