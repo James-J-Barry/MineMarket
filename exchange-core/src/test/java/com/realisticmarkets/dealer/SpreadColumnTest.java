@@ -88,6 +88,15 @@ class SpreadColumnTest {
     }
 
     @Test
+    void anOldConfigRowKeepsTheBuiltInCollateralClass() throws Exception {
+        DealerCatalog builtIn = DealerCatalog.parseCsv(new StringReader("minecraft:diamond,100,32,mining,,,,A\n"));
+        DealerCatalog old = DealerCatalog.parseCsv(new StringReader("minecraft:diamond,120,32,mining,,\n"));
+        DealerCatalog merged = DealerCatalog.merge(builtIn, old);
+        assertEquals(120, merged.spec("diamond").fairValue(), "the config's price wins");
+        assertEquals("A", merged.spec("diamond").collateralClass(), "but a blank class keeps the built-in one");
+    }
+
+    @Test
     void collateralClassColumn() throws Exception {
         DealerCatalog c = DealerCatalog.parseCsv(new StringReader("minecraft:diamond,100,32,mining,,,,a\n"));
         assertEquals("A", c.spec("diamond").collateralClass());

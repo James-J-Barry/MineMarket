@@ -101,7 +101,15 @@ public final class DealerCatalog {
      */
     public static DealerCatalog merge(DealerCatalog builtIn, DealerCatalog overrides) {
         Map<String, MarketSpec> m = new LinkedHashMap<>(builtIn.specs);
-        m.putAll(overrides.specs);
+        for (MarketSpec o : overrides.specs.values()) {
+            MarketSpec b = builtIn.specs.get(o.itemId());
+            // A config copy older than the collateral_class column leaves it blank: keep the built-in class.
+            if (b != null && o.collateralClass() == null && b.collateralClass() != null && !o.isLinked()) {
+                o = new MarketSpec(o.itemId(), o.fairValue(), o.depth(), o.group(), o.baseItem(), o.baseUnits(),
+                        o.spread(), b.collateralClass());
+            }
+            m.put(o.itemId(), o);
+        }
         return new DealerCatalog(new ArrayList<>(m.values()));
     }
 
