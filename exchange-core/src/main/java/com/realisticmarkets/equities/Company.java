@@ -14,11 +14,20 @@ import java.util.Map;
  * @param shares         shares outstanding
  * @param requiredReturn what investors want a day for owning it
  * @param events         world event id to the change in that quarter's revenue per occurrence
+ * @param creditSpread   extra yield a day its bonds pay over Treasuries in normal times (it widens in bad ones)
  */
 public record Company(String ticker, String name, Map<String, Long> revenue, double fixedCost, Map<String, Long> inputs,
                       double growth, double outputVol, double payout, long shares, double requiredReturn,
-                      Map<String, Double> events) {
+                      Map<String, Double> events, double creditSpread) {
     public static final int QUARTER_DAYS = 7;
+    public static final double DEFAULT_CREDIT_SPREAD = 0.0003;
+
+    public Company(String ticker, String name, Map<String, Long> revenue, double fixedCost, Map<String, Long> inputs,
+                   double growth, double outputVol, double payout, long shares, double requiredReturn,
+                   Map<String, Double> events) {
+        this(ticker, name, revenue, fixedCost, inputs, growth, outputVol, payout, shares, requiredReturn, events,
+                DEFAULT_CREDIT_SPREAD);
+    }
 
     public Company {
         revenue = Map.copyOf(revenue);

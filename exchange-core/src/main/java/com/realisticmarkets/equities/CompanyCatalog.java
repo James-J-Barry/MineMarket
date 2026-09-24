@@ -44,10 +44,11 @@ public final class CompanyCatalog {
             if (t.isEmpty() || t.startsWith("#") || t.startsWith("ticker,")) continue;
             String[] c = t.split(",", -1);
             try {
-                if (c.length != 11) throw new IllegalArgumentException("expected 11 columns");
+                if (c.length != 11 && c.length != 12) throw new IllegalArgumentException("expected 11 or 12 columns");
+                double spread = c.length == 12 && !c[11].isBlank() ? Double.parseDouble(c[11]) : Company.DEFAULT_CREDIT_SPREAD;
                 out.add(new Company(c[0], c[1], units(c[2]), Double.parseDouble(c[3]), units(c[4]), Double.parseDouble(c[5]),
                         Double.parseDouble(c[6]), Double.parseDouble(c[7]), Long.parseLong(c[8]), Double.parseDouble(c[9]),
-                        effects(c[10])));
+                        effects(c[10]), spread));
             } catch (RuntimeException e) {
                 throw new IllegalArgumentException("companies line " + n + ": " + e.getMessage(), e);
             }
