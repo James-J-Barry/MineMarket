@@ -3,6 +3,7 @@
   "values": [
     "realisticmarkets:basic_exchange",
     "realisticmarkets:almanac_lectern",
-    "realisticmarkets:drafting_table"
+    "realisticmarkets:drafting_table",
+    "realisticmarkets:price_board"
   ]
 }

@@ -3,6 +3,7 @@ package com.realisticmarkets.mod;
 import com.realisticmarkets.mod.dealer.DealerCommands;
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.progression.ProgressionService;
+import com.realisticmarkets.mod.registry.ModBlockEntities;
 import com.realisticmarkets.mod.registry.ModBlocks;
 import com.realisticmarkets.mod.registry.ModCreativeTab;
 import com.realisticmarkets.mod.registry.ModItems;
@@ -33,6 +34,7 @@ public final class RealisticMarkets implements ModInitializer {
     public void onInitialize() {
         ModItems.init();
         ModBlocks.init();
+        ModBlockEntities.init();
         ModMenus.init();
         ModCreativeTab.init();
 

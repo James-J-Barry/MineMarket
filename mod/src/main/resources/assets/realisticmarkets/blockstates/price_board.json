@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "realisticmarkets:block/price_board"
+    },
+    "facing=east": {
+      "model": "realisticmarkets:block/price_board",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "realisticmarkets:block/price_board",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "realisticmarkets:block/price_board",
+      "y": 270
+    }
+  }
+}

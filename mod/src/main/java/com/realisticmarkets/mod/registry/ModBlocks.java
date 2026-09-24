@@ -3,6 +3,7 @@ package com.realisticmarkets.mod.registry;
 import com.realisticmarkets.mod.RealisticMarkets;
 import com.realisticmarkets.mod.block.BasicExchangeBlock;
 import com.realisticmarkets.mod.block.MenuBlock;
+import com.realisticmarkets.mod.block.PriceBoardBlock;
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.menu.AlmanacMenu;
 import com.realisticmarkets.mod.menu.DraftingTableMenu;
@@ -25,6 +26,7 @@ public final class ModBlocks {
     public static Block BASIC_EXCHANGE;
     public static Block ALMANAC_LECTERN;
     public static Block DRAFTING_TABLE;
+    public static Block PRICE_BOARD;
 
     public static void init() {
         ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("basic_exchange"));
@@ -41,6 +43,17 @@ public final class ModBlocks {
                 new AlmanacMenu(id, inv, access, ProgressionService.get(), DealerService.get()));
         DRAFTING_TABLE = registerMenuBlock("drafting_table", (id, inv, access) ->
                 new DraftingTableMenu(id, inv, access, ProgressionService.get()));
+
+        ResourceKey<Block> boardKey = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("price_board"));
+        PRICE_BOARD = Registry.register(BuiltInRegistries.BLOCK, boardKey,
+                new PriceBoardBlock(BlockBehaviour.Properties.of()
+                        .setId(boardKey)
+                        .mapColor(MapColor.WOOD)
+                        .strength(1.0f)
+                        .sound(SoundType.WOOD)
+                        .noOcclusion()));
+        ModItems.register("price_board", props -> new BlockItem(PRICE_BOARD, props),
+                new Item.Properties().useBlockDescriptionPrefix().stacksTo(16));
     }
 
     private static Block registerMenuBlock(String name, MenuBlock.Factory factory) {

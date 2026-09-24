@@ -1,14 +1,19 @@
 package com.realisticmarkets.mod.test;
 
+import com.realisticmarkets.mod.block.PriceBoardBlock;
+import com.realisticmarkets.mod.block.PriceBoardBlockEntity;
 import com.realisticmarkets.mod.dealer.BillClip;
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.dealer.Wallet;
 import com.realisticmarkets.mod.menu.BasicExchangeMenu;
 import com.realisticmarkets.mod.menu.BillClipMenu;
 import com.realisticmarkets.mod.progression.ProgressionService;
+import com.realisticmarkets.mod.registry.ModBlocks;
 import com.realisticmarkets.mod.registry.ModItems;
 import com.realisticmarkets.money.Denomination;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -96,6 +101,39 @@ public class Tier1GameTests {
         menu.getSlot(3).set(bill(Denomination.TEN, 4));
         check(BillClip.cents(clip) == 4_000, "edits write through to the item, holds " + BillClip.cents(clip));
         check(menu.stillValid(player), "valid while the clip is carried");
+        helper.succeed();
+    }
+
+    // ------------------------------------------------------------------ Price Board
+
+    @GameTest
+    public void priceBoardQuotesTradedItemsOnly(GameTestHelper helper) {
+        BlockPos pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.PRICE_BOARD.defaultBlockState().setValue(PriceBoardBlock.FACING, Direction.SOUTH));
+        PriceBoardBlockEntity board = helper.getBlockEntity(pos, PriceBoardBlockEntity.class);
+        DealerService svc = DealerService.forTest(1234L);
+        var catalog = svc.dealer().catalog();
+
+        check(board.tryAdd(new ItemStack(Items.DIRT), catalog) != null, "dirt has no market");
+        check(board.tryAdd(bill(Denomination.ONE, 1), catalog) != null, "money has no price");
+        check(board.tryAdd(new ItemStack(Items.WHEAT, 64), catalog) == null, "wheat accepted");
+        check(board.item(0).getCount() == 1, "the board holds one of the item, not the stack");
+        board.refresh(svc.dealer(), 0);
+        check(board.bidMills(0) == 450 && board.askMills(0) == 550,
+                "board shows the public quote $0.45/$0.55, got " + board.bidMills(0) + "/" + board.askMills(0));
+        check(board.fairMills(0) == 500, "Normal is $0.50");
+
+        svc.sellStack(new ItemStack(Items.WHEAT, 64), 0, false);
+        board.refresh(svc.dealer(), 0);
+        check(board.bidMills(0) == 350, "the bid follows the Dealer: $0.35 after 64 wheat, got " + board.bidMills(0));
+        check(board.midMills(0) < board.fairMills(0), "market below normal after the sale");
+
+        check(board.tryAdd(new ItemStack(Items.IRON_INGOT), catalog) == null, "2nd");
+        check(board.tryAdd(new ItemStack(Items.COAL), catalog) == null, "3rd");
+        check(board.tryAdd(new ItemStack(Items.BONE), catalog) == null, "4th");
+        check(board.tryAdd(new ItemStack(Items.STRING), catalog) != null, "a fifth item doesn't fit");
+        check(board.removeLast().is(Items.BONE), "take back the last one");
+        check(board.count() == 3, "three left");
         helper.succeed();
     }
 

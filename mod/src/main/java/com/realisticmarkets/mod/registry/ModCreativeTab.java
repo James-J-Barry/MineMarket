@@ -38,7 +38,7 @@ public final class ModCreativeTab {
                             output.accept(ModItems.INK_BOTTLE);
                             output.accept(ModItems.BRASS_FITTINGS);
                             output.accept(ModItems.BILL_CLIP);
-                            output.accept(ModItems.PRICE_BOARD);
+                            output.accept(ModBlocks.PRICE_BOARD);
                             output.accept(ModItems.TRADE_ROUTE_CRATE);
                         })
                         .build());

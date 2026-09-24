@@ -25,7 +25,7 @@ public final class ModItems {
     public static Item LEDGER_PAPER, INK_BOTTLE, BRASS_FITTINGS;
 
     /** Tier 1 blueprint results, made only at the Drafting Table. */
-    public static Item BILL_CLIP, PRICE_BOARD, TRADE_ROUTE_CRATE;
+    public static Item BILL_CLIP, TRADE_ROUTE_CRATE;
 
     public static void init() {
         for (Denomination d : Denomination.values()) {
@@ -36,7 +36,6 @@ public final class ModItems {
         BRASS_FITTINGS = register("brass_fittings", Item::new, new Item.Properties());
         BILL_CLIP = register("bill_clip", BillClipItem::new, new Item.Properties().stacksTo(1)
                 .component(DataComponents.CONTAINER, ItemContainerContents.EMPTY));
-        PRICE_BOARD = register("price_board", Item::new, new Item.Properties().stacksTo(16));
         TRADE_ROUTE_CRATE = register("trade_route_crate", Item::new, new Item.Properties().stacksTo(16));
     }
 
