@@ -62,7 +62,7 @@ Dollars are physical items in four denominations, and they can only enter the wo
 **Rules**
 
 - Not craftable, not in loot tables, not sold by villagers. Creative inventory only for testing.
-- Every exchange block pays out in the fewest items and makes change automatically, pulling bills from the player's inventory and Bill Clip.
+- Every exchange block pays out in the fewest items and makes change automatically, pulling bills from the player's inventory and Bill Clip. Payouts and change go into the first Bill Clip with room, then the inventory.
 - Dollars drop on death like any item. This is intentional: it motivates the Bank Vault (Tier 2) and ATM (Tier 8).
 - The Dealer rounds in its own favor: sale totals round down to 10¢, purchase totals round up. Players learn that rounding is a small hidden cost.
 
@@ -182,7 +182,7 @@ The Almanac Lectern is the progression hub: a lectern holding the Market Almanac
 | 4 | Patience Pays | Sell the same item again after its price recovers above 90% of fair value | $15 | Mean reversion and liquidity recovery |
 | 5 | Diversify | Earn at least $20 from each of three item groups in one in-game day | $25 | Diversification |
 | 6 | Bookkeeper | Reach $250 net worth (cash plus goods valued at the Dealer's bid); the lectern announces it | $10 | Net worth vs cash |
-| 7 | Two Markets | Deliver goods with a Trade Route Crate and profit from the price difference | $40 | Arbitrage and transport cost |
+| 7 | Two Markets | Ship goods with a Trade Route Crate whose payout, after freight, beats what the local Dealer would have paid at shipping time | $40 | Arbitrage and transport cost |
 | 8 | Save It | Reach $500 held at once without spending | Discount of 10% on the Bank Vault | Saving and opportunity cost |
 
 Guides stay short: 150–250 words each, a worked example using the player's own numbers where possible (“You sold 256 wheat for $72.82; at a steady price it would have been $115.20”), and a one-line real-world parallel.
@@ -225,7 +225,7 @@ Unlocks are permanent and per player; the things they unlock are crafted at a Dr
 
 - **No vanilla recipes for mod items**, except the three Tier 0 blocks: Basic Exchange, Almanac Lectern and Drafting Table. A vanilla crafting table cannot make anything else from the mod.
 - **Drafting Table** (Tier 0, recipe: Crafting Table + 3 Paper + Iron Ingot, shapeless). A stonecutter-style list screen: every blueprint the player has unlocked, locked ones greyed out with “Unlock at the Almanac”. Selecting one shows its materials with have/need counts; **Craft ×1** and **Craft max** consume materials from the player's inventory.
-- **Licenses and perks are account-based**, not items. The Merchant License sets the 12% spread for that player permanently. A physical copy of a license or document can be reissued at the Almanac Lectern for a small fee, for flavor or trading.
+- **Licenses and perks are account-based**, not items. The Merchant License sets the 12% spread for that player permanently. There is no physical license item.
 - **Paid copies** (buying an unlocked item outright at a markup) are held back as an optional money sink, to add only if balancing shows the economy needs one.
 
 ### Components
@@ -234,7 +234,7 @@ Components are sold by the Dealer under a **Components** group in the Basic Exch
 
 | Component | First needed | Fair value (placeholder) | Depth (units) | Used in |
 | --- | --- | --- | --- | --- |
-| Ledger Paper | Tier 1 | $4 | 64 | Passbook, Order Slips, license reissues |
+| Ledger Paper | Tier 1 | $4 | 64 | Trade Route Crate, Passbook, Order Slips |
 | Ink Bottle | Tier 1 | $6 | 48 | Price Board, Passbook, printed papers |
 | Brass Fittings | Tier 1 | $10 | 32 | Bill Clip, Price Board, Trade Route Crate |
 | Lock Mechanism | Tier 2 | $60 | 16 | Bank Vault, Safe Deposit Box |
@@ -266,10 +266,10 @@ The mod adds 42 items and blocks plus 10 components (see Crafting) across nine t
 | 0 | Almanac Lectern | Block | Crafted | Buy upgrades, read guides, track quests | — |
 | 0 | Drafting Table | Block | Crafted | Crafts every unlocked blueprint from materials plus bought components | Input costs, make vs buy |
 | 0 | Dime, $1, $10, $100 | Items | From exchanges only | Physical currency | Denominations, change |
-| 1 | Bill Clip | Item | $40 | Wallet holding up to 9 stacks of currency; exchanges pay from it automatically | Cash management |
-| 1 | Price Board | Wall block | $75 | Shows live bid/ask for up to 4 items placed in its frame | Quotes |
-| 1 | Merchant License | Document item | $150 (requires quest 2) | While in inventory, Basic Exchange spread drops from 20% to 12% | Transaction costs, market power |
-| 1 | Trade Route Crate | Block | $250 | Ship goods to the Capital, a second dealer with its own inventory and prices; paid after 1 in-game day, minus a 5% freight fee | Arbitrage between markets, settlement delay |
+| 1 | Bill Clip | Item | $40 | Wallet holding up to 9 stacks of currency; exchanges pay from it and pay into it automatically | Cash management |
+| 1 | Price Board | Wall block | $75 | Shows the Basic Exchange's public (unlicensed) bid/ask for up to 4 items placed in its frame, refreshed every 5 seconds | Quotes |
+| 1 | Merchant License | Account perk | $150 (requires quest 2) | Basic Exchange spread drops from 20% to 12% for that player, permanently | Transaction costs, market power |
+| 1 | Trade Route Crate | Block | $250 | Ship goods to the Capital, a second dealer with its own inventory and prices (sell-only); priced on arrival after 1 in-game day, minus a 5% freight fee | Arbitrage between markets, settlement delay |
 | 2 | Bank Vault | Block | $500 | Deposit dollars; balance is safe from death; earns 0.3% per in-game day, compounded daily | Interest, compounding, safety |
 | 2 | Passbook | Item | Free with Bank Vault | Book showing balance and every transaction; required to withdraw | Record keeping |
 | 2 | Certificate of Deposit | Item | $1,200 | Lock dollars for 7 or 21 days at a higher rate; early redemption forfeits interest | Term premium, liquidity |
@@ -410,13 +410,26 @@ In single player every trade needs a simulated counterparty, and each one must r
 | Counterparty | Appears | Behavior | What the player learns |
 | --- | --- | --- | --- |
 | The Dealer | Tier 0 | Quotes bid/ask around fair value, shading prices by its inventory (Dealer section) | Spreads, price impact |
-| The Capital dealer | Tier 1 | A second, independent Dealer reached by Trade Route Crate; different fair values and inventory | Arbitrage, transport cost |
+| The Capital dealer | Tier 1 | A second, independent Dealer reached by Trade Route Crate; different fair values and inventory (see below) | Arbitrage, transport cost |
 | Market maker | Tier 3 | Quotes both sides on every book, skewing prices to shed inventory (Avellaneda–Stoikov) | Why liquidity costs money |
 | Noise traders | Tier 3 | Random small orders around the current price | Prices move without news |
 | Fundamentalists | Tier 3 | Buy below and sell above their estimate of fair value | Mean reversion, value investing |
 | Momentum traders | Tier 3 | Follow recent price trends | Bubbles and overshooting |
 | Issuers | Tiers 4–5 | Companies and the central bank that issue shares and bonds, pay dividends and coupons | Primary vs secondary markets |
 | Clearing House | Tier 6 | Sits between both sides of every future; enforces margin | Counterparty risk |
+
+### The Capital (Tier 1)
+
+A second Dealer, reached only by Trade Route Crate. It trades the same items as the local Dealer (not components), with the same depths, its own inventory and its own fair-value drift. Fair values differ by group, so shipping pays for some goods and not others:
+
+| Group | Capital fair value vs local |
+| --- | --- |
+| Farm | ×1.30 |
+| Mobs | ×1.20 |
+| Wood and Stone | ×1.10 |
+| Mining | ×0.90 |
+
+The Capital's spread is 15%, and the Merchant License does not apply there. A shipment is priced when it arrives, one in-game day after shipping, and pays out minus a 5% freight fee. Buying at the Capital is not possible yet. Multipliers are placeholders to tune with `sim progression`.
 
 NPC traders are shown in the world as villager merchants standing around the Trading Floor and Stock Exchange; the busier the market, the more of them appear. They are cosmetic, and the simulation runs whether or not they are loaded.
 
@@ -536,7 +549,7 @@ Build in tier order, and make each milestone a complete, playable loop before st
 | --- | --- | --- | --- |
 | M1 | Dollars and the Dealer | Four currency items, Basic Exchange block and screen, `dealer` and `money` packages, 17 reference items | Unit tests prove the proceeds ceiling and recovery; a GameTest sells 64 Wheat and receives $25.40 in the right bills; sim shows a wheat farm capped near $21 per day |
 | M2 | Almanac Lectern | Drafting Table with per-player blueprints; Tier 1 components in the Buy tab; Block and three-tab screen, `progression` package, Tier 1 nodes, quests 1–8, first 5 guides, per-player persistence | A fresh world can reach Tier 1 in a scripted sim run in about 2 hours of game time; progress survives restart |
-| M3 | Tier 1 content | Bill Clip, Price Board, Merchant License, Trade Route Crate and Capital dealer | Quest 7 (arbitrage) completable in play |
+| M3 | Tier 1 content | Bill Clip, Price Board, Trade Route Crate and Capital dealer, four Tier 1 guides (the Merchant License perk shipped in M2) | Quest 7 (arbitrage) completable in play |
 | M4 | Banking and collateral | Bank Vault, Passbook, CD, Loan Note; `collateral` and `registry` packages; margin calls and liquidation | The worked loan example matches the table; a margin call liquidates correctly in a GameTest |
 | M5 | Trading Floor | Order Slips, receipts, NPC trader population on the existing batch auction, Ticker Tape and Price Chart | Books stay liquid with no player; prices track fair value in sim |
 | M6 | Equities | Stock Exchange, certificates, six companies, Annual Reports, Newspaper Stand, Portfolio Binder, Safe Deposit Box | Dividends pay on presentation; earnings react to commodity prices |
