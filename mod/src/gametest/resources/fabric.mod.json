@@ -8,7 +8,8 @@
     "fabric-gametest": [
       "com.realisticmarkets.mod.test.MarketGameTests",
       "com.realisticmarkets.mod.test.DealerGameTests",
-      "com.realisticmarkets.mod.test.ProgressionGameTests"
+      "com.realisticmarkets.mod.test.ProgressionGameTests",
+      "com.realisticmarkets.mod.test.InvariantGameTests"
     ]
   },
   "depends": {
