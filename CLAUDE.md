@@ -6,7 +6,8 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 
 - **Design doc (source of truth for gameplay):** `docs/design.md`, exported from the "Realistic Markets —
   Game Design Document" Claude Doc. If a request conflicts with it, ask before building.
-- **Current milestone:** M4, banking and item collateral (no spec file yet). Done: M2 (`docs/milestones/M2.md`),
+- **Current milestone:** M4, banking and item collateral. Spec `docs/milestones/M4.md` (draft: its "Decisions
+  for James" must be answered before building). Done: M2 (`docs/milestones/M2.md`),
   M3 (`docs/milestones/M3.md`).
 - **Owner:** James. He play-tests in the IntelliJ dev client; keep him in the loop on anything that
   changes gameplay feel.
@@ -138,7 +139,8 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   Tier 1 components in the Buy tab. 68 unit tests, 19 GameTests, `sim progression` = 2.0 h. → `docs/milestones/M2.md`
 - [x] **M3: Tier 1 content.** Bill Clip, Price Board, Trade Route Crate + the Capital, four Tier 1 guides.
   86 unit tests, 30 GameTests; crate lifts farm-heavy income +35%. → `docs/milestones/M3.md`
-- [ ] M4: Banking and item collateral (Bank Vault, Passbook, CD, Loan Note, margin calls)
+- [ ] **M4: Banking and item collateral** (Bank Vault, Passbook, CD, Loan Note, margin calls).
+  → `docs/milestones/M4.md` (draft)
 - [ ] M5: Trading Floor on the batch auction (order slips, NPC traders, Ticker Tape)
 - [ ] M6–M10: equities, bonds, futures, options, modern finance (ATM, Brokerage)
 - [ ] M11: multiplayer
