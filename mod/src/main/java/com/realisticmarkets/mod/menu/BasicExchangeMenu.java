@@ -356,8 +356,8 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
     }
 
     /**
-     * Buys from the Dealer, paying with every bill and coin in the player's inventory and the
-     * payout drawer; change and the goods go into the player's inventory (dropped if full).
+     * Buys from the Dealer, paying with every bill and coin the player carries (Bill Clips included) and the
+     * payout drawer; change goes into Bill Clips first, goods into the inventory (dropped if full).
      */
     private boolean buy(Player p, int quantity) {
         int sel = selected();
@@ -376,9 +376,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
 
         for (int i = 0; i < OUTPUT_COUNT; i++) output.setItem(i, ItemStack.EMPTY);
         Inventory inv = p.getInventory();
-        for (int i = 0; i < inv.getContainerSize(); i++) {
-            if (ModItems.denominationOf(inv.getItem(i)) != null) inv.setItem(i, ItemStack.EMPTY);
-        }
+        Wallet.takeAll(p);
         dealer.dealer().buy(id, quantity, day, licensed());
         Wallet.give(p, available - cost);
 

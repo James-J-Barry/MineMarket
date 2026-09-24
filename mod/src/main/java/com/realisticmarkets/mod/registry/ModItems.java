@@ -1,16 +1,19 @@
 package com.realisticmarkets.mod.registry;
 
 import com.realisticmarkets.mod.RealisticMarkets;
+import com.realisticmarkets.mod.item.BillClipItem;
 import com.realisticmarkets.money.Denomination;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Function;
 import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemContainerContents;
 
 public final class ModItems {
     private ModItems() {}
@@ -21,7 +24,7 @@ public final class ModItems {
     /** Tier 1 components: buy-only from the Dealer. No recipes, loot or villager trades. */
     public static Item LEDGER_PAPER, INK_BOTTLE, BRASS_FITTINGS;
 
-    /** Tier 1 blueprint results. Placeholders until M3 gives them behavior; made only at the Drafting Table. */
+    /** Tier 1 blueprint results, made only at the Drafting Table. */
     public static Item BILL_CLIP, PRICE_BOARD, TRADE_ROUTE_CRATE;
 
     public static void init() {
@@ -31,7 +34,8 @@ public final class ModItems {
         LEDGER_PAPER = register("ledger_paper", Item::new, new Item.Properties());
         INK_BOTTLE = register("ink_bottle", Item::new, new Item.Properties());
         BRASS_FITTINGS = register("brass_fittings", Item::new, new Item.Properties());
-        BILL_CLIP = register("bill_clip", Item::new, new Item.Properties().stacksTo(1));
+        BILL_CLIP = register("bill_clip", BillClipItem::new, new Item.Properties().stacksTo(1)
+                .component(DataComponents.CONTAINER, ItemContainerContents.EMPTY));
         PRICE_BOARD = register("price_board", Item::new, new Item.Properties().stacksTo(16));
         TRADE_ROUTE_CRATE = register("trade_route_crate", Item::new, new Item.Properties().stacksTo(16));
     }

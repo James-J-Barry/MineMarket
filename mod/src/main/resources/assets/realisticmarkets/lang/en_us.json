@@ -18,5 +18,6 @@
   "item.realisticmarkets.brass_fittings": "Brass Fittings",
   "item.realisticmarkets.bill_clip": "Bill Clip",
   "item.realisticmarkets.price_board": "Price Board",
-  "item.realisticmarkets.trade_route_crate": "Trade Route Crate"
+  "item.realisticmarkets.trade_route_crate": "Trade Route Crate",
+  "container.realisticmarkets.bill_clip": "Bill Clip"
 }

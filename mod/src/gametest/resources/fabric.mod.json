@@ -9,7 +9,8 @@
       "com.realisticmarkets.mod.test.MarketGameTests",
       "com.realisticmarkets.mod.test.DealerGameTests",
       "com.realisticmarkets.mod.test.ProgressionGameTests",
-      "com.realisticmarkets.mod.test.InvariantGameTests"
+      "com.realisticmarkets.mod.test.InvariantGameTests",
+      "com.realisticmarkets.mod.test.Tier1GameTests"
     ]
   },
   "depends": {

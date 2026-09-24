@@ -3,6 +3,7 @@ package com.realisticmarkets.mod.registry;
 import com.realisticmarkets.mod.RealisticMarkets;
 import com.realisticmarkets.mod.menu.AlmanacMenu;
 import com.realisticmarkets.mod.menu.BasicExchangeMenu;
+import com.realisticmarkets.mod.menu.BillClipMenu;
 import com.realisticmarkets.mod.menu.DraftingTableMenu;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -17,6 +18,7 @@ public final class ModMenus {
     public static MenuType<BasicExchangeMenu> BASIC_EXCHANGE;
     public static MenuType<AlmanacMenu> ALMANAC;
     public static MenuType<DraftingTableMenu> DRAFTING_TABLE;
+    public static MenuType<BillClipMenu> BILL_CLIP;
 
     public static void init() {
         ResourceKey<MenuType<?>> key = ResourceKey.create(Registries.MENU, RealisticMarkets.id("basic_exchange"));
@@ -28,5 +30,8 @@ public final class ModMenus {
         DRAFTING_TABLE = Registry.register(BuiltInRegistries.MENU,
                 ResourceKey.create(Registries.MENU, RealisticMarkets.id("drafting_table")),
                 new MenuType<>(DraftingTableMenu::new, FeatureFlags.VANILLA_SET));
+        BILL_CLIP = Registry.register(BuiltInRegistries.MENU,
+                ResourceKey.create(Registries.MENU, RealisticMarkets.id("bill_clip")),
+                new MenuType<>(BillClipMenu::new, FeatureFlags.VANILLA_SET));
     }
 }
