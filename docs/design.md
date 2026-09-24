@@ -117,6 +117,7 @@ Fair value V moves on its own, so prices change even when the player does nothin
 
 The Basic Exchange and Price Board show **Normal** as the Dealer's published fair value at yesterday's close, not the live value: it lags by a day's moves, trades and news, so buying "under Normal" is a judgment call, not a sure thing.
 
+- **The central rate (M7).** A central bank sets a policy rate (starting at 0.3% a day) and reviews it every 7 days: hold, raise or cut by 0.05%, within about 0.15-0.5%, announced on the Newsstand. The vault pays it, new CDs and loans are priced off it (existing CDs keep their rate), and bond prices move opposite to it.
 - **Inflation.** The general price level rises about 0.1% a day (about 3% a month of in-game days) and scales every fair value, so goods hold their value against cash, and company earnings (revenue, fixed costs, regulated fees) rise with it. Almanac costs stay fixed in dollars, so upgrades get slightly cheaper in real terms as a world ages.
 
 This gives the classic ordering of investments (`sim equities`, 140 days, 8 worlds): cash in a chest loses about 0.1% a day of buying power; goods held at fair value earn about inflation (0.13% a day) with real risk; the vault pays 0.3% (about 0.2% above inflation) with none; a spread of shares earns about 0.5% a day with losing weeks. Holding goods to sell later is a bet that they rise by more than the vault pays: the time value of money.
@@ -301,9 +302,9 @@ The mod adds 42 items and blocks plus 10 components (see Crafting) across nine t
 | 4 | Electronic Newsfeed | Block | $2,000 | Company news: earnings, dividends and corporate headlines that move share prices, as they happen (the Tier 3 Newsstand covers commodity news) | Information, efficient markets |
 | 4 | Portfolio Binder | Item | $5,000 | Holds up to 27 security items and shows their total value | Portfolio management |
 | 4 | Safe Deposit Box | Block | $4,000 | 54-slot blast-proof storage that accepts only securities and currency; shows no totals by itself | Custody, safekeeping |
-| 5 | Bond Desk | Block | $25,000 | Buy Treasury and Corporate Bonds; claim coupons | Fixed income |
-| 5 | Treasury Bond | Item | Bought at Bond Desk | Face value, coupon, maturity; price moves with the central rate | Yield, rate risk |
-| 5 | Corporate Bond | Item | Bought at Bond Desk | Higher coupon; defaults if its company's earnings collapse | Credit risk |
+| 5 | Bond Desk | Block | $25,000 | Buys and sells Treasury and Corporate Bonds at quoted prices (about 0.5% spread); pays coupons and redemptions; shows the yield curve | Fixed income |
+| 5 | Treasury Bond | Item | Bought at Bond Desk | $100 face, quarterly coupon, 2/4/8-quarter maturities; stackable series; price moves opposite to the central rate, long bonds most | Yield, rate risk |
+| 5 | Corporate Bond | Item | Bought at Bond Desk | Treasury yield plus a credit spread that widens as the company's earnings fall; defaults after two negative quarters (coupons stop, 40% of face recovered) | Credit risk |
 | 5 | Records Terminal | Block | $20,000 (Digital Record Keeping) | Shows net worth, holdings, income and a payment calendar across all linked blocks | Bookkeeping, net worth, cost basis |
 | 5 | Record Link | Tool item | Included in Digital Record Keeping | Links bank and storage blocks to a Records Terminal (16 links, 64-block range) | — |
 | 6 | Forward Contract | Item | $40,000 | Private deal with the Dealer to deliver goods on a future day at a fixed price | Hedging |
@@ -601,7 +602,7 @@ Build in tier order, and make each milestone a complete, playable loop before st
 
 ## Open questions
 
-- [ ] **Time scale:** one in-game day is 20 real minutes, so a 7-day bond lasts 2h 20m. Is that fast enough to feel rewarding without making interest trivial? A “market day = N game days” setting may be needed.
+- [x] **Time scale:** (M7: kept at 1 in-game day; bonds run 14-56 days, about 5-19 hours of play.) one in-game day is 20 real minutes, so a 7-day bond lasts 2h 20m. Is that fast enough to feel rewarding without making interest trivial? A “market day = N game days” setting may be needed.
 - [x] **Live values on papers:** (M6: papers show no value; the Portfolio Binder shows the live total.) should a security's tooltip always show its live value, or only the value from the last time it was marked at an exchange or Price Board? Live is friendlier; last-marked is more grounded.
 - [ ] **Delivery vs cash settlement:** should futures and forwards require physical delivery of the items (more grounded, more logistics) or allow cash settlement at a fee?
 - [ ] **Modded items:** should the Dealer eventually price items from other mods, for example by inferring value from their recipes, or stay vanilla-only?

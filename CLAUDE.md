@@ -6,7 +6,7 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 
 - **Design doc (source of truth for gameplay):** `docs/design.md`, exported from the "Realistic Markets —
   Game Design Document" Claude Doc. If a request conflicts with it, ask before building.
-- **Current milestone:** M7 (bonds), spec drafted `docs/milestones/M7.md` (decisions pending). M6 (equities) is done: `docs/milestones/M6.md`. M5 (Trading Floor, M5a/M5b/M5c) is done:
+- **Current milestone:** M7, bonds. Spec `docs/milestones/M7.md` (decisions answered; M7a first, then M7b). M6 (equities) is done: `docs/milestones/M6.md`. M5 (Trading Floor, M5a/M5b/M5c) is done:
   `docs/milestones/M5.md`, `docs/milestones/M5c.md`. M4 (banking and collateral) is done. Spec `docs/milestones/M4.md`
   (decisions answered). Done: M2 (`docs/milestones/M2.md`),
   M3 (`docs/milestones/M3.md`).
@@ -160,7 +160,9 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   inflation (buy and hold works), three guides, three quests. 185 unit tests, 52 GameTests. → `docs/milestones/M6.md`
 - [x] **M6b: Electronic Newsfeed, Portfolio Binder, Safe Deposit Box.** Company news with a day's head start, live
   portfolio value, safekeeping; Custody guide, Diversified quest. 187 unit tests, 56 GameTests. → `docs/milestones/M6.md`
-- [ ] M7–M10: bonds, futures, options, modern finance (ATM, Brokerage)
+- [ ] **M7a: Rates and bonds.** → `docs/milestones/M7.md`
+- [ ] **M7b: Digital Record Keeping.** → `docs/milestones/M7.md`
+- [ ] M8–M10: futures, options, modern finance (ATM, Brokerage)
 - [ ] M11: multiplayer
 
 ## Known gaps / ideas parked
