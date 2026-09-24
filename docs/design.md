@@ -185,6 +185,8 @@ The Almanac Lectern is the progression hub: a lectern holding the Market Almanac
 | 7 | Two Markets | Ship goods with a Trade Route Crate whose payout, after freight, beats what the local Dealer would have paid at shipping time | $40 | Arbitrage and transport cost |
 | 8 | Save It | Reach $500 held at once without spending | Discount of 10% on the Bank Vault | Saving and opportunity cost |
 
+Tier 2 adds three more: **Nest Egg** (earn $10 of interest), **Locked In** (hold a CD to maturity) and **Leverage** (open and fully repay a loan), each worth $10–$25.
+
 Guides stay short: 150–250 words each, a worked example using the player's own numbers where possible (“You sold 256 wheat for $72.82; at a steady price it would have been $115.20”), and a one-line real-world parallel.
 
 ## Information as progression
@@ -195,7 +197,7 @@ What the player can see about markets and their own money is itself a progressio
 | --- | --- | --- |
 | 0 | (start) | The Dealer's quote for the one item in the Exchange slot, or the item in hand near the block. Counting money means counting bills |
 | 1 | Price Board | Live quotes for up to 4 chosen items on a wall |
-| 2 | Passbook | A handwritten-style record of Bank Vault deposits, withdrawals and interest, for that vault only |
+| 2 | Passbook | A handwritten-style record of the player's bank balance, deposits, withdrawals and interest; the only place the balance is shown |
 | 3 | Ticker Tape and Price Chart | A 7-day price history for one item per chart |
 | 4 | Portfolio Binder, Safe Deposit Box | Total value of the papers in one binder; safe storage for papers and bills, with no summary of its own |
 | 5 | Digital Record Keeping | A Records Terminal showing net worth, every holding, income by source, and upcoming payments across all linked blocks |
@@ -270,10 +272,10 @@ The mod adds 42 items and blocks plus 10 components (see Crafting) across nine t
 | 1 | Price Board | Wall block | $75 | Shows the Basic Exchange's public (unlicensed) bid/ask for up to 4 items placed in its frame, refreshed every 5 seconds | Quotes |
 | 1 | Merchant License | Account perk | $150 (requires quest 2) | Basic Exchange spread drops from 20% to 12% for that player, permanently | Transaction costs, market power |
 | 1 | Trade Route Crate | Block | $250 | Ship goods to the Capital, a second dealer with its own inventory and prices (sell-only); priced on arrival after 1 in-game day, minus a 5% freight fee | Arbitrage between markets, settlement delay |
-| 2 | Bank Vault | Block | $500 | Deposit dollars; balance is safe from death; earns 0.3% per in-game day, compounded daily | Interest, compounding, safety |
-| 2 | Passbook | Item | Free with Bank Vault | Book showing balance and every transaction; required to withdraw | Record keeping |
-| 2 | Certificate of Deposit | Item | $1,200 | Lock dollars for 7 or 21 days at a higher rate; early redemption forfeits interest | Term premium, liquidity |
-| 2 | Loan Note | Item | $2,000 | Borrow dollars against item collateral; interest accrues daily | Leverage, collateral, margin calls |
+| 2 | Bank Vault | Block | $500 ($450 with the Save It perk) | One bank account per player, reachable only at their own vault (one placed at a time). Balance is safe from death; earns 0.3% per in-game day, compounded daily, credited down to the dime. The vault can only be broken when completely empty (no balance, loan, debt or escrowed collateral; CDs are carried papers), so moving it means carrying the cash yourself; remote access is what the ATM is for | Interest, compounding, safety |
+| 2 | Passbook | Item | Free with Bank Vault | Book showing balance and every transaction; not needed to withdraw; replaced for 1 Ledger Paper | Record keeping |
+| 2 | Certificate of Deposit | Item | $1,200 | Bearer paper funded from the vault: 7 days at 0.45%/day or 21 days at 0.60%/day, compounded daily, minimum $100, 1 Security Paper each; early redemption returns principal only | Term premium, liquidity |
+| 2 | Loan Note | Item | $2,000 | Borrow against item collateral; cash goes to the vault balance; floating rate reset each dawn from collateral quality. The note is the borrower's statement (the debt is on the account); replaced for 1 Security Paper | Leverage, collateral, margin calls |
 | 3 | Trading Floor | Block | $3,000 | Batch-auction order book for commodities, trading against NPC traders; tighter prices than the Dealer | Order books, liquidity |
 | 3 | Order Slip | Item | Free with Trading Floor | A physical limit order: fill in item, side, quantity and price, drop it in the Floor; filled slips return as receipts | Limit vs market orders |
 | 3 | Trade Receipt | Item | Produced by fills | Proof of a trade with price and time; can be recycled to paper | Settlement records |
@@ -364,10 +366,12 @@ Q = \frac{C}{\sum_i n_i \, m_i}
 
 | Class | Examples | Haircut h | Accepted? |
 | --- | --- | --- | --- |
-| A | Diamond, Emerald, Gold Ingot, Netherite Ingot, bills held in escrow | 10% | Yes |
+| A | Diamond, Emerald, Gold Ingot, bills held in escrow | 10% | Yes |
 | B | Iron, Copper, Coal, Lapis, Redstone | 20% | Yes |
 | C | Crops, logs, leather, string, bones | 40% | Yes |
-| D | Dirt, cobblestone, rotten flesh, anything outside the Dealer catalog | — | No |
+| D | Dirt, cobblestone, stone, sand, gravel, rotten flesh, components, anything outside the Dealer catalog | — | No |
+
+Classes are a `collateral_class` column in the Dealer catalog. Netherite joins class A only once the Dealer trades it.
 
 Because P(n) already includes price impact, concentration is penalized automatically: 1,500 logs are not worth 1,500 × $1. And collateral is worth less right after the player has flooded that item's market, which is exactly true of fire sales in real markets.
 
@@ -394,14 +398,14 @@ With the reference values, a 20% Dealer spread and the Dealer starting at zero i
 | 64 Gold Ingots | $960 | $631 | $568 | 0.59 | $454 | 0.81% |
 | 1,500 Oak Logs | $1,500 | $230 | $138 | 0.09 | $110 | 1.31% |
 
-No number of oak logs can back more than about $110, because the Dealer would never pay more than $230 for any amount of them. The Loan Note guide opens with this table filled in with the player's own attempt.
+No number of oak logs can back more than about $110, because the Dealer would never pay more than $230 for any amount of them. The Leverage and Collateral guide opens with this table.
 
 ### Margin calls and liquidation
 
-1. At dawn, coverage below 110% issues a Margin Call Notice item and lights the contract block red.
+1. At dawn, coverage below 110% triggers a margin call: a chat message, the contract block's light turns red, and the contract's paper shows the deadline. (Bank loans use no notice item; the Clearing House's Margin Call Notice arrives in Tier 6.)
 2. The player has one in-game day to add collateral, repay part of the exposure, or close the contract.
 3. If nothing changes, the counterparty liquidates: it sells collateral through the Dealer, largest haircut classes first, until coverage is restored or the debt is paid. The sales move prices like any other sale.
-4. Any surplus returns to the player's Bank Vault (or drops at the block if no vault exists). Any shortfall becomes debt in the Passbook, accruing the loan rate, and new contracts are blocked until it is repaid.
+4. Any surplus returns to the player's bank balance. Any shortfall becomes debt in the Passbook, accruing the loan rate, and new contracts are blocked until it is repaid.
 
 ## Counterparties in single player
 
@@ -519,7 +523,7 @@ flowchart TD
 ### Mod-layer decisions
 
 - **Time:** every schedule (recovery, interest, maturity, earnings) runs on the in-game day counter, not wall-clock time, so a paused single-player world freezes the economy.
-- **Persistence:** world-level state (Dealer inventories, order books, registry, companies) in one SavedData; per-player state (unlocks, quests, vault balance, debts) as Fabric data attachments on the player.
+- **Persistence:** plain-text files in the world folder, written atomically and unit-tested: world-level state (Dealer and Capital inventories, shipments, security registry) in `realisticmarkets/*.txt`, per-player state (unlocks, quests, bank account, debts, escrow) in `realisticmarkets/players/<uuid>*.txt`.
 - **Threading:** the core stays single-threaded on the server thread. NPC traders only generate orders, and heavier agent work can move to a worker thread that queues orders for the next auction.
 - **Data-driven content:** item values, catalog, Almanac tree, quests, guides and companies are datapack JSON loaded with a reload listener.
 - **Screens:** vanilla container screens only (slots, a few buttons, text). No custom windowing library.
@@ -559,7 +563,8 @@ Build in tier order, and make each milestone a complete, playable loop before st
 | M1 | Dollars and the Dealer | Four currency items, Basic Exchange block and screen, `dealer` and `money` packages, 17 reference items | Unit tests prove the proceeds ceiling and recovery; a GameTest sells 64 Wheat and receives $25.40 in the right bills; sim shows a wheat farm capped near $21 per day |
 | M2 | Almanac Lectern | Drafting Table with per-player blueprints; Tier 1 components in the Buy tab; Block and three-tab screen, `progression` package, Tier 1 nodes, quests 1–8, first 5 guides, per-player persistence | A fresh world can reach Tier 1 in a scripted sim run in about 2 hours of game time; progress survives restart |
 | M3 | Tier 1 content | Bill Clip, Price Board, Trade Route Crate and Capital dealer, four Tier 1 guides (the Merchant License perk shipped in M2) | Quest 7 (arbitrage) completable in play |
-| M4 | Banking and collateral | Bank Vault, Passbook, CD, Loan Note; `collateral` and `registry` packages; margin calls and liquidation | The worked loan example matches the table; a margin call liquidates correctly in a GameTest |
+| M4a | Banking | Bank Vault, Passbook, interest, CD; `registry` package; Nest Egg and Locked In quests | Interest compounds correctly; a CD settles once and a copy is VOID |
+| M4b | Collateral and loans | Loan Note, escrow, `collateral` package, margin calls and liquidation; Leverage quest | The worked loan example matches the table; a margin call liquidates correctly in a GameTest |
 | M5 | Trading Floor | Order Slips, receipts, NPC trader population on the existing batch auction, Ticker Tape and Price Chart | Books stay liquid with no player; prices track fair value in sim |
 | M6 | Equities | Stock Exchange, certificates, six companies, Annual Reports, Newspaper Stand, Portfolio Binder, Safe Deposit Box | Dividends pay on presentation; earnings react to commodity prices |
 | M7 | Bonds | Bond Desk, Treasury and Corporate Bonds, central-rate events, defaults; Digital Record Keeping (Records Terminal, Record Link) | Bond prices fall when the rate rises; the Records Terminal's net worth equals the sum of linked holdings in a GameTest |
