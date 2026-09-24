@@ -6,8 +6,8 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 
 - **Design doc (source of truth for gameplay):** `docs/design.md`, exported from the "Realistic Markets —
   Game Design Document" Claude Doc. If a request conflicts with it, ask before building.
-- **Current milestone:** M5, the Trading Floor. Spec `docs/milestones/M5.md` (decisions answered; M5a first,
-  then M5b). M4 (banking and collateral) is done. Spec `docs/milestones/M4.md`
+- **Current milestone:** M5, the Trading Floor. Spec `docs/milestones/M5.md` (M5a done, then M5c
+  `docs/milestones/M5c.md`: markets that move, then M5b). M4 (banking and collateral) is done. Spec `docs/milestones/M4.md`
   (decisions answered). Done: M2 (`docs/milestones/M2.md`),
   M3 (`docs/milestones/M3.md`).
 - **Owner:** James. He play-tests in the IntelliJ dev client; keep him in the loop on anything that
@@ -20,7 +20,7 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 | `test` | exchange-core unit tests, prints `N tests, M failed` | ~5 s |
 | `sim farm [item] [days]` | Dealer balance: income vs farm size → `build/sim/*.csv` | ~5 s |
 | `sim floor` | Trading Floor: liquidity, spreads, fair-value tracking, sale impact vs the Dealer, no-arbitrage loops | ~10 s |
-| `sim trader [free] [visits=N] [capital=C] [size=D] [cap=C]` | Does the Floor make a player money? Gatherer income uplift + payback; trading strategies vs the vault | ~10 s |
+| `sim trader [free] [visits=N] [capital=C] [size=D] [cap=C] [seeds=N]` | Does the Floor make a player money? Gatherer uplift + payback; five trading strategies vs the vault | ~40 s |
 | `sim progression [profile]` | Tier 1 play time, then Trade Route Crate income uplift, from gathering profiles in `sim/src/main/resources/profiles/` | ~5 s |
 | `build` | compile everything **and run the GameTests** (Loom's `check` includes them) | ~15 s |
 | `gametest` | server GameTests only, in a headless Minecraft server | ~10 s |
@@ -83,8 +83,9 @@ docs/            design.md, milestones/
 ## How things work (read before extending)
 
 - **Dealer pricing:** `m(I) = V·e^(−kI/L)`; bid/ask = m·(1∓s/2); sale proceeds integrate the price walk;
-  inventory decays `I·e^(−t/τ)`; fair value V drifts (seeded AR(1) on log V). Compressed items (iron block)
-  trade through their base pool × units.
+  inventory decays `I·e^(−t/τ)`. Fair value V (M5c): daily random step + a wandering trend, weak 60-day anchor,
+  permanent supply impact (1% per depth sold), and world events (`WorldEvents`, `events.csv`, seeded, no save state).
+  Compressed items (iron block) trade through their base pool × units; on the Floor they get their own basis.
 - **Config:** `mod/run/config/realisticmarkets/dealer_catalog.csv` + `dealer_params.properties` are copied
   from the defaults on first launch; `/mkt dealer reload` re-reads them live. Both are applied **on top of** the
   built-in defaults (catalog rows by item id, params by key), so new default rows appear automatically; but an
@@ -149,6 +150,8 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   forced sales, Leverage guide and quest. 124 unit tests, 37 GameTests. → `docs/milestones/M4.md`
 - [x] **M5a: Trading Floor.** Order Slips, Trade Receipts, NPC traders on the batch auction, day/market orders,
   three guides, Tier 3 quests. 149 unit tests, 42 GameTests; Tier 3 at ~16 h. → `docs/milestones/M5.md`
+- [ ] **M5c: Make trading pay.** Prices that trend and never snap back, world events, cheaper slips, repricing,
+  14 books. → `docs/milestones/M5c.md`
 - [ ] **M5b: Ticker Tape** and Price Chart. → `docs/milestones/M5.md`
 - [ ] M6–M10: equities, bonds, futures, options, modern finance (ATM, Brokerage)
 - [ ] M11: multiplayer

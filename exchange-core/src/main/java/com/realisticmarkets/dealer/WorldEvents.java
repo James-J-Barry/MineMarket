@@ -36,8 +36,10 @@ public final class WorldEvents implements Dealer.Shocks {
 
     private final List<Type> types;
     private final long seed;
-    private final Map<Type, Set<String>> resolved = new LinkedHashMap<>();
+    private final List<Set<String>> resolved = new ArrayList<>(); // by type index
     private final Map<Long, List<Event>> startsCache = new LinkedHashMap<>();
+    private long activeDay = Long.MIN_VALUE;
+    private List<Event> active = List.of(); // events within LOOKBACK_DAYS of activeDay
 
     public WorldEvents(List<Type> types, DealerCatalog catalog, long seed) {
         this.types = List.copyOf(types);
@@ -52,7 +54,7 @@ public final class WorldEvents implements Dealer.Shocks {
                     items.add(catalog.pool(target).itemId());
                 }
             }
-            resolved.put(t, items);
+            resolved.add(items);
         }
     }
 
@@ -89,7 +91,7 @@ public final class WorldEvents implements Dealer.Shocks {
     public List<Type> types() { return types; }
 
     /** Base items an event type moves. */
-    public Set<String> affects(Type t) { return resolved.get(t); }
+    public Set<String> affects(Type t) { return resolved.get(t.index()); }
 
     /** Events that start on {@code day} (at dawn). */
     public List<Event> startingOn(long day) {
@@ -117,19 +119,20 @@ public final class WorldEvents implements Dealer.Shocks {
     @Override
     public double permanent(String baseItem, long day) {
         double sum = 0;
-        for (Event e : startingOn(day)) if (resolved.get(e.type()).contains(baseItem)) sum += e.type().permanent();
+        for (Event e : startingOn(day)) if (resolved.get(e.type().index()).contains(baseItem)) sum += e.type().permanent();
         return sum;
     }
 
     @Override
     public double fading(String baseItem, double day) {
-        double sum = 0;
         long today = (long) Math.floor(day);
-        for (long d = today; d > today - LOOKBACK_DAYS; d--) {
-            for (Event e : startingOn(d)) {
-                if (!resolved.get(e.type()).contains(baseItem)) continue;
-                sum += transientEffect(e.type(), day - d);
-            }
+        if (today != activeDay) { // called for every price quote: work out the day's live events once
+            active = recent(day, LOOKBACK_DAYS);
+            activeDay = today;
+        }
+        double sum = 0;
+        for (Event e : active) {
+            if (resolved.get(e.type().index()).contains(baseItem)) sum += transientEffect(e.type(), day - e.day());
         }
         return sum;
     }

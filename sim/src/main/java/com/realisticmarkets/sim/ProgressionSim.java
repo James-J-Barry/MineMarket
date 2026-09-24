@@ -47,7 +47,7 @@ import java.util.Set;
  */
 public final class ProgressionSim {
     static final double MINUTES_PER_DAY = 20.0;
-    static final int MAX_DAYS = 60;
+    static final int MAX_DAYS = 90;
     static final String DUMP_ITEM = "minecraft:cobblestone";
     static final double HOLD_BELOW = 0.90;
     static final long GROUP_TARGET_CENTS = 2050;
@@ -149,8 +149,11 @@ public final class ProgressionSim {
     static CrateResult runCrate(List<Source> sources, boolean useCrate) {
         DealerCatalog catalog = DealerCatalog.loadDefault();
         Dealer local = new Dealer(catalog, DealerParams.defaults(), 7L);
+        com.realisticmarkets.dealer.WorldEvents events = com.realisticmarkets.dealer.WorldEvents.loadDefault(catalog, 7L);
+        local.setShocks(events);
         Capital.Config cfg = Capital.loadDefault();
         Dealer capital = Capital.dealer(catalog, DealerParams.defaults(), cfg, 11L);
+        capital.setShocks(events);
         ShipmentBook book = new ShipmentBook();
         long steadyCents = 0, steadyShipped = 0;
         int steadyDays = 0;
@@ -216,6 +219,7 @@ public final class ProgressionSim {
     static Result run(List<Source> sources, double scale, PrintWriter csv, int maxTier) {
         DealerCatalog catalog = DealerCatalog.loadDefault();
         Dealer dealer = new Dealer(catalog, DealerParams.defaults(), 7L);
+        dealer.setShocks(com.realisticmarkets.dealer.WorldEvents.loadDefault(catalog, 7L));
         UnlockTree tree = UnlockTree.loadDefault();
         Quests quests = Quests.loadDefault();
         Blueprints blueprints = Blueprints.loadDefault();
@@ -365,6 +369,10 @@ public final class ProgressionSim {
                 return new Result(scale, doneDay, nodeCents, componentCents, questCents[0], questDay, cash[0], true,
                         interestCents, recent(incomeLog), recent(interestLog));
             }
+        }
+        if (doneDay > 0) { // finished, but the days after ran past MAX_DAYS
+            return new Result(scale, doneDay, nodeCents, componentCents, questCents[0], questDay, cash[0], true,
+                    interestCents, recent(incomeLog), recent(interestLog));
         }
         return new Result(scale, MAX_DAYS, nodeCents, componentCents, questCents[0], questDay, cash[0], false,
                 interestCents, recent(incomeLog), recent(interestLog));

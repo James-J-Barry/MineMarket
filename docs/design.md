@@ -108,7 +108,14 @@ Between trades the Dealer offloads stock to the outside world, so inventory deca
 I(t) = I_0 \, e^{-t/\tau}
 ```
 
-Fair value V also drifts slowly (a mean-reverting random walk, about 2% per in-game day), so prices move even when the player does nothing.
+Fair value V moves on its own, so prices change even when the player does nothing, and nothing snaps them back (M5c):
+
+- **Random walk with trends.** Each in-game day log V takes a random step (about 2%) plus a trend that itself wanders and lasts a week or two, so prices can climb or slide for days.
+- **A weak anchor.** Log V is pulled toward the catalog value with a 60-day half-life, so a long save stays sane: 95% of the time within about ±43% of the catalog value. A typical month moves 10%; one month in ten, over 24%.
+- **Supply and demand.** Every depth's worth sold to the Dealer lowers V by 1% for good (buying raises it). The Dealer's inventory still recovers in days (below), so part of a dump's price drop comes back and part never does: a huge single-item farm slowly depresses its own market.
+- **World events.** Bumper harvests, droughts, mine collapses, rich veins, building booms, raids and more (`events.csv`, about one every 3-6 days) hit groups of items. Each has a transient shock (±18-35%) that builds over the first hours after dawn and fades over days, plus a smaller permanent part. Headlines reach Trading Floor owners at dawn and show on the Floor screen, so someone who reads the news can trade before the price has fully moved.
+
+Goods pay no interest while money in a Bank Vault does, so holding goods to sell later is a bet that they rise by more than the vault pays: the time value of money.
 
 ### Why farms can't break it
 
@@ -121,7 +128,7 @@ Take Wheat with V = $0.50, L = 256, k = 1, s = 20%, τ = 2 days.
 | 1,024 | $460.80 | $113.09 | $0.01 |
 | Infinite | — | $115.20 (hard ceiling) | $0.00 |
 
-The best sustainable income comes from selling about L/τ = 128 wheat per day, which earns about $21 per in-game day. A bigger farm earns almost nothing extra. The lesson lands on its own: price impact is real, and diversifying across goods beats scaling one farm.
+The best sustainable income comes from selling about L/τ = 128 wheat per day, which earns about $21 per in-game day. With the permanent supply effect (M5c), each day's sales also nudge V down, so `sim farm` now peaks at about $19.50 a day from 96 wheat, and bigger farms fall off faster. A bigger farm earns almost nothing extra. The lesson lands on its own: price impact is real, and diversifying across goods beats scaling one farm.
 
 Buying works in reverse. Buying pushes I negative and raises the ask, so buying cheap and selling back always loses at least the spread.
 
@@ -279,7 +286,7 @@ The mod adds 42 items and blocks plus 10 components (see Crafting) across nine t
 | 2 | Certificate of Deposit | Item | $1,200 | Bearer paper funded from the vault: 7 days at 0.45%/day or 21 days at 0.60%/day, compounded daily, minimum $100, 1 Security Paper each; early redemption returns principal only | Term premium, liquidity |
 | 2 | Loan Note | Item | $2,000 | Borrow against item collateral; cash goes to the vault balance; floating rate reset each dawn from collateral quality. The note is the borrower's statement (the debt is on the account); replaced for 1 Security Paper | Leverage, collateral, margin calls |
 | 3 | Trading Floor | Block | $3,000 | Batch auction every 10 seconds for about 10 commodity books (iron ingot and iron block trade separately), against each other and NPC traders; spreads around 2-6% vs the Dealer's 20%. Goods and bills are dropped in to place orders; fills and refunds are collected from its output | Order books, liquidity |
-| 3 | Order Slip | Item | Drafting Table: 1 Ledger Paper -> 8 slips | One slip per order: a limit order good until the next dawn, or a market order (filled now or refunded) | Limit vs market orders, transaction costs |
+| 3 | Order Slip | Item | Drafting Table: 1 Ledger Paper -> 32 slips | One slip per order: a limit order good until the next dawn (repriced for free from the Floor screen), or a market order (filled now or refunded) | Limit vs market orders, transaction costs |
 | 3 | Trade Receipt | Item | One per finished order | Item, side, filled quantity, average price and day; can be recycled to paper | Settlement records |
 | 3 | Ticker Tape | Block | $1,500 | Prints a Price Chart for any Trading Floor book, for 1 Ledger Paper + 1 Ink Bottle | Price history |
 | 3 | Price Chart | Item | Produced by Ticker Tape | A snapshot of 7 days: line chart on right-click, sparkline in the tooltip (item-frame display later) | Reading charts, volatility |
@@ -441,12 +448,12 @@ With these values `sim progression` (licensed player, selling each day's output,
 
 | Profile | Local only | With crate | Uplift | Share of income shipped |
 | --- | --- | --- | --- | --- |
-| Early survival mix | $170/day | $189/day | +11% | 35% |
-| Farm-heavy | $188/day | $255/day | +35% | 45% |
+| Early survival mix | $165/day | $191/day | +16% | 55% |
+| Farm-heavy | $170/day | $239/day | +41% | 47% |
 
 The crate pays off for farmers and barely matters for miners, which is the intended lesson: arbitrage only works where the price gap beats freight and spreads.
 
-Every NPC trader has finite cash and stock that drift back to a baseline over in-game days, like the Dealer's recovery, so the Floor can be exhausted by a big enough seller and recovers over days: nothing prints unlimited money. The fundamentalists' anchor is the Dealer's drifting fair value.
+Every NPC trader has finite cash and stock that drift back to a baseline over in-game days, like the Dealer's recovery, so the Floor can be exhausted by a big enough seller and recovers over days: nothing prints unlimited money. The fundamentalists' anchor is the Dealer's moving fair value. Books for compressed items (iron block) have their own supply and demand on top: a basis around 9 × the ingot price that wanders about 5% with a one-day half-life, which is what makes Two Books tradeable.
 
 NPC traders shown in the world as villager merchants around the Trading Floor and Stock Exchange (more of them when the market is busy) are cosmetic and parked for later; the simulation runs regardless.
 
@@ -480,16 +487,18 @@ In single player the Dealer is an unlimited faucet, so its price impact is the m
 | Dealer spread s | 20% (12% licensed) | Slow early income | Speed early game |
 | Depth L per item | Reference table | Let farms earn more | Punish single-item farms harder |
 | Recovery time τ | 2 in-game days | Slow repeat selling | Allow more frequent selling |
-| Fair-value drift | 2% per day | Make prices livelier | Make prices calmer |
+| Fair-value moves | 2% a day, trends, 60-day anchor, 1% per depth sold, events | Make prices livelier | Make prices calmer |
 | Bank Vault rate | 0.3% per day | Reward saving | Push players toward riskier tools |
 | Advance rate and haircuts | 80%; 10/20/40% | — | Make borrowing easier |
 | Almanac costs | Catalog table | Lengthen the game | Shorten the game |
 
 All of these live in datapack JSON, and difficulty presets (Relaxed, Standard, Realistic) swap whole sets at world creation.
 
-**Trading Floor (`sim floor`, 30 in-game days, no player):** all 10 books trade in 62-90% of auctions at spreads of 3.3-5.4%, 0.8-4.8% from the Dealer's fair value. Selling 64 on the Floor pays 1.2-2x the Dealer; 1,024 shows heavy impact and thin books (diamond, emerald, iron block) absorb only 100-350 a day. Every Floor-Dealer round trip loses money.
+**Trading Floor (`sim floor`, 30 in-game days, no player):** all 14 books (wheat, carrot, potato, beef, oak log, coal, iron ingot, iron block, copper ingot, gold ingot, redstone, emerald, diamond, bone) trade in 62-90% of auctions at spreads of 3.3-5.3%, 1-7% from the Dealer's fair value (world events jump fair value faster than the NPCs follow). Selling 64 on the Floor pays 1.2-2x the Dealer; 1,024 shows heavy impact and thin books (diamond, emerald, iron block) absorb only 100-350 a day. Every Floor-Dealer round trip loses money.
 
-**Measured so far (`sim progression`, assumed gathering profiles):** Tier 1 complete at 2.0 h (target ~2 h). Tier 2 complete (Bank Vault, CD, Loan Note, vault built) at 9.7-10.3 h against a ~5 h target: Tier 2 costs about 7x Tier 1 while Tier 1's tools add only 11-35% income. Current prices are kept for now; halving Tier 2 prices and a 4-block vault recipe would bring it to about 5.3-6.3 h. Vault savings earn about $4-8 a day against $106-174 of income.
+**Trading for a living (`sim trader`, 30 days, 8 worlds, 4 Floor visits a day, Order Slips $0.14):** selling gathered goods on the Floor instead of the Dealer lifts income 20% (early survival) to 57% (farm-heavy), paying back the Floor in 30-90 days. With $1,000 and no gathering, against the vault's $3/day: quoting inside the market maker earns about $6/day (worst week -$44); buying under Normal and selling over it about $13/day; trading the news about $3/day (the NPCs reprice fast and books are shallow); iron block vs ingots about $19/day (worst week -$121, the stock you hold moves); buy-and-hold loses about $2/day with -$82 weeks. Trading pays, and it carries risk.
+
+**Measured so far (`sim progression`, assumed gathering profiles):** Tier 1 complete at 2.0 h (target ~2 h). Tier 3 (Trading Floor built) at 17 h against ~10 h. Tier 2 complete (Bank Vault, CD, Loan Note, vault built) at 9.7-10.3 h against a ~5 h target: Tier 2 costs about 7x Tier 1 while Tier 1's tools add only 11-35% income. Current prices are kept for now; halving Tier 2 prices and a 4-block vault recipe would bring it to about 5.3-6.3 h. Vault savings earn about $4-8 a day against $106-174 of income.
 
 ## Technical architecture
 

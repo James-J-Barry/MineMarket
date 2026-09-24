@@ -8,11 +8,11 @@ Every Basic Exchange in this world trades with the same Dealer. The Dealer buys 
 
 Dollars are real items. You can't craft them, mobs don't drop them, and if you die carrying them they fall to the ground like anything else. Keep what you don't need in a chest.
 
-The Sell tab shows three prices per item. Normal is the item's fair value, the price the Dealer drifts back to over time. Market is where the Dealer's price sits right now. Pays is what you get for the next item. Your first sale went through close to Normal because the Dealer had none of that item in stock.
+The Sell tab shows three prices per item. Normal is the item's fair value: what it's worth today. Market is where the Dealer's price sits right now. Pays is what you get for the next item. Your first sale went through close to Normal because the Dealer had none of that item in stock.
 
 If the Dealer won't buy something, no market exists for it yet. More markets open as you unlock new tools here at the Almanac.
 
-Fair values also wander by about 2% a day, even when nobody trades. Yesterday's price is a guide, not a promise.
+Fair values move every day, even when nobody trades. They wander, follow trends that can last a week or two, and jump on news, and nothing pulls them back where they started except very slowly. Yesterday's price is a guide, not a promise.
 
 Real world: money exists so you don't have to find someone who wants your wheat and also happens to have the pickaxe you need. Economists call that the double coincidence of wants.
 
@@ -63,7 +63,7 @@ The steady pace a Dealer can absorb is about half its depth per day. For wheat t
 
 So patience is a strategy. Store goods in a chest, check the Market price, and sell when it has recovered. Rotate between items while each one recovers.
 
-Waiting never undoes a sale that already happened, though. Money lost selling into a crashed price is gone; patience only helps the next sale.
+Not all of the drop comes back. Every 256 wheat sold also lowers Normal itself by about 1%, for good: the world simply has more wheat. And waiting has a cost. Goods in a chest earn nothing, money in a Bank Vault earns interest, and Normal may move against you while you wait.
 
 Real world: after a big trade, market makers slowly sell off the inventory they took on and prices drift back. Traders call this liquidity recovering.
 
@@ -79,7 +79,7 @@ Compare two ways to sell 192 items, all with wheat's depth of 256:
 
 Same work, about a quarter more money, just from spreading it out. The best income comes from several small operations that each sell near their steady pace, not one giant farm.
 
-Diversification also protects you. Fair values drift about 2% a day, and any single item can have a bad week. If you sell many things, one weak price hurts less.
+Diversification also protects you. Fair values move every day, trend and jump on news, and any single item can have a bad week. If you sell many things, one weak price hurts less.
 
 There is a limit. Spreading into goods that take ages to gather, or are worth very little, can cost more time than it earns. Diversify across things that each pay their way.
 
@@ -101,7 +101,7 @@ You put up a Price Board. Each item on it shows two prices: the Bid, what the De
 
 A quote is only good for the next item. Wheat shows a bid of $0.45, but sell 64 at once and the last ones fetch less. Right after that sale the board shows a bid of $0.35. Wait a few days and it climbs back.
 
-So read a board like a trader. A down arrow on something you hold means wait if you can. An up arrow means sell now, before someone else, or the drift, takes it away. Compare items side by side to decide what to sell today.
+So read a board like a trader. A down arrow on something you hold means wait if you can. An up arrow means sell now, before someone else, or the market, takes it away. Compare items side by side to decide what to sell today.
 
 The board shows the public price at the Basic Exchange. If you hold a Merchant License, your own prices are a little better than what the board says.
 
@@ -196,15 +196,15 @@ Nobody on the Floor owes you a trade. If no one wants your wheat at your price, 
 Real world: stock exchanges open and close each day with this kind of auction, one price that matches as many buyers and sellers as possible.
 
 @limit_and_market_orders Limit and Market Orders
-Every order on the Floor costs one Order Slip, and it's either a limit order or a market order.
+Every order costs one Order Slip. It's either a limit order or a market order.
 
 A limit order names your worst price: the most you'll pay, or the least you'll take. It trades only at that price or better, and it waits in the book, auction after auction, until it fills, you cancel it, or dawn comes. Limit orders are day orders: whatever hasn't filled by the next dawn expires, and your goods or cash come back.
 
 A market order names no price. It joins the next auction only and takes whatever price clears. So that it can trade, the Floor lets it reach 50% past the last price. A market buy of 16 wheat when wheat last traded at $0.50 sets aside 16 x $0.75 = $12.00, and a market sell will accept as little as $0.25. Whatever doesn't fill comes straight back, with the cash you didn't spend.
 
-Either way the Floor holds your goods or cash from the moment you place the order. Fills, refunds and a Trade Receipt wait at any Trading Floor. The receipt shows how much traded and the average price.
+Changed your mind? The Floor screen can move an open order to a new price without another slip. Either way the Floor holds your goods or cash from the moment you place the order. Fills, refunds and a Trade Receipt showing the average price wait at any Trading Floor.
 
-Use a limit order when the price matters more than the time, and a market order when trading now matters more than the price.
+Use a limit when the price matters most, and a market order when time does.
 
 Real world: a market order is the fastest way to trade, but in a thin or fast market it can fill far from the last price you saw. That's why professionals mostly use limits.
 
