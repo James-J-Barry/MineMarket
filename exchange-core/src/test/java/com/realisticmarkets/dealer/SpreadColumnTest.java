@@ -70,6 +70,24 @@ class SpreadColumnTest {
     }
 
     @Test
+    void configRowsOverrideBuiltInsAndNewBuiltInsStillAppear() throws Exception {
+        DealerCatalog builtIn = DealerCatalog.parseCsv(new StringReader(CSV));
+        // An old config copy: predates brass fittings, and the player tweaked wheat and added melon.
+        DealerCatalog config = DealerCatalog.parseCsv(new StringReader("""
+                minecraft:wheat,0.60,256,farm,,
+                minecraft:hay_block,,,farm,minecraft:wheat,9
+                realisticmarkets:ledger_paper,4.00,64,components,,,0.40
+                minecraft:melon_slice,0.15,512,farm,,
+                """));
+        DealerCatalog merged = DealerCatalog.merge(builtIn, config);
+        assertEquals(0.60, merged.spec("wheat").fairValue(), "the player's edit wins");
+        assertEquals(10.00, merged.spec("realisticmarkets:brass_fittings").fairValue(), "a new built-in item appears");
+        assertEquals(0.15, merged.spec("melon_slice").fairValue(), "config-only items are added");
+        assertEquals(5, merged.all().size());
+        assertEquals("minecraft:wheat", merged.all().keySet().iterator().next(), "built-in order is kept");
+    }
+
+    @Test
     void outOfRangeSpreadIsRejected() {
         assertThrows(IllegalArgumentException.class,
                 () -> DealerCatalog.parseCsv(new StringReader("x:y,1.0,10,misc,,,2.5\n")));

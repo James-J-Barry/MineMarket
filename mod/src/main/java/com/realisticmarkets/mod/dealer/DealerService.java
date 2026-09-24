@@ -26,7 +26,8 @@ import net.minecraft.world.item.ItemStack;
  *
  * <p>Config lives in {@code config/realisticmarkets/}: {@code dealer_catalog.csv} and
  * {@code dealer_params.properties}, copied from the defaults on first start and re-read by
- * {@code /mkt dealer reload}.
+ * {@code /mkt dealer reload}. Both are applied on top of the built-in defaults (catalog rows by item id, params by
+ * key), so content added by a mod update still appears when an older config copy exists.
  *
  * <p>Dealer state (inventories, fair-value drift, dev time-shift) is saved to
  * {@code <world>/realisticmarkets/dealer_state.txt} every {@link #SAVE_INTERVAL_TICKS} ticks and when
@@ -144,7 +145,7 @@ public final class DealerService {
             Path paramsFile = ensureDefault("dealer_params.properties");
             DealerCatalog catalog;
             try (Reader r = Files.newBufferedReader(catalogFile, StandardCharsets.UTF_8)) {
-                catalog = DealerCatalog.parseCsv(r);
+                catalog = DealerCatalog.merge(DealerCatalog.loadDefault(), DealerCatalog.parseCsv(r));
             }
             Properties props = new Properties();
             try (Reader r = Files.newBufferedReader(paramsFile, StandardCharsets.UTF_8)) {

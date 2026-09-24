@@ -83,8 +83,9 @@ docs/            design.md, milestones/
   inventory decays `I·e^(−t/τ)`; fair value V drifts (seeded AR(1) on log V). Compressed items (iron block)
   trade through their base pool × units.
 - **Config:** `mod/run/config/realisticmarkets/dealer_catalog.csv` + `dealer_params.properties` are copied
-  from the defaults on first launch; `/mkt dealer reload` re-reads them live. If you change the defaults,
-  delete the copies in `mod/run/config/` (or they shadow your change).
+  from the defaults on first launch; `/mkt dealer reload` re-reads them live. Both are applied **on top of** the
+  built-in defaults (catalog rows by item id, params by key), so new default rows appear automatically; but an
+  edited default *value* is still shadowed by the same row in an existing copy.
 - **Persistence:** `<world>/realisticmarkets/dealer_state.txt`, written atomically every 5 min and on
   `SERVER_STOPPING`. Plain text on purpose (see "Why not SavedData" below).
 - **Menu ↔ screen sync:** `ContainerData` only. Values travel as **shorts**, so every number is split into two

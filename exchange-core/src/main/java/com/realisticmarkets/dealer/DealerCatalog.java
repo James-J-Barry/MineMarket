@@ -91,6 +91,17 @@ public final class DealerCatalog {
         return new DealerCatalog(rows);
     }
 
+    /**
+     * The built-in catalog with a config file applied on top: a config row replaces the built-in row for the same
+     * item, and items only in the config are added. Built-in items the config doesn't mention stay, so items added
+     * by a mod update appear even when an old config copy exists.
+     */
+    public static DealerCatalog merge(DealerCatalog builtIn, DealerCatalog overrides) {
+        Map<String, MarketSpec> m = new LinkedHashMap<>(builtIn.specs);
+        m.putAll(overrides.specs);
+        return new DealerCatalog(new ArrayList<>(m.values()));
+    }
+
     /** "wheat" -> "minecraft:wheat"; ids with a namespace pass through. */
     public static String normalize(String id) {
         String s = id.strip().toLowerCase(java.util.Locale.ROOT);
