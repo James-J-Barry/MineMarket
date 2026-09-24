@@ -298,6 +298,7 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             case QuestGoal.HoldCashAtLeast(long cents) -> "Hold " + Money.format(cents) + " in cash at once.";
             case QuestGoal.InterestEarned(long cents) -> "Earn " + Money.format(cents) + " of interest at your Bank Vault.";
             case QuestGoal.CdMatured() -> "Hold a Certificate of Deposit until it matures, then redeem it.";
+            case QuestGoal.LoanRepaid() -> "Borrow against your goods at the Bank Vault, then pay the loan off in full.";
             case QuestGoal.ShipBeatsLocal() ->
                     "Ship goods with a Trade Route Crate and get more, after freight, than the local Dealer would pay.";
         };

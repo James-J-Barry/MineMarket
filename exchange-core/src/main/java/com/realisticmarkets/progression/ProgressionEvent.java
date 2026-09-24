@@ -32,4 +32,7 @@ public sealed interface ProgressionEvent {
 
     /** A Certificate of Deposit redeemed; {@code matured} is false for early redemption (principal only). */
     record CdRedeemed(long principalCents, long payoutCents, boolean matured, long day) implements ProgressionEvent {}
+
+    /** A loan paid off by the borrower (not by liquidation). */
+    record LoanRepaid(long principalCents, long interestPaidCents, long day) implements ProgressionEvent {}
 }

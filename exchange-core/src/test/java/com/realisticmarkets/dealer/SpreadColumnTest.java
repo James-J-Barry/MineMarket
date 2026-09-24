@@ -88,6 +88,16 @@ class SpreadColumnTest {
     }
 
     @Test
+    void collateralClassColumn() throws Exception {
+        DealerCatalog c = DealerCatalog.parseCsv(new StringReader("minecraft:diamond,100,32,mining,,,,a\n"));
+        assertEquals("A", c.spec("diamond").collateralClass());
+        assertThrows(IllegalArgumentException.class,
+                () -> DealerCatalog.parseCsv(new StringReader("minecraft:diamond,100,32,mining,,,,E\n")));
+        assertThrows(IllegalArgumentException.class, () -> DealerCatalog.parseCsv(new StringReader(
+                "minecraft:gold_ingot,15,96,mining,,\nminecraft:gold_block,,,mining,minecraft:gold_ingot,9,,A\n")));
+    }
+
+    @Test
     void outOfRangeSpreadIsRejected() {
         assertThrows(IllegalArgumentException.class,
                 () -> DealerCatalog.parseCsv(new StringReader("x:y,1.0,10,misc,,,2.5\n")));

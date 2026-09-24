@@ -24,7 +24,8 @@ import java.util.Map;
  * minecraft:hay_block,,,farm,minecraft:wheat,9
  * realisticmarkets:ledger_paper,4.00,64,components,,,0.40
  * </pre>
- * {@code spread} is optional (base markets only); blank means {@link DealerParams#spread()}.
+ * {@code spread} is optional (base markets only); blank means {@link DealerParams#spread()}. An eighth column,
+ * {@code collateral_class} (A-D), sets the loan haircut class; blank means by group.
  */
 public final class DealerCatalog {
     public static final String DEFAULT_RESOURCE = "/realisticmarkets/dealer_catalog.csv";
@@ -76,10 +77,12 @@ public final class DealerCatalog {
             try {
                 if (baseItem == null) {
                     Double spread = c.length > 6 && !c[6].isBlank() ? Double.valueOf(c[6].strip()) : null;
-                    rows.add(MarketSpec.base(item, Double.parseDouble(c[1].strip()), Double.parseDouble(c[2].strip()), group, spread));
+                    String cls = c.length > 7 && !c[7].isBlank() ? c[7].strip().toUpperCase(java.util.Locale.ROOT) : null;
+                    rows.add(MarketSpec.base(item, Double.parseDouble(c[1].strip()), Double.parseDouble(c[2].strip()), group,
+                            spread, cls));
                 } else {
-                    if (c.length > 6 && !c[6].isBlank()) {
-                        throw new IllegalArgumentException("line " + lineNo + ": linked item " + item + " can't set a spread (it uses " + baseItem + "'s)");
+                    if ((c.length > 6 && !c[6].isBlank()) || (c.length > 7 && !c[7].isBlank())) {
+                        throw new IllegalArgumentException("line " + lineNo + ": linked item " + item + " can't set a spread or collateral class (it uses " + baseItem + "'s)");
                     }
                     int units = Integer.parseInt(c.length > 5 ? c[5].strip() : "");
                     rows.add(MarketSpec.linked(item, baseItem, units, group));

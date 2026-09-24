@@ -61,7 +61,7 @@ class ProgressionTest {
     void defaultDataLoadsAndIsConsistent() {
         assertEquals(4, tree.tier(1).size());
         assertEquals(4000, tree.node("bill_clip").costCents());
-        assertEquals(10, quests.all().size());
+        assertEquals(11, quests.all().size());
         assertEquals(4, blueprints.all().size());
         assertEquals(2, tree.tier(2).size());
         blueprints.validateAgainst(tree);
@@ -251,6 +251,12 @@ class ProgressionTest {
         p.buy(tree.node("price_board"), tree, 1_000_000);
         assertTrue(p.canBuy(vault, tree, 50_000));
         assertEquals("Requires Bank Vault", p.whyCannotBuy(tree.node("certificate_of_deposit"), tree, 1_000_000).orElseThrow());
+    }
+
+    @Test
+    void leverageNeedsALoanRepaidInFull() {
+        assertEquals(List.of("leverage"), feed(new ProgressionEvent.LoanRepaid(50_000, 1_200, 9)));
+        assertEquals(2500, quests.quest("leverage").rewardCents());
     }
 
     @Test

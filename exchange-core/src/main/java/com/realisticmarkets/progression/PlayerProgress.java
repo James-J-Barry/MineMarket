@@ -90,6 +90,7 @@ public final class PlayerProgress {
             case ProgressionEvent.Shipment e -> e.day();
             case ProgressionEvent.Interest e -> e.day();
             case ProgressionEvent.CdRedeemed e -> e.day();
+            case ProgressionEvent.LoanRepaid e -> e.day();
         };
         if (day != trackedDay) {
             trackedDay = day;
@@ -133,6 +134,9 @@ public final class PlayerProgress {
         }
         if (event instanceof ProgressionEvent.Interest i) {
             return goal instanceof QuestGoal.InterestEarned g && i.lifetimeCents() >= g.cents();
+        }
+        if (event instanceof ProgressionEvent.LoanRepaid) {
+            return goal instanceof QuestGoal.LoanRepaid;
         }
         if (event instanceof ProgressionEvent.CdRedeemed r) {
             return goal instanceof QuestGoal.CdMatured && r.matured();
