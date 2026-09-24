@@ -8,6 +8,8 @@ import com.realisticmarkets.mod.menu.DraftingTableMenu;
 import com.realisticmarkets.mod.progression.ProgressionService;
 import com.realisticmarkets.mod.registry.ModItems;
 import com.realisticmarkets.progression.ProgressionEvent;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -164,6 +166,44 @@ public class ProgressionGameTests {
         check(content.pages().size() >= 3, "a ~220-word guide spans several pages, got " + content.pages().size());
         String all = String.join(" ", content.pages().stream().map(p -> p.raw().getString()).toList());
         check(all.contains("$0.45") && all.contains("Real world:"), "book should contain the guide text");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void progressSurvivesAServiceRestart(GameTestHelper helper) throws Exception {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        Path dir = Files.createTempDirectory("rm-progress");
+        ProgressionService before = ProgressionService.forTest(dir);
+        Wallet.give(player, 4_000);
+        check(before.buyNode(player, "bill_clip").isEmpty(), "buy Bill Clip node");
+        before.emit(player, new ProgressionEvent.Sale("minecraft:wheat", "farm", 200, 6000, 1.0, 0.5, 3));
+        Path file = dir.resolve(player.getUUID() + ".txt");
+        check(Files.exists(file), "save file written on change: " + file);
+
+        ProgressionService after = ProgressionService.forTest(dir);
+        var p = after.progress(player);
+        check(p.hasBlueprint("realisticmarkets:bill_clip"), "blueprint survives");
+        check(p.hasCompleted("first_sale"), "quest survives");
+        check(p.hasGuide("money_and_dealer"), "guide survives");
+        // Same-day history survives too: 56 more wheat completes Flooding the Market.
+        var done = after.emit(player, new ProgressionEvent.Sale("minecraft:wheat", "farm", 56, 900, 0.5, 0.45, 3));
+        check(done.stream().anyMatch(q -> q.id().equals("flooding_the_market")), "day history survives, got " + done);
+        helper.succeed();
+    }
+
+    @GameTest
+    public void unreadableSaveIsMovedAsideNotOverwritten(GameTestHelper helper) throws Exception {
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        Path dir = Files.createTempDirectory("rm-progress");
+        Path file = dir.resolve(player.getUUID() + ".txt");
+        Files.writeString(file, "garbage line\n");
+
+        ProgressionService svc = ProgressionService.forTest(dir);
+        check(svc.progress(player).nodes().isEmpty(), "starts fresh");
+        try (var files = Files.list(dir)) {
+            check(files.anyMatch(f -> f.getFileName().toString().startsWith(player.getUUID() + ".broken-")),
+                    "the unreadable file should be kept aside");
+        }
         helper.succeed();
     }
 

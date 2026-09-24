@@ -86,6 +86,11 @@ public final class ProgressionService {
         return new ProgressionService(null);
     }
 
+    /** Instance saving to {@code dir}, for persistence GameTests. */
+    public static ProgressionService forTest(Path dir) {
+        return new ProgressionService(dir);
+    }
+
     public UnlockTree tree() { return tree; }
     public Quests quests() { return quests; }
     public Blueprints blueprints() { return blueprints; }
