@@ -1,9 +1,12 @@
 package com.realisticmarkets.mod.menu;
 
+import com.realisticmarkets.collateral.CollateralValuer;
 import com.realisticmarkets.contracts.BankAccount;
 import com.realisticmarkets.mod.bank.BankService;
+import com.realisticmarkets.mod.bank.LoanNoteItem;
 import com.realisticmarkets.mod.bank.PassbookItem;
 import com.realisticmarkets.mod.block.BankVaultBlockEntity;
+import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.progression.ProgressionService;
 import com.realisticmarkets.mod.registry.ModBlocks;
 import com.realisticmarkets.mod.registry.ModItems;
@@ -31,42 +34,52 @@ import net.minecraft.world.item.ItemStack;
 public class BankVaultMenu extends AbstractContainerMenu {
     public static final int WIDTH = 176, HEIGHT = 196, INVENTORY_Y = 114;
     public static final int SLOT_X = 8, PASSBOOK_Y = 20, CD_SLOT_Y = 80;
-    public static final int PASSBOOK_SLOT = 0, CD_SLOT = 1, INV_START = 2, INV_END = INV_START + 36;
+    public static final int PASSBOOK_SLOT = 0, CD_SLOT = 1, COLLATERAL_START = 2, COLLATERAL_SLOTS = 4;
+    public static final int INV_START = COLLATERAL_START + COLLATERAL_SLOTS, INV_END = INV_START + 36;
+    public static final int COLLATERAL_Y = 20;
 
-    public static final int TAB_ACCOUNT = 0, TAB_CDS = 1;
+    public static final int TAB_ACCOUNT = 0, TAB_CDS = 1, TAB_LOANS = 2;
     public static final int BUTTON_TAB_ACCOUNT = 0, BUTTON_TAB_CDS = 1, BUTTON_DEPOSIT_ALL = 2;
     public static final int BUTTON_WITHDRAW_1 = 3, BUTTON_WITHDRAW_10 = 4, BUTTON_WITHDRAW_100 = 5, BUTTON_WITHDRAW_ALL = 6;
     public static final int BUTTON_PASSBOOK = 7;
     public static final int BUTTON_CD_MINUS_1000 = 8, BUTTON_CD_MINUS_100 = 9, BUTTON_CD_PLUS_100 = 10, BUTTON_CD_PLUS_1000 = 11;
     public static final int BUTTON_CD_TERM = 12, BUTTON_CD_ISSUE = 13, BUTTON_CD_REDEEM = 14;
+    public static final int BUTTON_TAB_LOANS = 15, BUTTON_LOAN_MINUS_100 = 16, BUTTON_LOAN_MINUS_10 = 17;
+    public static final int BUTTON_LOAN_PLUS_10 = 18, BUTTON_LOAN_PLUS_100 = 19, BUTTON_BORROW = 20;
+    public static final int BUTTON_REPAY_10 = 21, BUTTON_REPAY_100 = 22, BUTTON_REPAY_ALL = 23, BUTTON_ADD_COLLATERAL = 24;
 
     private static final int D_TAB = 0, D_HAS_PASSBOOK = 1, D_BALANCE = 2, D_AMOUNT = 4, D_TERM = 6, D_HAS_PERK = 7;
-    private static final int D_CD_VALUE = 8, D_PASSBOOKS = 10, D_DAY = 11, D_SIZE = 13;
+    private static final int D_CD_VALUE = 8, D_PASSBOOKS = 10, D_DAY = 11;
+    private static final int D_HAS_LOAN_PERK = 13, D_LOAN_OPEN = 14, D_OWED = 15, D_RATE = 17, D_COVERAGE = 18, D_CALL = 19;
+    private static final int D_SLOT_VALUE = 20, D_MAX_LOAN = 22, D_QUALITY = 24, D_REFUSED = 25, D_LOAN_AMOUNT = 26;
+    private static final int D_SLOT_RATE = 28, D_SIZE = 29;
     private static final long MAX_SYNCED = (1L << 30) - 1;
 
-    private final Container vaultSlots = new SimpleContainer(2);
+    private final Container vaultSlots = new SimpleContainer(2 + COLLATERAL_SLOTS);
     private final ContainerData data = new SimpleContainerData(D_SIZE);
     private final ContainerLevelAccess access;
     private final Player player;
     private final BankVaultBlockEntity vault; // server only
     private final BankService bank;
     private final ProgressionService progression;
+    private final DealerService dealer;
     private final LongSupplier day;
     private long lastWritten = Long.MIN_VALUE;
     private int ticks;
 
     public BankVaultMenu(int containerId, Inventory inv) {
-        this(containerId, inv, null, ContainerLevelAccess.NULL, null, null, () -> 0);
+        this(containerId, inv, null, ContainerLevelAccess.NULL, null, null, null, () -> 0);
     }
 
     public BankVaultMenu(int containerId, Inventory inv, BankVaultBlockEntity vault, ContainerLevelAccess access,
-                         BankService bank, ProgressionService progression, LongSupplier day) {
+                         BankService bank, ProgressionService progression, DealerService dealer, LongSupplier day) {
         super(ModMenus.BANK_VAULT, containerId);
         this.player = inv.player;
         this.vault = vault;
         this.access = access;
         this.bank = bank;
         this.progression = progression;
+        this.dealer = dealer;
         this.day = day;
         addSlot(new Slot(vaultSlots, 0, SLOT_X, PASSBOOK_Y) {
             @Override
@@ -90,11 +103,20 @@ public class BankVaultMenu extends AbstractContainerMenu {
                 return tab() == TAB_CDS;
             }
         });
+        for (int i = 0; i < COLLATERAL_SLOTS; i++) {
+            addSlot(new Slot(vaultSlots, COLLATERAL_START + i, SLOT_X + i * 18, COLLATERAL_Y) {
+                @Override
+                public boolean isActive() {
+                    return tab() == TAB_LOANS;
+                }
+            });
+        }
         addStandardInventorySlots(inv, 8, INVENTORY_Y);
         addDataSlots(data);
         if (bank != null) {
             setPair(D_AMOUNT, bank.params().cdMinimumCents());
             data.set(D_TERM, bank.params().cdTerms().getFirst().days());
+            setPair(D_LOAN_AMOUNT, 10_000);
             refresh();
         }
     }
@@ -111,6 +133,21 @@ public class BankVaultMenu extends AbstractContainerMenu {
     public long cdSlotValueCents() { return pair(D_CD_VALUE) - 2; }
     public int passbooksIssued() { return data.get(D_PASSBOOKS); }
     public long day() { return pair(D_DAY); }
+    public boolean hasLoanPerk() { return data.get(D_HAS_LOAN_PERK) != 0; }
+    public boolean loanOpen() { return data.get(D_LOAN_OPEN) != 0; }
+    public long owedCents() { return pair(D_OWED); }
+    /** Daily rate in thousandths of a percent: 753 = 0.753% a day. */
+    public int rateMilliPct() { return data.get(D_RATE); }
+    /** Coverage in percent (capped at 999). */
+    public int coveragePct() { return data.get(D_COVERAGE); }
+    public boolean marginCall() { return data.get(D_CALL) != 0; }
+    public long slotValueCents() { return pair(D_SLOT_VALUE); }
+    public long maxLoanCents() { return pair(D_MAX_LOAN); }
+    /** Collateral quality Q x 100. */
+    public int qualityPct() { return data.get(D_QUALITY); }
+    public boolean slotRefused() { return data.get(D_REFUSED) != 0; }
+    public long loanAmountCents() { return pair(D_LOAN_AMOUNT); }
+    public int slotRateMilliPct() { return data.get(D_SLOT_RATE); }
 
     private long pair(int i) {
         return (long) data.get(i) | ((long) data.get(i + 1) << 15);
@@ -149,7 +186,43 @@ public class BankVaultMenu extends AbstractContainerMenu {
         setPair(D_CD_VALUE, value + 2);
         data.set(D_PASSBOOKS, a.passbooksIssued());
         setPair(D_DAY, today);
-        if (vault != null) vault.setLocked(!a.isEmpty());
+        refreshLoans(today);
+        if (vault != null) vault.setLocked(!bank.mayBreakVault(player.getUUID(), player, today));
+    }
+
+    private void refreshLoans(long today) {
+        bank.collectClosedLoan(player, today);
+        data.set(D_HAS_LOAN_PERK, progression.progress(player).hasPerk(BankService.LOAN_PERK) ? 1 : 0);
+        var loan = bank.loan(player.getUUID());
+        data.set(D_LOAN_OPEN, loan.isPresent() ? 1 : 0);
+        if (loan.isPresent() && dealer != null) {
+            var v = loan.get().value(dealer.dealer(), today);
+            setPair(D_OWED, loan.get().owedCents());
+            data.set(D_RATE, (int) Math.round(loan.get().dailyRate() * 100_000));
+            data.set(D_COVERAGE, (int) Math.min(999, Math.round(v.coverage(loan.get().owedCents()) * 100)));
+            data.set(D_CALL, loan.get().underMarginCall() ? 1 : 0);
+            Inventory inv = player.getInventory();
+            for (int i = 0; i < inv.getContainerSize(); i++) {
+                if (inv.getItem(i).is(ModItems.LOAN_NOTE)) LoanNoteItem.write(inv.getItem(i), loan.get(), v, today);
+            }
+        }
+        if (dealer != null) {
+            java.util.Map<String, Integer> items = new java.util.LinkedHashMap<>();
+            long cash = 0;
+            for (int i = 0; i < COLLATERAL_SLOTS; i++) {
+                ItemStack st = vaultSlots.getItem(COLLATERAL_START + i);
+                if (st.isEmpty()) continue;
+                var d = ModItems.denominationOf(st);
+                if (d != null) cash += d.cents() * st.getCount();
+                else items.merge(DealerService.itemId(st), st.getCount(), Integer::sum);
+            }
+            var v = CollateralValuer.value(items, cash, dealer.dealer(), today);
+            setPair(D_SLOT_VALUE, v.valueCents());
+            setPair(D_MAX_LOAN, v.maxLoanCents());
+            data.set(D_QUALITY, (int) Math.round(v.quality() * 100));
+            data.set(D_REFUSED, v.refused().isEmpty() ? 0 : 1);
+            data.set(D_SLOT_RATE, (int) Math.round(v.dailyRate() * 100_000));
+        }
     }
 
     @Override
@@ -178,6 +251,16 @@ public class BankVaultMenu extends AbstractContainerMenu {
                 data.set(D_TERM, terms.get((i + 1) % terms.size()).days());
             }
             case BUTTON_CD_ISSUE -> why = bank.issueCd(p, cdAmountCents(), cdTermDays(), today, progression);
+            case BUTTON_TAB_LOANS -> data.set(D_TAB, TAB_LOANS);
+            case BUTTON_LOAN_MINUS_100 -> setPair(D_LOAN_AMOUNT, Math.max(1_000, loanAmountCents() - 10_000));
+            case BUTTON_LOAN_MINUS_10 -> setPair(D_LOAN_AMOUNT, Math.max(1_000, loanAmountCents() - 1_000));
+            case BUTTON_LOAN_PLUS_10 -> setPair(D_LOAN_AMOUNT, loanAmountCents() + 1_000);
+            case BUTTON_LOAN_PLUS_100 -> setPair(D_LOAN_AMOUNT, loanAmountCents() + 10_000);
+            case BUTTON_BORROW -> why = bank.openLoan(p, collateralView(), loanAmountCents(), today, dealer.dealer(), progression);
+            case BUTTON_REPAY_10 -> why = bank.repayLoan(p, 1_000, today, progression);
+            case BUTTON_REPAY_100 -> why = bank.repayLoan(p, 10_000, today, progression);
+            case BUTTON_REPAY_ALL -> why = bank.repayLoan(p, -1, today, progression);
+            case BUTTON_ADD_COLLATERAL -> why = bank.addCollateral(p, collateralView(), dealer.dealer());
             case BUTTON_CD_REDEEM -> {
                 ItemStack cd = vaultSlots.getItem(CD_SLOT);
                 why = cd.isEmpty() ? Optional.of("Put a certificate in the slot") : bank.redeemCd(p, cd, today, progression);
@@ -205,6 +288,8 @@ public class BankVaultMenu extends AbstractContainerMenu {
             if (!moveItemStackTo(stack, PASSBOOK_SLOT, PASSBOOK_SLOT + 1, false)) return ItemStack.EMPTY;
         } else if (stack.is(ModItems.CERTIFICATE_OF_DEPOSIT) && tab() == TAB_CDS) {
             if (!moveItemStackTo(stack, CD_SLOT, CD_SLOT + 1, false)) return ItemStack.EMPTY;
+        } else if (tab() == TAB_LOANS) {
+            if (!moveItemStackTo(stack, COLLATERAL_START, COLLATERAL_START + COLLATERAL_SLOTS, false)) return ItemStack.EMPTY;
         } else {
             return ItemStack.EMPTY;
         }
@@ -222,6 +307,26 @@ public class BankVaultMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player p) {
         return stillValid(access, p, ModBlocks.BANK_VAULT) && (vault == null || vault.isOwner(p));
+    }
+
+    /** The four collateral slots as their own container. */
+    private Container collateralView() {
+        return new Container() {
+            public int getContainerSize() { return COLLATERAL_SLOTS; }
+            public boolean isEmpty() {
+                for (int i = 0; i < COLLATERAL_SLOTS; i++) if (!getItem(i).isEmpty()) return false;
+                return true;
+            }
+            public ItemStack getItem(int i) { return vaultSlots.getItem(COLLATERAL_START + i); }
+            public ItemStack removeItem(int i, int n) { return vaultSlots.removeItem(COLLATERAL_START + i, n); }
+            public ItemStack removeItemNoUpdate(int i) { return vaultSlots.removeItemNoUpdate(COLLATERAL_START + i); }
+            public void setItem(int i, ItemStack st) { vaultSlots.setItem(COLLATERAL_START + i, st); }
+            public void setChanged() { vaultSlots.setChanged(); }
+            public boolean stillValid(Player pl) { return true; }
+            public void clearContent() {
+                for (int i = 0; i < COLLATERAL_SLOTS; i++) vaultSlots.setItem(COLLATERAL_START + i, ItemStack.EMPTY);
+            }
+        };
     }
 
     /** Server-side, for tests: the Passbook / CD slot container. */

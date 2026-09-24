@@ -54,7 +54,8 @@ public class PassbookItem extends Item {
         int onPage = 0;
         for (BankAccount.Entry e : log) {
             boolean in = e.kind() == BankAccount.Kind.DEPOSIT || e.kind() == BankAccount.Kind.INTEREST
-                    || e.kind() == BankAccount.Kind.CD_REDEEM;
+                    || e.kind() == BankAccount.Kind.CD_REDEEM || e.kind() == BankAccount.Kind.LOAN
+                    || e.kind() == BankAccount.Kind.LIQUIDATION;
             page.append("Day ").append(e.day()).append(' ').append(label(e.kind())).append('\n')
                     .append(in ? "+" : "-").append(Money.format(e.amountCents()))
                     .append("  = ").append(Money.format(e.balanceCents())).append("\n");
@@ -80,6 +81,9 @@ public class PassbookItem extends Item {
             case INTEREST -> "interest";
             case CD_ISSUE -> "CD bought";
             case CD_REDEEM -> "CD redeemed";
+            case LOAN -> "loan";
+            case LOAN_REPAY -> "loan repaid";
+            case LIQUIDATION -> "forced sale";
         };
     }
 

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "realisticmarkets:block/bank_vault_top",
+    "bottom": "minecraft:block/iron_block",
+    "side": "realisticmarkets:block/bank_vault_side_alarm"
+  }
+}

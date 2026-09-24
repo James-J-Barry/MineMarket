@@ -29,7 +29,7 @@ public final class ModItems {
     public static Item LOCK_MECHANISM, SECURITY_PAPER;
 
     /** Bank papers: the Passbook (balance and history) and Certificates of Deposit (bearer papers). */
-    public static Item PASSBOOK, CERTIFICATE_OF_DEPOSIT;
+    public static Item PASSBOOK, CERTIFICATE_OF_DEPOSIT, LOAN_NOTE;
 
     /** Tier 1 item made only at the Drafting Table (the Price Board and Trade Route Crate are blocks). */
     public static Item BILL_CLIP;
@@ -45,6 +45,7 @@ public final class ModItems {
         SECURITY_PAPER = register("security_paper", Item::new, new Item.Properties());
         PASSBOOK = register("passbook", PassbookItem::new, new Item.Properties().stacksTo(1));
         CERTIFICATE_OF_DEPOSIT = register("certificate_of_deposit", Item::new, new Item.Properties().stacksTo(1));
+        LOAN_NOTE = register("loan_note", Item::new, new Item.Properties().stacksTo(1));
         BILL_CLIP = register("bill_clip", BillClipItem::new, new Item.Properties().stacksTo(1)
                 .component(DataComponents.CONTAINER, ItemContainerContents.EMPTY));
     }

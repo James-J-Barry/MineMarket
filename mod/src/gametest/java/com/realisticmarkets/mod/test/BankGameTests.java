@@ -33,7 +33,8 @@ public class BankGameTests {
         BankService bank = BankService.forTest(null);
         ProgressionService prog = ProgressionService.forTest();
         AtomicLong day = new AtomicLong(10);
-        BankVaultMenu menu = new BankVaultMenu(1, owner.getInventory(), vault, ContainerLevelAccess.NULL, bank, prog, day::get);
+        BankVaultMenu menu = new BankVaultMenu(1, owner.getInventory(), vault, ContainerLevelAccess.NULL, bank, prog,
+                com.realisticmarkets.mod.dealer.DealerService.forTest(1234L), day::get);
         return new Bank(vault, bank, prog, day, menu);
     }
 

@@ -27,6 +27,7 @@ public final class Loan {
     private long openedDay;
     private long lastDay;
     private long callDay = -1;
+    private long interestCents; // total charged so far
 
     private Loan() {}
 
@@ -59,6 +60,7 @@ public final class Loan {
     public boolean underMarginCall() { return callDay >= 0; }
     public long callDay() { return callDay; }
     public boolean repaid() { return owedCents == 0; }
+    public long interestCents() { return interestCents; }
 
     public CollateralValuer.Valuation value(Dealer dealer, double day) {
         return CollateralValuer.value(collateral, cashCollateralCents, dealer, day);
@@ -79,6 +81,7 @@ public final class Loan {
             added += whole;
         }
         lastDay = day;
+        interestCents += added;
         return added;
     }
 
@@ -137,14 +140,14 @@ public final class Loan {
     /**
      * <pre>
      * # Realistic Markets loan v1
-     * loan	principal	owed	carry	rate	opened	last_day	call_day	cash_collateral
+     * loan	principal	owed	carry	rate	opened	last_day	call_day	cash_collateral	interest
      * escrow	minecraft:diamond	15
      * </pre>
      */
     public void write(Writer w) throws IOException {
         w.write(HEADER + "\n");
         w.write("loan\t" + principalCents + "\t" + owedCents + "\t" + carryCents + "\t" + dailyRate + "\t" + openedDay
-                + "\t" + lastDay + "\t" + callDay + "\t" + cashCollateralCents + "\n");
+                + "\t" + lastDay + "\t" + callDay + "\t" + cashCollateralCents + "\t" + interestCents + "\n");
         for (Map.Entry<String, Integer> e : collateral.entrySet()) w.write("escrow\t" + e.getKey() + "\t" + e.getValue() + "\n");
         w.flush();
     }
@@ -173,6 +176,7 @@ public final class Loan {
                         l.lastDay = Long.parseLong(c[6]);
                         l.callDay = Long.parseLong(c[7]);
                         l.cashCollateralCents = Long.parseLong(c[8]);
+                        l.interestCents = c.length > 9 ? Long.parseLong(c[9]) : 0;
                     }
                     case "escrow" -> escrow.merge(c[1], Integer.parseInt(c[2]), Integer::sum);
                     default -> throw new IllegalArgumentException("unknown key " + c[0]);
@@ -194,6 +198,7 @@ public final class Loan {
         return o instanceof Loan x && principalCents == x.principalCents && owedCents == x.owedCents
                 && carryCents == x.carryCents && dailyRate == x.dailyRate && openedDay == x.openedDay
                 && lastDay == x.lastDay && callDay == x.callDay && cashCollateralCents == x.cashCollateralCents
+                && interestCents == x.interestCents
                 && collateral.equals(x.collateral);
     }
 

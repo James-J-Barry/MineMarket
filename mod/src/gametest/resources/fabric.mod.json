@@ -11,7 +11,8 @@
       "com.realisticmarkets.mod.test.ProgressionGameTests",
       "com.realisticmarkets.mod.test.InvariantGameTests",
       "com.realisticmarkets.mod.test.Tier1GameTests",
-      "com.realisticmarkets.mod.test.BankGameTests"
+      "com.realisticmarkets.mod.test.BankGameTests",
+      "com.realisticmarkets.mod.test.LoanGameTests"
     ]
   },
   "depends": {

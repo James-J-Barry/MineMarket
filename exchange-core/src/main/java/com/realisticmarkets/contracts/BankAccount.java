@@ -19,7 +19,7 @@ public final class BankAccount {
     public static final String HEADER = "# Realistic Markets bank account v1";
     public static final int LOG_SIZE = 100;
 
-    public enum Kind { DEPOSIT, WITHDRAW, INTEREST, CD_ISSUE, CD_REDEEM }
+    public enum Kind { DEPOSIT, WITHDRAW, INTEREST, CD_ISSUE, CD_REDEEM, LOAN, LOAN_REPAY, LIQUIDATION }
 
     /** {@code day} is the in-game day the entry was made; {@code balanceCents} is the balance after it. */
     public record Entry(long day, Kind kind, long amountCents, long balanceCents) {}

@@ -38,6 +38,12 @@ public class BankVaultBlockEntity extends OwnedBlockEntity {
         }
     }
 
+    public void setAlarm(boolean on) {
+        if (level == null || level.isClientSide()) return;
+        BlockState state = getBlockState();
+        if (state.getValue(BankVaultBlock.ALARM) != on) level.setBlock(worldPosition, state.setValue(BankVaultBlock.ALARM, on), Block.UPDATE_ALL);
+    }
+
     @Override
     protected void saveAdditional(ValueOutput out) {
         super.saveAdditional(out);

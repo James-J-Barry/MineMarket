@@ -1,6 +1,7 @@
 package com.realisticmarkets.mod.block;
 
 import com.realisticmarkets.mod.bank.BankService;
+import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.menu.BankVaultMenu;
 import com.realisticmarkets.mod.progression.ProgressionService;
 import net.minecraft.core.BlockPos;
@@ -19,6 +20,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
 
 /**
@@ -28,9 +31,17 @@ import net.minecraft.world.phys.BlockHitResult;
  */
 public class BankVaultBlock extends Block implements EntityBlock {
     private static final Component TITLE = Component.translatable("container.realisticmarkets.bank_vault");
+    /** Red light: the owner's loan is under a margin call. */
+    public static final BooleanProperty ALARM = BooleanProperty.create("alarm");
 
     public BankVaultBlock(Properties properties) {
         super(properties);
+        registerDefaultState(defaultBlockState().setValue(ALARM, false));
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(ALARM);
     }
 
     @Override
@@ -67,7 +78,7 @@ public class BankVaultBlock extends Block implements EntityBlock {
         var server = ((ServerLevel) level).getServer();
         player.openMenu(new SimpleMenuProvider((id, inv, p) -> new BankVaultMenu(id, inv, vault,
                 ContainerLevelAccess.create(level, pos), BankService.get(), ProgressionService.get(),
-                () -> BankService.day(server)), TITLE));
+                DealerService.get(), () -> BankService.day(server)), TITLE));
         return InteractionResult.SUCCESS;
     }
 

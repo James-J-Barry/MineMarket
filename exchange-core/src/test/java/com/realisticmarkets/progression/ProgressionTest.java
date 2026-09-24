@@ -63,7 +63,7 @@ class ProgressionTest {
         assertEquals(4000, tree.node("bill_clip").costCents());
         assertEquals(11, quests.all().size());
         assertEquals(4, blueprints.all().size());
-        assertEquals(2, tree.tier(2).size());
+        assertEquals(3, tree.tier(2).size());
         blueprints.validateAgainst(tree);
         for (UnlockNode n : tree.all()) {
             if (n.requiredQuest() != null) assertTrue(quests.has(n.requiredQuest()), n.id());

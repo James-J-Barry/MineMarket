@@ -99,6 +99,7 @@ class CollateralTest {
         assertEquals(0, loan.accrueTo(0));
         loan.accrueTo(3);
         assertEquals(50_000 * Math.pow(1 + r, 3), loan.owedCents(), 10);
+        assertEquals(loan.owedCents() - 50_000, loan.interestCents());
     }
 
     @Test

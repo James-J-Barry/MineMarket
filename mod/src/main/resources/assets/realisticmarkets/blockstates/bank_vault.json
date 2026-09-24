@@ -1,7 +1,10 @@
 {
   "variants": {
-    "": {
+    "alarm=false": {
       "model": "realisticmarkets:block/bank_vault"
+    },
+    "alarm=true": {
+      "model": "realisticmarkets:block/bank_vault_alarm"
     }
   }
 }

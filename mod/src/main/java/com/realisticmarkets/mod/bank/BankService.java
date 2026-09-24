@@ -1,14 +1,18 @@
 package com.realisticmarkets.mod.bank;
 
+import com.realisticmarkets.collateral.Loan;
+import com.realisticmarkets.collateral.MarginCheck;
 import com.realisticmarkets.contracts.BankAccount;
 import com.realisticmarkets.contracts.BankParams;
 import com.realisticmarkets.contracts.Cd;
+import com.realisticmarkets.dealer.Dealer;
 import com.realisticmarkets.exchange.RejectedException;
 import com.realisticmarkets.mod.RealisticMarkets;
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.dealer.Wallet;
 import com.realisticmarkets.mod.progression.ProgressionService;
 import com.realisticmarkets.mod.registry.ModItems;
+import com.realisticmarkets.money.Denomination;
 import com.realisticmarkets.progression.ProgressionEvent;
 import com.realisticmarkets.registry.SecurityRegistry;
 import java.io.IOException;
@@ -19,13 +23,18 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -37,6 +46,7 @@ import net.minecraft.world.level.storage.LevelResource;
  */
 public final class BankService {
     public static final String CD_PERK = "certificate_of_deposit";
+    public static final String LOAN_PERK = "loans";
     private static final int CHECK_TICKS = 200;
 
     private static BankService instance;
@@ -44,12 +54,17 @@ public final class BankService {
     private final BankParams params = BankParams.loadDefault();
     private final Path dir; // <world>/realisticmarkets, or a temp dir / null in tests
     private final Map<UUID, BankAccount> accounts = new HashMap<>();
+    private final Map<UUID, Loan> loans = new HashMap<>(); // every open loan, loaded at start so dawn checks reach offline players
+    private long lastDawn = Long.MIN_VALUE;
     private SecurityRegistry registry = new SecurityRegistry();
     private int ticks;
 
     private BankService(Path dir) {
         this.dir = dir;
-        if (dir != null) loadRegistry();
+        if (dir != null) {
+            loadRegistry();
+            loadLoans();
+        }
     }
 
     public static void start(MinecraftServer server) {
@@ -114,6 +129,7 @@ public final class BankService {
     public boolean mayBreakVault(UUID owner, Player breaker, long day) {
         if (owner == null) return true;
         if (!owner.equals(breaker.getUUID())) return false;
+        if (loans.containsKey(owner)) return false;
         return !hasAccount(owner) || account(owner, day).isEmpty();
     }
 
@@ -211,6 +227,171 @@ public final class BankService {
                 .orElse(-1L);
     }
 
+    // ------------------------------------------------------------------ loans
+
+    public Optional<Loan> loan(UUID owner) {
+        return Optional.ofNullable(loans.get(owner));
+    }
+
+    /**
+     * Opens a loan against the items in {@code collateralSlots} (bills there count as cash collateral), paying the
+     * principal into the account. Costs 1 Security Paper; issues a Loan Note statement.
+     */
+    public Optional<String> openLoan(Player player, Container collateralSlots, long principalCents, long day,
+                                     Dealer dealer, ProgressionService prog) {
+        if (!prog.progress(player).hasPerk(LOAN_PERK)) return Optional.of("Unlock the Loan Note at the Almanac");
+        if (loans.containsKey(player.getUUID())) return Optional.of("You already have a loan: repay it first");
+        Inventory inv = player.getInventory();
+        if (inv.countItem(ModItems.SECURITY_PAPER) < 1) return Optional.of("A Loan Note needs 1 Security Paper");
+        Map<String, Integer> items = new LinkedHashMap<>();
+        long cash = 0;
+        for (int i = 0; i < collateralSlots.getContainerSize(); i++) {
+            ItemStack s = collateralSlots.getItem(i);
+            if (s.isEmpty()) continue;
+            Denomination d = ModItems.denominationOf(s);
+            if (d != null) cash += d.cents() * s.getCount();
+            else items.merge(DealerService.itemId(s), s.getCount(), Integer::sum);
+        }
+        if (items.isEmpty() && cash == 0) return Optional.of("Put collateral in the slots");
+        Loan loan;
+        try {
+            loan = Loan.open(items, cash, principalCents, dealer, day);
+        } catch (RejectedException | IllegalArgumentException e) {
+            return Optional.of(e.getMessage());
+        }
+        collateralSlots.clearContent();
+        removeOne(inv, ModItems.SECURITY_PAPER);
+        accrue(player, day, prog);
+        account(player.getUUID(), day).deposit(principalCents, day, BankAccount.Kind.LOAN);
+        loans.put(player.getUUID(), loan);
+        ItemStack note = new ItemStack(ModItems.LOAN_NOTE);
+        LoanNoteItem.write(note, loan, loan.value(dealer, day), day);
+        inv.placeItemBackInInventory(note);
+        save(player.getUUID());
+        saveLoan(player.getUUID());
+        return Optional.empty();
+    }
+
+    /** Moves the slots' items into escrow for the open loan. */
+    public Optional<String> addCollateral(Player player, Container collateralSlots, Dealer dealer) {
+        Loan loan = loans.get(player.getUUID());
+        if (loan == null || loan.repaid()) return Optional.of("No open loan");
+        Map<String, Integer> items = new LinkedHashMap<>();
+        long cash = 0;
+        for (int i = 0; i < collateralSlots.getContainerSize(); i++) {
+            ItemStack s = collateralSlots.getItem(i);
+            if (s.isEmpty()) continue;
+            Denomination d = ModItems.denominationOf(s);
+            if (d != null) cash += d.cents() * s.getCount();
+            else items.merge(DealerService.itemId(s), s.getCount(), Integer::sum);
+        }
+        if (items.isEmpty() && cash == 0) return Optional.of("Put collateral in the slots");
+        var refused = com.realisticmarkets.collateral.CollateralValuer.value(items, 0, dealer, 0).refused();
+        if (!refused.isEmpty()) return Optional.of("The bank won't take " + String.join(", ", refused));
+        loan.addCollateral(items, cash);
+        collateralSlots.clearContent();
+        saveLoan(player.getUUID());
+        return Optional.empty();
+    }
+
+    /** Repays from the account balance ({@code cents < 0}: as much as owed). Paying off returns the collateral. */
+    public Optional<String> repayLoan(Player player, long cents, long day, ProgressionService prog) {
+        Loan loan = loans.get(player.getUUID());
+        if (loan == null) return Optional.of("No open loan");
+        loan.accrueTo(day);
+        accrue(player, day, prog);
+        BankAccount a = account(player.getUUID(), day);
+        long want = cents < 0 ? loan.owedCents() : Math.min(cents, loan.owedCents());
+        long pay = Math.min(want, a.balanceCents());
+        if (pay <= 0 && !loan.repaid()) return Optional.of("Deposit cash first: repayments come from your balance");
+        if (pay > 0) {
+            a.withdraw(pay, day, BankAccount.Kind.LOAN_REPAY);
+            loan.repay(pay);
+        }
+        boolean paidOff = loan.repaid();
+        if (paidOff) {
+            closeLoan(player, day);
+            if (prog != null) prog.emit(player, new ProgressionEvent.LoanRepaid(loan.principalCents(), loan.interestCents(), day));
+        }
+        save(player.getUUID());
+        saveLoan(player.getUUID());
+        return Optional.empty();
+    }
+
+    /** A paid-off loan (by the borrower or a forced sale): hand back what's left in escrow and forget it. */
+    private void closeLoan(Player player, long day) {
+        Loan loan = loans.remove(player.getUUID());
+        for (Map.Entry<String, Integer> e : loan.releaseCollateral().entrySet()) {
+            var item = net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(
+                    net.minecraft.resources.Identifier.parse(e.getKey()));
+            int left = e.getValue();
+            while (left > 0) {
+                int n = Math.min(left, item.getDefaultMaxStackSize());
+                player.getInventory().placeItemBackInInventory(new ItemStack(item, n));
+                left -= n;
+            }
+        }
+        long cash = loan.releaseCash();
+        if (cash > 0) account(player.getUUID(), day).deposit(cash, day, BankAccount.Kind.DEPOSIT);
+    }
+
+    /** Collects a loan the bank closed by forced sale while the borrower was away. */
+    public void collectClosedLoan(Player player, long day) {
+        Loan loan = loans.get(player.getUUID());
+        if (loan != null && loan.repaid()) {
+            closeLoan(player, day);
+            save(player.getUUID());
+            saveLoan(player.getUUID());
+        }
+    }
+
+    /**
+     * The dawn check for every open loan: interest, re-valuation, margin calls and forced sales. Surplus from a
+     * forced sale goes to the borrower's balance. {@code alarm} lights or clears the owner's vault.
+     */
+    public void dawn(long day, Dealer dealer, Function<UUID, Player> online, ProgressionService prog,
+                     BiConsumer<UUID, Boolean> alarm) {
+        lastDawn = day;
+        for (Map.Entry<UUID, Loan> e : new ArrayList<>(loans.entrySet())) {
+            UUID owner = e.getKey();
+            Loan loan = e.getValue();
+            if (loan.repaid()) continue;
+            MarginCheck.Result r = MarginCheck.atDawn(loan, dealer, day);
+            Player p = online.apply(owner);
+            switch (r.status()) {
+                case CALL_ISSUED -> {
+                    alarm.accept(owner, true);
+                    tell(p, "MARGIN CALL: your collateral covers only " + pct(r.coverage()) + " of your loan (110% needed). "
+                            + "Add collateral or repay by dawn tomorrow, or the bank will sell it.");
+                }
+                case CALL_CLEARED -> {
+                    alarm.accept(owner, false);
+                    tell(p, "Margin call cleared: coverage is back to " + pct(r.coverage()) + ".");
+                }
+                case LIQUIDATED -> {
+                    if (r.surplusCents() > 0) account(owner, day).deposit(r.surplusCents(), day, BankAccount.Kind.LIQUIDATION);
+                    alarm.accept(owner, loan.underMarginCall());
+                    tell(p, "The bank sold your collateral: " + r.sales().size() + " sale(s)"
+                            + (loan.repaid() ? ", the loan is paid off" : ", " + com.realisticmarkets.money.Money.format(loan.owedCents()) + " still owed")
+                            + (r.surplusCents() > 0 ? ", " + com.realisticmarkets.money.Money.format(r.surplusCents()) + " returned to your balance" : "")
+                            + ".");
+                    if (loan.repaid() && p != null) closeLoan(p, day);
+                    save(owner);
+                }
+                default -> { }
+            }
+            saveLoan(owner);
+        }
+    }
+
+    private static void tell(Player p, String text) {
+        if (p instanceof ServerPlayer sp) sp.sendSystemMessage(net.minecraft.network.chat.Component.literal(text));
+    }
+
+    private static String pct(double coverage) {
+        return Double.isInfinite(coverage) ? "all" : Math.round(coverage * 100) + "%";
+    }
+
     // ------------------------------------------------------------------ passbooks
 
     /** First Passbook free; later ones cost 1 Ledger Paper. */
@@ -254,9 +435,61 @@ public final class BankService {
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
             if (instance.hasAccount(p.getUUID())) instance.accrue(p, day, prog);
         }
+        if (day > instance.lastDawn && !instance.loans.isEmpty()) {
+            instance.dawn(day, DealerService.get().dealer(), id -> server.getPlayerList().getPlayer(id), prog,
+                    (owner, on) -> instance.setAlarm(server, owner, on, day));
+        } else {
+            instance.lastDawn = Math.max(instance.lastDawn, day);
+        }
+    }
+
+    private void setAlarm(MinecraftServer server, UUID owner, boolean on, long day) {
+        if (!hasAccount(owner)) return;
+        var vault = com.realisticmarkets.mod.block.Locations.find(server, account(owner, day).vaultLocation(),
+                com.realisticmarkets.mod.block.BankVaultBlockEntity.class);
+        if (vault != null) vault.setAlarm(on);
     }
 
     // ------------------------------------------------------------------ persistence
+
+    private Path loanFile(UUID id) {
+        return dir.resolve("players").resolve(id + ".loan.txt");
+    }
+
+    private void loadLoans() {
+        Path players = dir.resolve("players");
+        if (Files.notExists(players)) return;
+        try (var files = Files.list(players)) {
+            for (Path f : files.filter(f -> f.getFileName().toString().endsWith(".loan.txt")).toList()) {
+                UUID id = UUID.fromString(f.getFileName().toString().replace(".loan.txt", ""));
+                try (Reader r = Files.newBufferedReader(f, StandardCharsets.UTF_8)) {
+                    Loan loan = Loan.read(r);
+                    if (loan != null) loans.put(id, loan);
+                } catch (IOException | RuntimeException e) {
+                    RealisticMarkets.LOGGER.error("Could not read {}; moving it aside", f, e);
+                    moveAside(f);
+                }
+            }
+        } catch (IOException e) {
+            RealisticMarkets.LOGGER.error("Could not list {}", players, e);
+        }
+    }
+
+    private void saveLoan(UUID id) {
+        if (dir == null) return;
+        Loan loan = loans.get(id);
+        try {
+            if (loan == null) {
+                Files.deleteIfExists(loanFile(id));
+                return;
+            }
+            StringWriter w = new StringWriter();
+            loan.write(w);
+            writeAtomic(loanFile(id), w.toString());
+        } catch (IOException e) {
+            RealisticMarkets.LOGGER.error("Could not save loan {}", id, e);
+        }
+    }
 
     private Path accountFile(UUID id) {
         return dir.resolve("players").resolve(id + ".bank.txt");
@@ -318,6 +551,7 @@ public final class BankService {
 
     private void saveAll() {
         accounts.keySet().forEach(this::save);
+        loans.keySet().forEach(this::saveLoan);
         saveRegistry();
     }
 

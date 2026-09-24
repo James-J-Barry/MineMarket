@@ -26,5 +26,6 @@
   "item.realisticmarkets.lock_mechanism": "Lock Mechanism",
   "item.realisticmarkets.security_paper": "Security Paper",
   "item.realisticmarkets.passbook": "Passbook",
-  "item.realisticmarkets.certificate_of_deposit": "Certificate of Deposit"
+  "item.realisticmarkets.certificate_of_deposit": "Certificate of Deposit",
+  "item.realisticmarkets.loan_note": "Loan Note"
 }
