@@ -29,12 +29,17 @@ value"). `docs/design.md` is updated with this milestone.
    diamond rush, redstone craze. Each has a **transient** shock, scaled 0.5-1.5x per event, plus a smaller
    **permanent** part. About one event every few days across the catalog.
    **News is a purchase (James, 2026-09-24).** A Tier 3 **Newsstand** ($1,000; blueprint: 6 planks, 2 Ledger Paper,
-   1 Ink Bottle) gives its owner one **Newspaper** a day: the morning's headlines and which goods to expect higher or
-   lower. No news on the Floor screen or in chat. **The market hears at midday** (half a day after dawn): only then
-   does the transient build (over a couple of hours) and fade over days; the permanent part lands the next dawn.
-   That half day is the reader's edge. Company headlines (Tier 4) come later from an **Electronic Newsfeed**, which
-   replaces the design doc's Newspaper Stand. The Floor's NPCs quote around the last trade but never more than 8%
-   from fair value, so once the market hears, the Floor follows within hours.
+   1 Ink Bottle) opens a board, the Overworld Gazette: the last three days' stories, each with the goods to expect
+   higher or lower. (A first version handed out a Newspaper item a day; James found the tooltip unintuitive and the
+   papers cluttered inventories.) No news on the Floor screen or in chat.
+   **A head start, felt not stated (James).** The rest of the market hears each story a third to two thirds of a
+   day after dawn, different per story; only then does the transient build and fade. The permanent part lands the
+   next dawn. The guide says only that news takes time to spread and the sooner you act the better.
+   **Frequency (James: a 12-day wait was too long).** 25 event types: rare big group shocks plus common small
+   single-market stories, about 1.1 a day, so two days in three bring news and silence rarely passes a week.
+   Company headlines (Tier 4) come later from an **Electronic Newsfeed**, which replaces the design doc's Newspaper
+   Stand. The Floor's NPCs quote around the last trade but never more than 8% from fair value, so once the market
+   hears, the Floor follows within hours.
 4. **Two Books really has two books.** Floor books for compressed items (iron block) get their own supply and
    demand: a *basis* around 9 x the ingot price that wanders (about 4%, half-life 1 day). Crafting links the
    books, so the gap closes, but most days it opens far enough to profit.
@@ -71,13 +76,13 @@ value"). `docs/design.md` is updated with this milestone.
 
       | strategy | $/day | worst world | worst week | orders/day |
       | --- | --- | --- | --- | --- |
-      | quote inside the market maker | +$6.42 | +$0.70 | -$66 | 65 |
-      | buy under Normal, sell over it (Normal a day old) | +$9.31 | -$4.48 | -$234 | 61 |
-      | trade the Newsstand's news | +$8.23 | +$1.23 | -$27 | 1.3 |
-      | iron block vs ingots (Two Books) | +$13.77 | +$7.25 | -$108 | 2.4 |
-      | buy and hold (benchmark) | -$1.72 | -$4.10 | -$99 | 0.4 |
+      | quote inside the market maker | +$6.81 | +$0.82 | -$99 | 66 |
+      | buy under Normal, sell over it (Normal a day old) | +$6.51 | -$4.54 | -$197 | 62 |
+      | trade the Newsstand's news | +$11.95 | +$4.41 | -$51 | 2.8 |
+      | iron block vs ingots (Two Books) | +$13.99 | +$4.27 | -$143 | 2.4 |
+      | buy and hold (benchmark) | -$2.05 | -$4.35 | -$108 | 0.4 |
 
-      Gatherers: Floor-first lifts income +20% (early survival) and +61% (farm-heavy); payback 90 and 28 days.
+      Gatherers: Floor-first lifts income +20% (early survival) and +63% (farm-heavy); payback 90 and 27 days.
       Before M5c the same traders lost $15-18 a day. Misses to note: the market-making strategy earns 2x the vault
       rather than 3-5x. (Before decision 7, buying under Normal made $12.58/day and never had a losing week.)
       `sim farm`: wheat now peaks at about $19.50/day (was $21) since sales lower V for good.
@@ -85,7 +90,7 @@ value"). `docs/design.md` is updated with this milestone.
       uplift +16% / +41%.
       Guides: Money & the Dealer, Recovery (part of a drop never comes back; waiting has a cost vs the vault),
       Diversification, Reading a Quote, Limit and Market Orders (repricing) updated.
-- [x] Newsstand and Newspaper (core timing + edition, block, item, guide News and Markets, GameTest).
+- [x] Newsstand board (varying head start, 25 event types, menu + screen, guide News and Markets, GameTest).
 - [x] Normal shown as yesterday's close (Dealer.normalValue, save v3, Basic Exchange, Price Board, Patience Pays).
-- [ ] James's in-game check: the Newsstand's paper and its head start, repricing, prices that move.
+- [ ] James's in-game check: the Newsstand board and acting on news, repricing, a day-old Normal, prices that move.
 - [ ] `./scripts/dev.sh check` green.

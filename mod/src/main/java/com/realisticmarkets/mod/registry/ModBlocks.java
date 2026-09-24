@@ -4,13 +4,13 @@ import com.realisticmarkets.mod.RealisticMarkets;
 import com.realisticmarkets.mod.block.BankVaultBlock;
 import com.realisticmarkets.mod.block.BasicExchangeBlock;
 import com.realisticmarkets.mod.block.MenuBlock;
-import com.realisticmarkets.mod.block.NewsstandBlock;
 import com.realisticmarkets.mod.block.PriceBoardBlock;
 import com.realisticmarkets.mod.block.TradeRouteCrateBlock;
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.floor.FloorService;
 import com.realisticmarkets.mod.menu.AlmanacMenu;
 import com.realisticmarkets.mod.menu.DraftingTableMenu;
+import com.realisticmarkets.mod.menu.NewsstandMenu;
 import com.realisticmarkets.mod.menu.TradingFloorMenu;
 import com.realisticmarkets.mod.progression.ProgressionService;
 import net.minecraft.network.chat.Component;
@@ -88,14 +88,8 @@ public final class ModBlocks {
         TRADING_FLOOR = registerMenuBlock("trading_floor", (id, inv, access) ->
                 new TradingFloorMenu(id, inv, access, FloorService.get(), ProgressionService.get(), DealerService.get()));
 
-        ResourceKey<Block> newsKey = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("newsstand"));
-        NEWSSTAND = Registry.register(BuiltInRegistries.BLOCK, newsKey,
-                new NewsstandBlock(BlockBehaviour.Properties.of()
-                        .setId(newsKey)
-                        .mapColor(MapColor.WOOD)
-                        .strength(2.0f)
-                        .sound(SoundType.WOOD)));
-        ModItems.register("newsstand", props -> new BlockItem(NEWSSTAND, props), new Item.Properties().useBlockDescriptionPrefix());
+        NEWSSTAND = registerMenuBlock("newsstand", (id, inv, access) ->
+                new NewsstandMenu(id, inv, access, ProgressionService.get(), DealerService.get()));
     }
 
     private static Block registerMenuBlock(String name, MenuBlock.Factory factory) {

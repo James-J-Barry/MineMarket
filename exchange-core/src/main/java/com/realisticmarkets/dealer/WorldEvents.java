@@ -20,15 +20,16 @@ import java.util.SplittableRandom;
  * a day with a fixed chance, decided by the world seed and the day alone, so the schedule needs no save state and
  * a world always has the same history.
  *
- * <p>The news breaks at dawn, in the Newsstand's paper, but the market only hears at midday: prices start to move
- * {@link #DELAY_DAYS} after dawn. The transient effect then builds over {@link #RAMP_DAYS} and fades with the
- * type's half-life; the smaller permanent effect lands at the next dawn. Each event's size is its type's size times
- * a {@link Event#scale()} between 0.5 and 1.5, so a headline says which way, not how far.
+ * <p>The news breaks at dawn on the Newsstand, but it takes the rest of the market a while to hear: prices start to
+ * move {@link Event#delay()} after dawn (between {@link #MIN_DELAY_DAYS} and {@link #MAX_DELAY_DAYS}, different for
+ * every story, and never told to the player). The transient effect then builds over {@link #RAMP_DAYS} and fades
+ * with the type's half-life; the smaller permanent effect lands at the next dawn. Each event's size is its type's
+ * size times a {@link Event#scale()} between 0.5 and 1.5, so a headline says which way, not how far.
  */
 public final class WorldEvents implements Dealer.Shocks {
     public static final String DEFAULT_RESOURCE = "/realisticmarkets/events.csv";
-    /** The market hears the news this long after dawn: a Newsstand reader's head start. */
-    public static final double DELAY_DAYS = 0.5;
+    /** The rest of the market hears a story this long after dawn (varies per story): a Newsstand reader's head start. */
+    public static final double MIN_DELAY_DAYS = 0.3, MAX_DELAY_DAYS = 0.7;
     /** Once the market hears, most of a transient shock arrives within about a quarter of a day. */
     public static final double RAMP_DAYS = 0.1;
     /** Transient effects older than this are ignored (under 0.1% of the shock at the longest half-life). */
@@ -37,8 +38,8 @@ public final class WorldEvents implements Dealer.Shocks {
     public record Type(int index, String id, List<String> targets, double shock, double halfLifeDays, double permanent,
                        double chancePerDay, String headline) {}
 
-    /** One event: a type starting on a day, at {@code scale} times the type's size. */
-    public record Event(Type type, long day, double scale) {}
+    /** One event: a type starting on a day, at {@code scale} times the type's size, heard {@code delay} days after dawn. */
+    public record Event(Type type, long day, double scale, double delay) {}
 
     private final List<Type> types;
     private final long seed;
@@ -109,7 +110,9 @@ public final class WorldEvents implements Dealer.Shocks {
             for (Type t : types) {
                 long mix = seed ^ (t.id().hashCode() * 0x9E3779B97F4A7C15L) ^ (d * 0xD6E8FEB86659FD93L);
                 SplittableRandom r = new SplittableRandom(mix);
-                if (r.nextDouble() < t.chancePerDay()) out.add(new Event(t, d, 0.5 + r.nextDouble()));
+                if (r.nextDouble() < t.chancePerDay()) {
+                    out.add(new Event(t, d, 0.5 + r.nextDouble(), MIN_DELAY_DAYS + (MAX_DELAY_DAYS - MIN_DELAY_DAYS) * r.nextDouble()));
+                }
             }
             return List.copyOf(out);
         });
@@ -154,14 +157,14 @@ public final class WorldEvents implements Dealer.Shocks {
         }
         double sum = 0;
         for (Event e : active) {
-            if (resolved.get(e.type().index()).contains(baseItem)) sum += e.scale() * transientEffect(e.type(), day - e.day());
+            if (resolved.get(e.type().index()).contains(baseItem)) sum += e.scale() * transientEffect(e.type(), day - e.day(), e.delay());
         }
         return sum;
     }
 
-    /** Transient log effect of a full-size event {@code age} days after dawn of its day. Zero until midday. */
-    public static double transientEffect(Type t, double age) {
-        double heard = age - DELAY_DAYS;
+    /** Transient log effect of a full-size event {@code age} days after dawn of its day, heard after {@code delay}. */
+    public static double transientEffect(Type t, double age, double delay) {
+        double heard = age - delay;
         if (heard < 0) return 0;
         return t.shock() * (1 - Math.exp(-heard / RAMP_DAYS)) * Math.pow(0.5, heard / t.halfLifeDays());
     }

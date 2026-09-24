@@ -34,5 +34,5 @@
   "item.realisticmarkets.order_slip": "Order Slip",
   "item.realisticmarkets.trade_receipt": "Trade Receipt",
   "block.realisticmarkets.newsstand": "Newsstand",
-  "item.realisticmarkets.newspaper": "Newspaper"
+  "container.realisticmarkets.newsstand": "Newsstand"
 }

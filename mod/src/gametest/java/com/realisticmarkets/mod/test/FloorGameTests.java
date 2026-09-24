@@ -236,7 +236,7 @@ public class FloorGameTests {
     }
 
     @GameTest
-    public void newsstandPaperGivesAHeadStartBeforeTheMarketMoves(GameTestHelper helper) {
+    public void newsstandShowsTheNewsBeforeTheMarketMoves(GameTestHelper helper) {
         ServerPlayer p = helper.makeMockServerPlayerInLevel();
         ServerPlayer stranger = helper.makeMockServerPlayerInLevel();
         DealerService dealer = DealerService.forTest(1234L);
@@ -248,26 +248,28 @@ public class FloorGameTests {
         }
         check(prog.progress(p).hasGuide("news_and_markets"), "the Newsstand grants its guide");
         com.realisticmarkets.dealer.WorldEvents ev = dealer.events();
-        long day = 1;
+        long day = 5;
         while (ev.startingOn(day).isEmpty()) day++;
         com.realisticmarkets.dealer.WorldEvents.Event e = ev.startingOn(day).getFirst();
-        com.realisticmarkets.mod.news.NewsService news = com.realisticmarkets.mod.news.NewsService.forTest();
+        dealer.shiftDays(day + 0.05 - dealer.day(helper.getLevel().getGameTime())); // just after dawn
 
-        check(news.collect(stranger, prog, dealer, day + 0.1).isPresent(), "no paper without the upgrade");
-        check(news.collect(p, prog, dealer, day + 0.1).isEmpty(), "the morning paper");
-        check(news.collect(p, prog, dealer, day + 0.3).isPresent(), "one paper a day");
-        ItemStack paper = BankGameTests.find(p, ModItems.NEWSPAPER);
-        String text = paper.get(DataComponents.LORE).lines().stream().map(c -> c.getString()).reduce("", (a, b) -> a + "\n" + b);
-        check(text.contains(e.type().headline()), "the paper carries today's headline: " + text);
-        check(text.contains(e.type().shock() > 0 ? "Expect higher" : "Expect lower"), "and says which way");
+        var board = new com.realisticmarkets.mod.menu.NewsstandMenu(1, p.getInventory(), ContainerLevelAccess.NULL, prog, dealer);
+        check(board.owner() && board.day() == day, "the owner reads day " + day);
+        check(board.storyCount() >= 1 && board.storyType(0) == e.type().index() && board.storyAge(0) == 0,
+                "today's story first: " + e.type().id());
+        int shown = 0;
+        for (long d = day; d > day - 3; d--) shown += ev.startingOn(d).size();
+        check(board.storyCount() == Math.min(shown, com.realisticmarkets.mod.menu.NewsstandMenu.MAX_STORIES), "the last 3 days' stories");
+        var theirs = new com.realisticmarkets.mod.menu.NewsstandMenu(2, stranger.getInventory(), ContainerLevelAccess.NULL, prog, dealer);
+        check(!theirs.owner() && theirs.storyCount() == 0, "no news without the upgrade");
 
         String item = ev.affects(e.type()).iterator().next();
-        double dawn = dealer.dealer().fairValue(item, day + 0.1), morning = dealer.dealer().fairValue(item, day + 0.45);
+        double dawn = dealer.dealer().fairValue(item, day + 0.05);
+        double beforeHeard = dealer.dealer().fairValue(item, day + e.delay() - 0.02);
         double evening = dealer.dealer().fairValue(item, day + 0.95);
-        check(Math.abs(morning / dawn - 1) < 0.03, "the market hasn't heard by mid-morning: " + morning / dawn);
-        check(Math.signum(evening / morning - 1) == Math.signum(e.type().shock()) && Math.abs(evening / morning - 1) > 0.05,
-                e.type().id() + " moved " + item + " after midday: " + evening / morning);
-        check(news.collect(p, prog, dealer, day + 1.1).isEmpty(), "a new paper the next dawn");
+        check(Math.abs(beforeHeard / dawn - 1) < 0.03, "a head start: prices still ignore it " + beforeHeard / dawn);
+        check(Math.signum(evening / beforeHeard - 1) == Math.signum(e.type().shock()),
+                e.type().id() + " moved " + item + " once the market heard: " + evening / beforeHeard);
         helper.succeed();
     }
 

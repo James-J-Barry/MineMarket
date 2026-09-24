@@ -265,8 +265,9 @@ class GuidesTest {
     @Test
     void newsGuideTimingMatchesTheEvents() {
         String t = text("news_and_markets");
-        assertEquals(0.5, com.realisticmarkets.dealer.WorldEvents.DELAY_DAYS, 0.0);
-        assertTrue(t.contains("around midday") && t.contains("That half day is your edge"));
+        assertTrue(com.realisticmarkets.dealer.WorldEvents.MIN_DELAY_DAYS > 0.2, "there is a head start to act on");
+        assertTrue(t.contains("News takes time to spread") && t.contains("The sooner you act"));
+        assertTrue(!t.contains("midday") && !t.contains("hours"), "the delay is felt, not stated");
         assertTrue(t.contains("half as much as last time, or half as much again"), "event scale 0.5-1.5");
     }
 

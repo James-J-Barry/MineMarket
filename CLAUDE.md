@@ -50,7 +50,6 @@ mod/             Fabric layer. Thin: translate Minecraft events <-> core calls.
   client/                   BasicExchangeScreen, RealisticMarketsClient (client entrypoint)
   dealer/                   DealerService (owns Dealer, config, persistence), Wallet, DealerCommands
   floor/                  FloorService (Trading Floor: NPC books, auctions, tickets, receipts), TradeReceiptItem
-  news/                   NewsService (Newsstand: one Newspaper a day for owners of the upgrade)
   gametest/               DealerGameTests, FloorGameTests, ...
 scripts/         dev.sh, mcapi.py (jar inspector), rcon.py
 docs/            design.md, milestones/
@@ -151,8 +150,8 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   forced sales, Leverage guide and quest. 124 unit tests, 37 GameTests. → `docs/milestones/M4.md`
 - [x] **M5a: Trading Floor.** Order Slips, Trade Receipts, NPC traders on the batch auction, day/market orders,
   three guides, Tier 3 quests. 149 unit tests, 42 GameTests; Tier 3 at ~16 h. → `docs/milestones/M5.md`
-- [ ] **M5c: Make trading pay.** Prices that trend and never snap back, world events read in the Newsstand's
-  paper half a day before the market hears, cheaper slips, repricing, 14 books. → `docs/milestones/M5c.md`
+- [ ] **M5c: Make trading pay.** Prices that trend and never snap back, world events read on the Newsstand before
+  the market hears, cheaper slips, repricing, 14 books. → `docs/milestones/M5c.md`
 - [ ] **M5b: Ticker Tape** and Price Chart. → `docs/milestones/M5.md`
 - [ ] M6–M10: equities, bonds, futures, options, modern finance (ATM, Brokerage)
 - [ ] M11: multiplayer

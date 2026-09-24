@@ -13,45 +13,60 @@ class WorldEventsTest {
     @Test
     void catalogResolvesGroupsAndItems() {
         WorldEvents ev = WorldEvents.loadDefault(catalog, 1L);
-        assertEquals(10, ev.types().size());
+        assertEquals(25, ev.types().size());
         WorldEvents.Type harvest = ev.types().getFirst();
         assertEquals("bumper_harvest", harvest.id());
         assertTrue(ev.affects(harvest).contains("minecraft:wheat") && ev.affects(harvest).contains("minecraft:beef"));
         assertFalse(ev.affects(harvest).contains("minecraft:iron_ingot"));
         for (WorldEvents.Type t : ev.types()) {
             assertFalse(ev.affects(t).isEmpty(), t.id() + " moves something");
-            assertTrue(t.headline().length() <= 36, t.id() + " headline fits one line of the Floor screen");
+            assertTrue(t.headline().length() <= 36, t.id() + " headline fits one line of the Newsstand board");
         }
     }
 
     @Test
-    void scheduleIsDeterministicAndAboutOneEventEveryFewDays() {
+    void scheduleIsDeterministicAndMostDaysBringAStory() {
         WorldEvents a = WorldEvents.loadDefault(catalog, 42L), b = WorldEvents.loadDefault(catalog, 42L);
         WorldEvents c = WorldEvents.loadDefault(catalog, 43L);
-        int n = 0;
+        int n = 0, storyDays = 0, longestQuiet = 0, quiet = 0;
         boolean differs = false;
         for (long d = 0; d < 1000; d++) {
             assertEquals(a.startingOn(d), b.startingOn(d));
             differs |= !a.startingOn(d).equals(c.startingOn(d));
             n += a.startingOn(d).size();
+            if (a.startingOn(d).isEmpty()) longestQuiet = Math.max(longestQuiet, ++quiet);
+            else {
+                storyDays++;
+                quiet = 0;
+            }
         }
         assertTrue(differs, "another world, another history");
         double expected = a.types().stream().mapToDouble(WorldEvents.Type::chancePerDay).sum() * 1000;
-        assertEquals(expected, n, expected * 0.25, "events per 1,000 days");
-        assertTrue(n / 1000.0 > 1 / 6.0 && n / 1000.0 < 1 / 3.0, "one every 3-6 days: " + n);
+        assertEquals(expected, n, expected * 0.15, "events per 1,000 days");
+        assertTrue(storyDays > 550 && storyDays < 800, "a story on about 2 days in 3: " + storyDays);
+        assertTrue(longestQuiet <= 8, "never much more than a week of silence: " + longestQuiet);
     }
 
     @Test
-    void theMarketHearsAtMiddayThenTheShockBuildsAndFades() {
+    void theMarketHearsLaterThenTheShockBuildsAndFades() {
         WorldEvents.Type drought = WorldEvents.loadTypes().get(1);
-        double hear = WorldEvents.DELAY_DAYS;
-        assertEquals(0.5, hear, 0.0, "half a day's head start for Newsstand readers");
-        assertEquals(0, WorldEvents.transientEffect(drought, 0), 1e-12);
-        assertEquals(0, WorldEvents.transientEffect(drought, hear - 0.01), 1e-12, "nothing moves before midday");
-        double early = WorldEvents.transientEffect(drought, hear + 0.02), peak = WorldEvents.transientEffect(drought, hear + 0.4);
+        double hear = 0.45;
+        assertEquals(0, WorldEvents.transientEffect(drought, 0, hear), 1e-12);
+        assertEquals(0, WorldEvents.transientEffect(drought, hear - 0.01, hear), 1e-12, "nothing moves until the market hears");
+        double early = WorldEvents.transientEffect(drought, hear + 0.02, hear), peak = WorldEvents.transientEffect(drought, hear + 0.4, hear);
         assertTrue(early < peak * 0.25, "then it moves fast");
         assertTrue(peak > 0.27, "peak near the full +30%: " + peak);
-        assertEquals(peak / 2, WorldEvents.transientEffect(drought, hear + 0.4 + drought.halfLifeDays()), 0.01);
+        assertEquals(peak / 2, WorldEvents.transientEffect(drought, hear + 0.4 + drought.halfLifeDays(), hear), 0.01);
+        WorldEvents ev = WorldEvents.loadDefault(catalog, 3L);
+        double lo = 9, hi = 0;
+        for (long d = 0; d < 500; d++) {
+            for (WorldEvents.Event e : ev.startingOn(d)) {
+                lo = Math.min(lo, e.delay());
+                hi = Math.max(hi, e.delay());
+            }
+        }
+        assertTrue(lo >= WorldEvents.MIN_DELAY_DAYS && lo < 0.35 && hi <= WorldEvents.MAX_DELAY_DAYS && hi > 0.65,
+                "a head start of a third of a day to two thirds, different each story: " + lo + "-" + hi);
     }
 
     @Test
@@ -87,10 +102,10 @@ class WorldEventsTest {
         d.setShocks(ev);
         String wheat = "minecraft:wheat";
         double before = d.fairValue(wheat, found.day());
-        double morning = found.day() + WorldEvents.DELAY_DAYS - 0.01; // (the Dealer only moves forward in time)
+        double morning = found.day() + found.delay() - 0.01; // (the Dealer only moves forward in time)
         assertEquals(Math.exp(ev.fading(wheat, morning) - ev.fading(wheat, found.day())), d.fairValue(wheat, morning) / before, 1e-3);
         double after = d.fairValue(wheat, found.day() + 1.0);
-        assertEquals(0, WorldEvents.transientEffect(found.type(), morning - found.day()), 0.0,
+        assertEquals(0, WorldEvents.transientEffect(found.type(), morning - found.day(), found.delay()), 0.0,
                 "the drought isn't in the morning's price yet: a Newsstand reader can still buy at it");
         double expected = Math.exp(ev.fading(wheat, found.day() + 1.0) - ev.fading(wheat, found.day())
                 + ev.permanent(wheat, found.day() + 1));

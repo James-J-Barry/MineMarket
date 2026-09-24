@@ -1,7 +1,8 @@
 # Realistic Markets: world events (M5c). Deterministic from the world seed and the in-game day.
 # targets: ;-separated base items or group:<name>. shock: change in log fair value at its peak (0.20 = about +22%),
 # building over the first hours after dawn and fading with half_life_days. permanent: the part that never fades.
-# chance_per_day: probability the event starts on any given day.
+# chance_per_day: probability the event starts on any given day. Together about 1.1 a day, so most days bring a
+#   story: big group-wide shocks are rare, small single-market stories common.
 id,targets,shock,half_life_days,permanent,chance_per_day,headline
 bumper_harvest,group:farm,-0.20,3,-0.03,0.025,Bumper harvest: granaries overflow
 drought,minecraft:wheat;minecraft:carrot;minecraft:potato;minecraft:beetroot,0.30,4,0.04,0.02,Drought: crop fields parched
@@ -13,3 +14,18 @@ diamond_rush,minecraft:diamond;minecraft:emerald,-0.25,4,-0.05,0.015,Diamond rus
 redstone_craze,minecraft:redstone,0.35,3,0.05,0.02,Redstone craze: tinkerers want dust
 pillager_raid,minecraft:iron_ingot;minecraft:emerald;minecraft:arrow,0.20,2,0.0,0.02,Pillager raid: villages rearm
 coal_shortage,minecraft:coal,0.30,3,0.02,0.015,Cold snap: furnaces need coal
+bakers_order,minecraft:wheat,0.12,2,0.01,0.06,Bakers' guild: bread orders pour in
+carrot_blight,minecraft:carrot,0.15,3,0.01,0.06,Blight in the carrot fields
+potato_glut,minecraft:potato,-0.12,2,-0.01,0.06,Potato glut at the market
+feast_day,minecraft:beef,0.12,2,0.0,0.06,Feast day: taverns buy beef
+tannery_fire,minecraft:leather,0.15,3,0.01,0.06,Tannery fire: leather scarce
+smiths_strike,minecraft:iron_ingot,-0.10,2,0.0,0.06,Smiths strike: iron sits unsold
+gold_hoarding,minecraft:gold_ingot,0.10,4,0.02,0.06,Nervous villagers hoard gold
+copper_roofs,minecraft:copper_ingot,0.12,3,0.01,0.06,Copper roofs come into fashion
+lumber_camp,minecraft:oak_log;minecraft:spruce_log;minecraft:birch_log,-0.12,2,-0.01,0.06,New lumber camp opens
+emerald_trade,minecraft:emerald,0.12,3,0.01,0.06,Villagers raise emerald prices
+bone_meal,minecraft:bone,0.15,2,0.0,0.06,Farmers want bone meal
+coal_seam,minecraft:coal,-0.12,2,-0.01,0.06,New coal seam opened
+redstone_dump,minecraft:redstone,-0.15,3,-0.02,0.06,Faulty contraptions: dust dumped
+sugar_rush,minecraft:sugar_cane,0.12,2,0.0,0.06,Confectioners buy up sugar cane
+spider_nests,minecraft:string,0.12,2,0.0,0.06,Spider nests cleared: string scarce
