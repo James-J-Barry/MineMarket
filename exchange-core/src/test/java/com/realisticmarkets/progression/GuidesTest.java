@@ -17,7 +17,8 @@ class GuidesTest {
     void guidesOfTheRightLength() {
         assertEquals(List.of("money_and_dealer", "spread", "price_impact", "recovery", "diversification",
                         "cash_on_hand", "reading_a_quote", "transaction_costs", "two_markets",
-                        "interest_and_compounding", "term_and_liquidity", "leverage_and_collateral"),
+                        "interest_and_compounding", "term_and_liquidity", "leverage_and_collateral",
+                        "order_books", "limit_and_market_orders", "liquidity_and_market_makers"),
                 guides.all().stream().map(Guides.Guide::id).toList());
         for (Guides.Guide g : guides.all()) {
             int words = g.wordCount();
@@ -193,6 +194,72 @@ class GuidesTest {
         double fall = 1 - 1.10 * 70_000 / v.valueCents(); // C falls in proportion to the diamond price
         assertEquals(0.2, fall, 0.02, "about a fifth");
         assertTrue(text("leverage_and_collateral").contains("Borrow $700 against those diamonds and a fall of about a fifth"));
+    }
+
+    @Test
+    void orderBooksExampleMatchesTheAuction() {
+        var ex = new com.realisticmarkets.exchange.Exchange();
+        ex.listInstrument("w");
+        for (String a : new String[] {"b1", "b2", "b3", "s1", "s2", "s3"}) {
+            ex.deposit(a, 100_000);
+            ex.depositPosition(a, "w", 100);
+        }
+        var buy = com.realisticmarkets.exchange.Side.BUY;
+        var sell = com.realisticmarkets.exchange.Side.SELL;
+        ex.submit(com.realisticmarkets.exchange.OrderRequest.limit("b1", "w", buy, 20, 52));
+        ex.submit(com.realisticmarkets.exchange.OrderRequest.limit("b2", "w", buy, 30, 50));
+        ex.submit(com.realisticmarkets.exchange.OrderRequest.limit("b3", "w", buy, 40, 48));
+        ex.submit(com.realisticmarkets.exchange.OrderRequest.limit("s1", "w", sell, 25, 47));
+        ex.submit(com.realisticmarkets.exchange.OrderRequest.limit("s2", "w", sell, 30, 49));
+        ex.submit(com.realisticmarkets.exchange.OrderRequest.limit("s3", "w", sell, 50, 51));
+        var r = ex.runAuction("w");
+        assertEquals(50, r.clearingPrice().getAsLong());
+        assertEquals(50, r.volume());
+        assertEquals(120, ex.account("b1").position("w"), "the $0.52 buyer gets all 20");
+        assertEquals(100_000 - 20 * 50, ex.account("b1").cash() + ex.account("b1").lockedCash(), "and pays $0.50 each");
+        assertEquals(130, ex.account("b2").position("w"));
+        assertEquals(75, ex.account("s1").position("w"), "the $0.47 seller sells all 25");
+        assertEquals(75, ex.account("s2").position("w") + ex.account("s2").lockedPosition("w"), "s2 sold 25 of 30");
+        assertEquals(5, ex.account("s2").lockedPosition("w"), "5 wait for the next auction");
+        assertEquals(100, ex.account("b3").position("w"));
+        assertEquals(100, ex.account("s3").position("w") + ex.account("s3").lockedPosition("w"));
+        String t = text("order_books");
+        assertTrue(t.contains("so 50 trade") && t.contains("pays $0.50") && t.contains("sells 25 of their 30"));
+    }
+
+    @Test
+    void limitAndMarketOrdersNumbers() {
+        var floor = new com.realisticmarkets.agents.TradingFloor(new com.realisticmarkets.exchange.Exchange(),
+                new com.realisticmarkets.exchange.PriceHistory(), com.realisticmarkets.agents.FloorCatalog.loadDefault(),
+                item -> 50, 1L);
+        long buy = floor.buyLimit("minecraft:wheat", 50, true, 0);
+        long sell = floor.sellLimit("minecraft:wheat", 50, true, 0);
+        String t = text("limit_and_market_orders");
+        assertTrue(t.contains("16 x " + usd(buy) + " = " + usd(16 * buy)), "market buy escrow at " + usd(buy));
+        assertTrue(t.contains("as little as " + usd(sell)));
+        assertTrue(t.contains("reach " + Math.round(com.realisticmarkets.agents.TradingFloor.MARKET_REACH * 100) + "%"));
+    }
+
+    @Test
+    void liquidityGuideQuotesMatchTheMarketMakers() {
+        var cat = com.realisticmarkets.agents.FloorCatalog.loadDefault();
+        var wheat = cat.book("minecraft:wheat");
+        var diamond = cat.book("minecraft:diamond");
+        var w = new com.realisticmarkets.agents.MarketMaker("w", wheat.halfSpread(), wheat.depth() / 16, wheat.depth() / 2);
+        var d = new com.realisticmarkets.agents.MarketMaker("d", diamond.halfSpread(), diamond.depth() / 16, diamond.depth() / 2);
+        String t = text("liquidity_and_market_makers");
+        long[] q = w.quotes(50, wheat.depth() / 2);
+        assertTrue(t.contains("bids " + usd(q[0]) + " and asks " + usd(q[1])));
+        assertEquals(4, Math.round((q[1] - q[0]) * 100.0 / 50), "a 4% spread");
+        Dealer dealer = new Dealer(DealerCatalog.loadDefault(), DealerParams.noDrift(), 1L);
+        assertEquals(0.20, (dealer.ask("minecraft:wheat", 0, false) - dealer.bid("minecraft:wheat", 0, false)) / 0.50, 1e-9);
+        long[] dq = d.quotes(10_000, diamond.depth() / 2);
+        assertTrue(t.contains("Diamonds at $100 get " + usd(dq[0]) + " and " + usd(dq[1])));
+        long[] full = w.quotes(50, wheat.depth());
+        assertTrue(t.contains("drops its quotes to " + usd(full[0]) + " and " + usd(full[1])));
+        long[] empty = w.quotes(50, 0);
+        assertTrue(t.contains("raises them to " + usd(empty[0]) + " and " + usd(empty[1])));
+        assertTrue(t.contains("quotes " + wheat.depth() / 16 + " at a time") && t.contains("quotes " + diamond.depth() / 16 + " at a time"));
     }
 
     @Test

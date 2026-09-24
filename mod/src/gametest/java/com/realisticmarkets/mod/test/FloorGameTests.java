@@ -105,6 +105,8 @@ public class FloorGameTests {
         check(got > 0 && got <= filled && filled - got < 10, "bills in the output: " + got + " of " + filled + " cents");
         check(filled >= 16 * pit.menu().priceCents(), "no worse than the limit");
         check(!pit.floor().hasWaiting(p), "nothing left waiting");
+        check(pit.prog().progress(p).hasCompleted("name_your_price"), "a filled limit completes Name Your Price");
+        check(pit.prog().progress(p).hasGuide("liquidity_and_market_makers"), "and grants the Liquidity guide");
         helper.succeed();
     }
 
@@ -224,6 +226,8 @@ public class FloorGameTests {
             if (DraftingTableMenu.BLUEPRINTS.get(i).result().equals("realisticmarkets:order_slip")) slip = i;
         }
         check(slip >= 0 && menu.unlocked(slip), "Order Slip blueprint unlocked");
+        check(prog.progress(p).hasGuide("order_books") && prog.progress(p).hasGuide("limit_and_market_orders"),
+                "the Trading Floor node grants Order Books and Limit and Market Orders");
         menu.clickMenuButton(p, DraftingTableMenu.BUTTON_SELECT_BASE + slip);
         check(menu.clickMenuButton(p, DraftingTableMenu.BUTTON_CRAFT_MAX), "craft");
         ItemStack out = menu.getSlot(DraftingTableMenu.OUTPUT).getItem();

@@ -16,6 +16,6 @@ save_it,hold_cash:50000,0,perk:bank_vault_discount_10,Save It
 nest_egg,interest_earned:1000,1000,,Nest Egg
 locked_in,cd_matured,2000,,Locked In
 leverage,loan_repaid,2500,,Leverage
-name_your_price,limit_filled,1000,,Name Your Price
+name_your_price,limit_filled,1000,guide:liquidity_and_market_makers,Name Your Price
 beat_the_dealer,beat_dealer,1500,,Beat the Dealer
 two_books,two_books:minecraft:iron_block:minecraft:iron_ingot:9,2500,,Two Books

@@ -174,3 +174,49 @@ Borrowing lets you do more with what you own. That's leverage: gains grow, and s
 Every dawn the bank re-values your collateral. It must cover at least 110% of what you owe. Borrow $700 against those diamonds and a fall of about a fifth in the diamond price triggers a margin call. You then have one day to add collateral or repay. After that the bank sells your goods itself, cheapest first, at whatever the Dealer pays that morning.
 
 Real world: lenders value collateral at fire-sale prices, not market prices, and margin calls force sales at the worst moment. Leverage wiped out many traders in 1929.
+
+@order_books Order Books
+You unlocked the Trading Floor. Unlike the Dealer, the Floor doesn't set prices. It collects orders from buyers and sellers, NPC traders and you, into an order book, one for each item, and every ten seconds it runs an auction.
+
+Take a wheat book with three buyers and three sellers:
+
+Buy 20 at $0.52
+Buy 30 at $0.50
+Buy 40 at $0.48
+Sell 25 at $0.47
+Sell 30 at $0.49
+Sell 50 at $0.51
+
+The auction looks for the price where the most wheat changes hands. At $0.50 the two top buyers want 50 wheat and the two cheapest sellers offer 55, so 50 trade. No price trades more.
+
+Everyone who trades gets that one price. The buyer who would have paid $0.52 pays $0.50, and the seller who would have taken $0.47 gets $0.50. The seller at $0.49 sells 25 of their 30; the other 5 wait for the next auction. The buyer at $0.48 and the seller at $0.51 don't trade at all.
+
+Nobody on the Floor owes you a trade. If no one wants your wheat at your price, it doesn't sell. The Dealer always buys, just at a worse price the more you sell.
+
+Real world: stock exchanges open and close each day with this kind of auction, one price that matches as many buyers and sellers as possible.
+
+@limit_and_market_orders Limit and Market Orders
+Every order on the Floor costs one Order Slip, and it's either a limit order or a market order.
+
+A limit order names your worst price: the most you'll pay, or the least you'll take. It trades only at that price or better, and it waits in the book, auction after auction, until it fills, you cancel it, or dawn comes. Limit orders are day orders: whatever hasn't filled by the next dawn expires, and your goods or cash come back.
+
+A market order names no price. It joins the next auction only and takes whatever price clears. So that it can trade, the Floor lets it reach 50% past the last price. A market buy of 16 wheat when wheat last traded at $0.50 sets aside 16 x $0.75 = $12.00, and a market sell will accept as little as $0.25. Whatever doesn't fill comes straight back, with the cash you didn't spend.
+
+Either way the Floor holds your goods or cash from the moment you place the order. Fills, refunds and a Trade Receipt wait at any Trading Floor. The receipt shows how much traded and the average price.
+
+Use a limit order when the price matters more than the time, and a market order when trading now matters more than the price.
+
+Real world: a market order is the fastest way to trade, but in a thin or fast market it can fill far from the last price you saw. That's why professionals mostly use limits.
+
+@liquidity_and_market_makers Liquidity and Market Makers
+Every Floor book has a market maker, an NPC who always offers to buy a little below the price and sell a little above it. With wheat at $0.50 it bids $0.49 and asks $0.51, a 4% spread where the Dealer's is 20%. Diamonds at $100 get $98.50 and $101.50.
+
+The maker earns the spread on every pair of trades, as long as buyers and sellers arrive in equal numbers. When they don't, it protects itself. Sell it wheat until it holds twice what it wants and it drops its quotes to $0.47 and $0.50, to buy less and sell more. Buy it out and it raises them to $0.49 and $0.53.
+
+That's liquidity: how much you can trade without moving the price. In a deep book like wheat's the maker quotes 32 at a time and other traders add more, so a stack or two barely moves it. In a thin book like diamonds' the maker quotes 3 at a time, and every trade moves the price.
+
+The NPCs also run out. A big seller drains their cash, and they take about two days to recover, like the Dealer's stock.
+
+Check the bid and ask before you trade. If they're wide, the book is thin or was just hit hard: use a limit order.
+
+Real world: market makers are paid through the spread for standing ready to trade. In a panic they widen their quotes or step away, and liquidity vanishes when people need it most.
