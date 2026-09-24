@@ -151,8 +151,54 @@ class DealerTest {
         assertEquals(a.fairValue(WHEAT, 400), b.fairValue(WHEAT, 400), 0.0);
         for (int d = 0; d < 2000; d += 10) {
             double v = a.fairValue(WHEAT, d);
-            assertTrue(v > 0.25 && v < 1.0, "day " + d + " fair value " + v);
+            assertTrue(v > 0.2 && v < 1.25, "day " + d + " fair value " + v); // the weak anchor keeps it in range
         }
+    }
+
+    @Test
+    void fairValueNoLongerSnapsBack() {
+        // After 30 days a price is typically ~10% from where it was, and it doesn't return within a week.
+        int stillAway = 0, n = 0;
+        for (long seed = 1; seed <= 40; seed++) {
+            Dealer d = new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), seed);
+            double v30 = Math.log(d.fairValue(WHEAT, 30) / 0.5);
+            double v37 = Math.log(d.fairValue(WHEAT, 37) / 0.5);
+            if (Math.abs(v30) > 0.08) {
+                n++;
+                if (Math.signum(v37) == Math.signum(v30) && Math.abs(v37) > Math.abs(v30) * 0.5) stillAway++;
+            }
+        }
+        assertTrue(n >= 10, "prices move: " + n + " of 40 seeds are over 8% away after 30 days");
+        assertTrue(stillAway >= n * 0.7, "and mostly stay away a week later: " + stillAway + " of " + n);
+    }
+
+    @Test
+    void sellingLowersFairValueForGood() {
+        Dealer d = new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), 5L);
+        Dealer quiet = new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), 5L);
+        d.sell(WHEAT, 256, 0, false); // one depth's worth
+        assertEquals(Math.exp(-0.01), d.fairValue(WHEAT, 0) / quiet.fairValue(WHEAT, 0), 1e-9, "1% per depth sold");
+        // The Dealer's inventory recovers in days; the supply effect fades only with the 60-day anchor.
+        double gap20 = d.fairValue(WHEAT, 20) / quiet.fairValue(WHEAT, 20);
+        assertEquals(Math.exp(-0.01 * Math.pow(0.5, 20 / 60.0)), gap20, 1e-9);
+        assertTrue(d.mid(WHEAT, 20) / d.fairValue(WHEAT, 20) > 0.999, "inventory long gone");
+        d.buy(WHEAT, 256, 20, false);
+        assertTrue(d.fairValue(WHEAT, 20) > quiet.fairValue(WHEAT, 20), "buying raises it back and more");
+        Dealer still = new Dealer(DealerCatalog.loadDefault(), DealerParams.noDrift(), 5L);
+        still.sell(WHEAT, 256, 0, false);
+        assertEquals(0.50, still.fairValue(WHEAT, 3), 1e-12, "noDrift keeps the design doc's fixed numbers");
+    }
+
+    @Test
+    void worldShocksMoveFairValue() {
+        Dealer d = new Dealer(DealerCatalog.loadDefault(), DealerParams.noDrift(), 5L);
+        d.setShocks(new Dealer.Shocks() {
+            public double permanent(String item, long day) { return item.equals(WHEAT) && day == 3 ? 0.1 : 0; }
+            public double fading(String item, double day) { return item.equals(WHEAT) && day >= 3 ? 0.2 : 0; }
+        });
+        assertEquals(0.50, d.fairValue(WHEAT, 2.5), 1e-12);
+        assertEquals(0.50 * Math.exp(0.3), d.fairValue(WHEAT, 3.2), 1e-12);
+        assertEquals(0.50, d.fairValue("minecraft:carrot", 3.2) / d.catalog().spec("minecraft:carrot").fairValue() * 0.5, 1e-12);
     }
 
     @Test
@@ -180,6 +226,21 @@ class DealerTest {
         }
         assertThrows(IllegalArgumentException.class,
                 () -> DealerStateIO.read(new StringReader("minecraft:wheat\tnot-a-number\t1\t1\t0\n")));
+    }
+
+    @Test
+    void movingPricesSurviveSaveAndLoadAndV1SavesStillLoad() throws Exception {
+        Dealer live = new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), 77L);
+        live.sell(WHEAT, 300, 12.5, false);
+        java.io.StringWriter out = new java.io.StringWriter();
+        DealerStateIO.write(new DealerStateIO.Saved(live.snapshot(), 0), out);
+        Dealer copy = new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), 77L);
+        copy.restore(DealerStateIO.read(new StringReader(out.toString())).pools());
+        assertEquals(live.fairValue(WHEAT, 40), copy.fairValue(WHEAT, 40), 0.0, "trend and level carry over");
+
+        var v1 = DealerStateIO.read(new StringReader("# Realistic Markets dealer state v1\nminecraft:wheat\t256.0\t12.5\t12\t-0.013\n"));
+        assertEquals(-0.013, v1.pools().get(WHEAT).logDeviation(), 0.0);
+        assertEquals(0.0, v1.pools().get(WHEAT).trend(), 0.0);
     }
 
     @Test

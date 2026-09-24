@@ -18,8 +18,12 @@ import java.util.SplittableRandom;
  *   buy  n units: V(1+s/2)(L/k) e^{-kI/L} (e^{kn/L} - 1)
  *   between trades: I(t) = I0 e^{-t/tau}
  * </pre>
- * Fair value V drifts as a mean-reverting AR(1) on log V, driven by a deterministic per-day shock
- * derived from the world seed, so the same world always has the same price history.
+ * Fair value V = catalog value x e^(level + event effects). Each in-game day the level takes a random step plus
+ * a trend that itself wanders (so prices can trend for days), under a very weak pull back toward the catalog value
+ * (half-life {@link DealerParams#anchorHalfLifeDays()}). Selling to the Dealer lowers the level for good and
+ * buying raises it ({@link DealerParams#supplyImpact()} per depth's worth); the Dealer's inventory, which recovers
+ * in days, is separate. World {@link Shocks} add a permanent step on the day they happen plus a transient effect
+ * that fades. Random shocks are derived from the world seed and the day, so a world's history is reproducible.
  *
  * <p>Time is passed in as fractional in-game days by the caller; the Dealer never reads a clock.
  * Not thread-safe; call from the server thread.
@@ -38,19 +42,34 @@ public final class Dealer {
                         double unitPriceBefore, double unitPriceAfter) {}
 
     /** Persistable per-pool state. */
-    public record PoolState(double inventory, double lastDay, long driftDay, double logDeviation) {}
+    public record PoolState(double inventory, double lastDay, long driftDay, double logDeviation, double trend) {
+        public PoolState(double inventory, double lastDay, long driftDay, double logDeviation) {
+            this(inventory, lastDay, driftDay, logDeviation, 0);
+        }
+    }
+
+    /** World events as the Dealer sees them, per base pool (see {@code WorldEvents}). */
+    public interface Shocks {
+        /** Permanent change in log fair value that happens on {@code day}. */
+        double permanent(String baseItem, long day);
+
+        /** Fading (transient) change in log fair value at (fractional) {@code day}. */
+        double fading(String baseItem, double day);
+    }
 
     private static final class Pool {
         double inventory;
         double lastDay = Double.NaN;
         long driftDay;
         double logDev;
+        double trend;
     }
 
     private DealerCatalog catalog;
     private DealerParams params;
     private final long seed;
     private final Map<String, Pool> pools = new LinkedHashMap<>();
+    private Shocks shocks;
 
     public Dealer(DealerCatalog catalog, DealerParams params, long seed) {
         this.catalog = catalog;
@@ -59,6 +78,9 @@ public final class Dealer {
     }
 
     public DealerCatalog catalog() { return catalog; }
+
+    /** Plugs in world events (null for none). */
+    public void setShocks(Shocks s) { this.shocks = s; }
     public DealerParams params() { return params; }
 
     /** Swap in edited catalog/params (e.g. /mkt dealer reload). Existing pool state is kept. */
@@ -92,7 +114,7 @@ public final class Dealer {
         MarketSpec spec = catalog.spec(itemId);
         MarketSpec base = catalog.pool(itemId);
         Pool p = advance(base, day);
-        return mid(base, p) * spec.baseUnits() * (1 - spread(base, licensed) / 2);
+        return mid(base, p, day) * spec.baseUnits() * (1 - spread(base, licensed) / 2);
     }
 
     /** Marginal price the Dealer charges for one more item right now, in dollars. */
@@ -100,20 +122,20 @@ public final class Dealer {
         MarketSpec spec = catalog.spec(itemId);
         MarketSpec base = catalog.pool(itemId);
         Pool p = advance(base, day);
-        return mid(base, p) * spec.baseUnits() * (1 + spread(base, licensed) / 2);
+        return mid(base, p, day) * spec.baseUnits() * (1 + spread(base, licensed) / 2);
     }
 
     /** The Dealer's current mid price per item (between bid and ask), in dollars. */
     public double mid(String itemId, double day) {
         MarketSpec spec = catalog.spec(itemId);
         MarketSpec base = catalog.pool(itemId);
-        return mid(base, advance(base, day)) * spec.baseUnits();
+        return mid(base, advance(base, day), day) * spec.baseUnits();
     }
 
     public double fairValue(String itemId, double day) {
         MarketSpec spec = catalog.spec(itemId);
         MarketSpec base = catalog.pool(itemId);
-        return fair(base, advance(base, day)) * spec.baseUnits();
+        return fair(base, advance(base, day), day) * spec.baseUnits();
     }
 
     /** Dealer inventory of the item's base pool, in base units. */
@@ -125,7 +147,7 @@ public final class Dealer {
 
     public Map<String, PoolState> snapshot() {
         Map<String, PoolState> out = new LinkedHashMap<>();
-        pools.forEach((id, p) -> out.put(id, new PoolState(p.inventory, p.lastDay, p.driftDay, p.logDev)));
+        pools.forEach((id, p) -> out.put(id, new PoolState(p.inventory, p.lastDay, p.driftDay, p.logDev, p.trend)));
         return out;
     }
 
@@ -138,6 +160,7 @@ public final class Dealer {
             p.lastDay = s.lastDay();
             p.driftDay = s.driftDay();
             p.logDev = s.logDeviation();
+            p.trend = s.trend();
             pools.put(id, p);
         });
     }
@@ -153,7 +176,7 @@ public final class Dealer {
             first = false;
             sb.append(String.format(Locale.ROOT,
                     "{\"item\":\"%s\",\"fairValue\":%.4f,\"inventory\":%.2f,\"bid\":%.4f,\"ask\":%.4f}",
-                    base.itemId(), fair(base, p), p.inventory,
+                    base.itemId(), fair(base, p, day), p.inventory,
                     bid(base.itemId(), day, licensed), ask(base.itemId(), day, licensed)));
         }
         return sb.append("]}").toString();
@@ -171,7 +194,7 @@ public final class Dealer {
         double k = params.k();
         double depth = base.depth();
         double s = spread(base, licensed);
-        double fv = fair(base, p);
+        double fv = fair(base, p, day);
         double level = Math.exp(-k * p.inventory / depth);
         double before = fv * level * spec.baseUnits();
 
@@ -194,7 +217,11 @@ public final class Dealer {
         double after = fv * Math.exp(-k * invAfter / depth) * spec.baseUnits();
         double sideFactor = side == Side.SELL_TO_DEALER ? (1 - s / 2) : (1 + s / 2);
 
-        if (execute) p.inventory = invAfter;
+        if (execute) {
+            p.inventory = invAfter;
+            // Supply and demand: part of every trade changes what the item is worth for good.
+            p.logDev += (side == Side.SELL_TO_DEALER ? -1 : 1) * params.supplyImpact() * units / depth;
+        }
         return new Quote(spec.itemId(), items, side, cents, rawCents, before * sideFactor, after * sideFactor);
     }
 
@@ -208,12 +235,13 @@ public final class Dealer {
         return params.spread() == 0 ? base.spread() : base.spread() * params.licensedSpread() / params.spread();
     }
 
-    private double mid(MarketSpec base, Pool p) {
-        return fair(base, p) * Math.exp(-params.k() * p.inventory / base.depth());
+    private double mid(MarketSpec base, Pool p, double day) {
+        return fair(base, p, day) * Math.exp(-params.k() * p.inventory / base.depth());
     }
 
-    private static double fair(MarketSpec base, Pool p) {
-        return base.fairValue() * Math.exp(p.logDev);
+    private double fair(MarketSpec base, Pool p, double day) {
+        double t = shocks == null ? 0 : shocks.fading(base.itemId(), day);
+        return base.fairValue() * Math.exp(p.logDev + t);
     }
 
     /** Brings a pool's inventory decay and fair-value drift up to {@code day}. */
@@ -226,17 +254,21 @@ public final class Dealer {
         }
         long target = (long) Math.floor(day);
         if (target > p.driftDay) {
-            double phi = Math.pow(0.5, 1.0 / params.driftHalfLifeDays());
+            double anchor = Math.pow(0.5, 1.0 / params.anchorHalfLifeDays());
+            double persist = Math.pow(0.5, 1.0 / params.trendHalfLifeDays());
             while (p.driftDay < target) {
                 p.driftDay++;
-                p.logDev = phi * p.logDev + params.driftSigma() * shock(base.itemId(), p.driftDay);
+                SplittableRandom r = rng(base.itemId(), p.driftDay);
+                p.trend = persist * p.trend + params.trendSigma() * r.nextGaussian();
+                p.logDev = anchor * p.logDev + p.trend + params.driftSigma() * r.nextGaussian();
+                if (shocks != null) p.logDev += shocks.permanent(base.itemId(), p.driftDay);
             }
         }
         return p;
     }
 
-    private double shock(String itemId, long day) {
+    private SplittableRandom rng(String itemId, long day) {
         long mix = seed ^ (itemId.hashCode() * 0x9E3779B97F4A7C15L) ^ (day * 0xC2B2AE3D27D4EB4FL);
-        return new SplittableRandom(mix).nextGaussian();
+        return new SplittableRandom(mix);
     }
 }

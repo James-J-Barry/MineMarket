@@ -90,8 +90,7 @@ public final class Capital {
 
     /** Local params with the Capital's spread. The license rate equals it: the license doesn't apply here. */
     public static DealerParams params(DealerParams local, Config cfg) {
-        return new DealerParams(cfg.spread(), cfg.spread(), local.k(), local.recoveryDays(), local.driftSigma(),
-                local.driftHalfLifeDays());
+        return local.withSpread(cfg.spread());
     }
 
     /** A ready Capital Dealer. Pass a different seed from the local Dealer so the two drift independently. */
