@@ -156,7 +156,8 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   the market hears, cheaper slips, repricing, 14 books. → `docs/milestones/M5c.md`
 - [x] **M5b: Ticker Tape.** Live 7-day chart (quarter-day points, volume) on the block's screen; Reading a Chart guide,
   Read the Tape quest. 166 unit tests, 46 GameTests. → `docs/milestones/M5.md`
-- [ ] **M6a: Companies and the Stock Exchange.** → `docs/milestones/M6.md`
+- [x] **M6a: Companies and the Stock Exchange.** Six companies, quarterly earnings and dividends, Share Certificates,
+  inflation (buy and hold works), three guides, three quests. 185 unit tests, 52 GameTests. → `docs/milestones/M6.md`
 - [ ] **M6b: Electronic Newsfeed, Portfolio Binder, Safe Deposit Box.** → `docs/milestones/M6.md`
 - [ ] M7–M10: bonds, futures, options, modern finance (ATM, Brokerage)
 - [ ] M11: multiplayer
