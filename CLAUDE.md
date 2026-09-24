@@ -6,7 +6,8 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 
 - **Design doc (source of truth for gameplay):** `docs/design.md`, exported from the "Realistic Markets —
   Game Design Document" Claude Doc. If a request conflicts with it, ask before building.
-- **Current milestone:** M5, the Trading Floor (no spec file yet). M4 (banking and collateral) is done. Spec `docs/milestones/M4.md`
+- **Current milestone:** M5, the Trading Floor. Spec `docs/milestones/M5.md` (draft: its "Decisions for James"
+  must be answered before building). M4 (banking and collateral) is done. Spec `docs/milestones/M4.md`
   (decisions answered). Done: M2 (`docs/milestones/M2.md`),
   M3 (`docs/milestones/M3.md`).
 - **Owner:** James. He play-tests in the IntelliJ dev client; keep him in the loop on anything that
@@ -144,7 +145,7 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   107 unit tests, 34 GameTests. → `docs/milestones/M4.md`
 - [x] **M4b: Collateral and loans.** Loan Note, escrow, collateral grades, floating rate, dawn margin calls and
   forced sales, Leverage guide and quest. 124 unit tests, 37 GameTests. → `docs/milestones/M4.md`
-- [ ] M5: Trading Floor on the batch auction (order slips, NPC traders, Ticker Tape)
+- [ ] **M5: Trading Floor** on the batch auction (order slips, NPC traders, Ticker Tape). → `docs/milestones/M5.md` (draft)
 - [ ] M6–M10: equities, bonds, futures, options, modern finance (ATM, Brokerage)
 - [ ] M11: multiplayer
 
