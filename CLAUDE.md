@@ -146,7 +146,8 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   107 unit tests, 34 GameTests. → `docs/milestones/M4.md`
 - [x] **M4b: Collateral and loans.** Loan Note, escrow, collateral grades, floating rate, dawn margin calls and
   forced sales, Leverage guide and quest. 124 unit tests, 37 GameTests. → `docs/milestones/M4.md`
-- [ ] **M5a: Trading Floor** (order slips, receipts, NPC traders on the batch auction). → `docs/milestones/M5.md`
+- [x] **M5a: Trading Floor.** Order Slips, Trade Receipts, NPC traders on the batch auction, day/market orders,
+  three guides, Tier 3 quests. 149 unit tests, 42 GameTests; Tier 3 at ~16 h. → `docs/milestones/M5.md`
 - [ ] **M5b: Ticker Tape** and Price Chart. → `docs/milestones/M5.md`
 - [ ] M6–M10: equities, bonds, futures, options, modern finance (ATM, Brokerage)
 - [ ] M11: multiplayer
