@@ -94,6 +94,7 @@ public final class PlayerProgress {
             case ProgressionEvent.CdRedeemed e -> e.day();
             case ProgressionEvent.LoanRepaid e -> e.day();
             case ProgressionEvent.FloorOrderDone e -> e.day();
+            case ProgressionEvent.ChartPrinted e -> e.day();
         };
         if (day != trackedDay) {
             trackedDay = day;
@@ -152,6 +153,9 @@ public final class PlayerProgress {
         }
         if (event instanceof ProgressionEvent.LoanRepaid) {
             return goal instanceof QuestGoal.LoanRepaid;
+        }
+        if (event instanceof ProgressionEvent.ChartPrinted) {
+            return goal instanceof QuestGoal.ChartPrinted;
         }
         if (event instanceof ProgressionEvent.CdRedeemed r) {
             return goal instanceof QuestGoal.CdMatured && r.matured();

@@ -210,7 +210,7 @@ What the player can see about markets and their own money is itself a progressio
 | 1 | Price Board | Live quotes for up to 4 chosen items on a wall |
 | 2 | Passbook | A handwritten-style record of the player's bank balance, deposits, withdrawals and interest; the only place the balance is shown |
 | 3 | Newsstand | The market news as it breaks (droughts, harvests, strikes, gluts) and which goods to expect up or down, before most of the market has heard |
-| 3 | Ticker Tape and Price Chart | A 7-day price history (daily close, high, low) for one Trading Floor book per chart, printed as a snapshot |
+| 3 | Ticker Tape and Price Chart | A 7-day price history for one Trading Floor book per chart, four points a day (close, with each quarter's high and low), printed as a snapshot |
 | 4 | Portfolio Binder, Safe Deposit Box | Total value of the papers in one binder; safe storage for papers and bills, with no summary of its own |
 | 5 | Digital Record Keeping | A Records Terminal showing net worth, every holding, income by source, and upcoming payments across all linked blocks |
 | 7 | Risk Report Module | Terminal add-on: collateral coverage, distance to margin calls, portfolio Greeks, simple stress tests |
@@ -293,7 +293,7 @@ The mod adds 42 items and blocks plus 10 components (see Crafting) across nine t
 | 3 | Trade Receipt | Item | One per finished order | Item, side, filled quantity, average price and day; can be recycled to paper | Settlement records |
 | 3 | Newsstand | Block | $1,000 | Opens the Overworld Gazette: the last three days' market stories, each with the goods it should push up or down. News breaks here at dawn, before most of the market has heard | Information, being early |
 | 3 | Ticker Tape | Block | $1,500 | Prints a Price Chart for any Trading Floor book, for 1 Ledger Paper + 1 Ink Bottle | Price history |
-| 3 | Price Chart | Item | Produced by Ticker Tape | A snapshot of 7 days: line chart on right-click, sparkline in the tooltip (item-frame display later) | Reading charts, volatility |
+| 3 | Price Chart | Item | Produced by Ticker Tape | A snapshot of 7 days in quarter-day points: line chart with high-low bars on right-click, a sparkline of daily closes in the tooltip (item-frame display later) | Reading charts, volatility |
 | 4 | Stock Exchange | Block | $10,000 | Buy and sell shares of fictional companies; claim dividends | Equity ownership |
 | 4 | Share Certificate | Item | Bought at Stock Exchange | Bearer certificate for 1, 10 or 100 shares of one company | Ownership, dividends |
 | 4 | Annual Report | Item | Free each earnings period per holding | Book with the company's revenue, costs, earnings and outlook | Fundamental analysis |

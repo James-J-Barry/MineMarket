@@ -317,6 +317,43 @@ public class FloorGameTests {
         helper.succeed();
     }
 
+    @GameTest
+    public void tickerTapePrintsASevenDayChart(GameTestHelper helper) {
+        ServerPlayer p = helper.makeMockServerPlayerInLevel();
+        DealerService dealer = DealerService.forTest(1234L);
+        dealer.shiftDays(10);
+        FloorService floor = FloorService.forTest(dealer, 99L);
+        ProgressionService prog = ProgressionService.forTest();
+        Wallet.give(p, 711_500); // bill clip, price board, vault, loan note, trading floor, ticker tape
+        for (String node : new String[] {"bill_clip", "price_board", "bank_vault", "loan_note", "trading_floor", "ticker_tape"}) {
+            check(prog.buyNode(p, node).isEmpty(), "buy " + node);
+        }
+        check(prog.progress(p).hasGuide("reading_a_chart"), "the Ticker Tape grants Reading a Chart");
+        double now = dealer.day(helper.getLevel().getGameTime());
+        for (double d = now - 3; d <= now; d += 0.05) floor.runAuctions(d); // three days of trading
+
+        var tape = new com.realisticmarkets.mod.menu.TickerTapeMenu(1, p.getInventory(), ContainerLevelAccess.NULL, floor, prog, dealer);
+        check(!tape.clickMenuButton(p, com.realisticmarkets.mod.menu.TickerTapeMenu.BUTTON_PRINT), "no paper, no chart");
+        p.getInventory().add(new ItemStack(ModItems.LEDGER_PAPER));
+        p.getInventory().add(new ItemStack(ModItems.INK_BOTTLE));
+        int wheat = book(WHEAT);
+        check(tape.clickMenuButton(p, com.realisticmarkets.mod.menu.TickerTapeMenu.BUTTON_BOOK_BASE + wheat), "pick wheat");
+        check(tape.clickMenuButton(p, com.realisticmarkets.mod.menu.TickerTapeMenu.BUTTON_PRINT), "print");
+        ItemStack chartStack = tape.output().getItem(0);
+        check(chartStack.is(ModItems.PRICE_CHART), "a Price Chart in the output");
+        var chart = com.realisticmarkets.mod.item.PriceChartItem.read(chartStack).orElseThrow();
+        long today = (long) Math.floor(now);
+        check(chart.equals(com.realisticmarkets.exchange.PriceChart.of(floor.floor().history(), WHEAT, today)),
+                "the chart is the last 7 days of wheat");
+        check(!chart.empty() && chart.close()[com.realisticmarkets.exchange.PriceChart.POINTS - 1] > 0, "with prices in it");
+        check(p.getInventory().countItem(ModItems.LEDGER_PAPER) == 0 && p.getInventory().countItem(ModItems.INK_BOTTLE) == 0,
+                "1 Ledger Paper + 1 Ink Bottle used");
+        String lore = chartStack.get(DataComponents.LORE).lines().getFirst().getString();
+        check(lore.equals(chart.sparkline()), "tooltip sparkline: " + lore);
+        check(prog.progress(p).hasCompleted("read_the_tape"), "Read the Tape");
+        helper.succeed();
+    }
+
     static void check(boolean condition, String message) {
         if (!condition) throw new IllegalStateException(message);
     }

@@ -152,7 +152,7 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   three guides, Tier 3 quests. 149 unit tests, 42 GameTests; Tier 3 at ~16 h. → `docs/milestones/M5.md`
 - [ ] **M5c: Make trading pay.** Prices that trend and never snap back, world events read on the Newsstand before
   the market hears, cheaper slips, repricing, 14 books. → `docs/milestones/M5c.md`
-- [ ] **M5b: Ticker Tape** and Price Chart. → `docs/milestones/M5.md`
+- [ ] **M5b: Ticker Tape** and Price Chart (built; awaiting James's check). → `docs/milestones/M5.md`
 - [ ] M6–M10: equities, bonds, futures, options, modern finance (ATM, Brokerage)
 - [ ] M11: multiplayer
 

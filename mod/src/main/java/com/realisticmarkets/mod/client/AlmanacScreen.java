@@ -304,6 +304,7 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             case QuestGoal.TwoBooks g -> "In one day on the Floor, buy iron blocks and sell iron ingots (or the reverse) at a profit.";
             case QuestGoal.ShipBeatsLocal() ->
                     "Ship goods with a Trade Route Crate and get more, after freight, than the local Dealer would pay.";
+            case QuestGoal.ChartPrinted() -> "Print a Price Chart at the Ticker Tape.";
         };
     }
 }

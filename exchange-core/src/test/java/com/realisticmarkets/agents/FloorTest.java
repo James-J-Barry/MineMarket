@@ -209,22 +209,31 @@ class FloorTest {
     }
 
     @Test
-    void priceHistoryKeepsDailyBars() throws Exception {
+    void priceHistoryKeepsQuarterDayBarsAndDailyTotals() throws Exception {
         PriceHistory h = new PriceHistory();
-        h.record(WHEAT, 3, 50, 10);
-        h.record(WHEAT, 3, 56, 5);
-        h.record(WHEAT, 3, 47, 2);
-        h.record(WHEAT, 3, 52, 1);
-        h.record(WHEAT, 5, 60, 4);
-        var bars = h.lastDays(WHEAT, 9, 7);
-        assertEquals(2, bars.size(), "days with no trades are skipped");
-        assertEquals(new PriceHistory.Bar(3, 50, 56, 47, 52, 18), bars.getFirst());
+        h.record(WHEAT, 3.1, 50, 10);
+        h.record(WHEAT, 3.2, 56, 5);
+        h.record(WHEAT, 3.6, 47, 2);
+        h.record(WHEAT, 3.9, 52, 1);
+        h.record(WHEAT, 5.0, 60, 4);
+        var quarters = h.periods(WHEAT, 9, 7);
+        assertEquals(4, quarters.size(), "3.1 and 3.2 share a quarter; empty quarters are skipped");
+        assertEquals(new PriceHistory.Bar(12, 50, 56, 50, 56, 15, 780), quarters.getFirst());
+        assertEquals(3, quarters.getFirst().day());
+        var days = h.lastDays(WHEAT, 9, 7);
+        assertEquals(2, days.size(), "days with no trades are skipped");
+        assertEquals(new PriceHistory.Bar(12, 50, 56, 47, 52, 18, 926), days.getFirst());
+        assertEquals(51, days.getFirst().average(), "volume-weighted: $9.26 over 18");
+        assertEquals(60, h.day(WHEAT, 5).orElseThrow().close());
+        assertTrue(h.day(WHEAT, 4).isEmpty());
         assertEquals(List.of(), h.lastDays(WHEAT, 20, 7), "older than a week");
-        for (int d = 0; d < 40; d++) h.record("x", d, 1, 1);
+        for (int d = 0; d < 40; d++) h.record("x", d + 0.5, 1, 1);
         assertEquals(1, h.lastDays("x", 39, 7).getFirst().close());
         assertEquals(PriceHistory.KEEP_DAYS, h.lastDays("x", 39, 100).size(), "only the last 30 days are kept");
         StringWriter w = new StringWriter();
         h.write(w);
         assertEquals(h, PriceHistory.read(new StringReader(w.toString())));
+        PriceHistory v1 = PriceHistory.read(new StringReader("# Realistic Markets price history v1\nbar\tx\t3\t50\t56\t47\t52\t18\n"));
+        assertEquals(new PriceHistory.Bar(12, 50, 56, 47, 52, 18, 52 * 18), v1.day("x", 3).orElseThrow());
     }
 }

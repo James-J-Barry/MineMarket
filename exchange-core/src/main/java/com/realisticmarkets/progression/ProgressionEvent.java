@@ -46,4 +46,7 @@ public sealed interface ProgressionEvent {
 
     /** A loan paid off by the borrower (not by liquidation). */
     record LoanRepaid(long principalCents, long interestPaidCents, long day) implements ProgressionEvent {}
+
+    /** A Price Chart printed at the Ticker Tape. */
+    record ChartPrinted(String item, long day) implements ProgressionEvent {}
 }

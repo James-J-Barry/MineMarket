@@ -149,7 +149,7 @@ public final class FloorService {
     public void runAuctions(double day) {
         long whole = (long) Math.floor(day);
         for (FloorCatalog.Book b : floor.catalog().all()) {
-            for (TradingFloor.Receipt r : floor.auction(b.item(), fairCents(b.item(), day), AUCTION_TICKS / 24_000.0, whole)) {
+            for (TradingFloor.Receipt r : floor.auction(b.item(), fairCents(b.item(), day), AUCTION_TICKS / 24_000.0, day)) {
                 receipts.computeIfAbsent(r.account(), k -> new ArrayList<>()).add(r);
             }
         }

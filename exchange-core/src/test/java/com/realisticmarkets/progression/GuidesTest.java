@@ -18,7 +18,7 @@ class GuidesTest {
         assertEquals(List.of("money_and_dealer", "spread", "price_impact", "recovery", "diversification",
                         "cash_on_hand", "reading_a_quote", "transaction_costs", "two_markets",
                         "interest_and_compounding", "term_and_liquidity", "leverage_and_collateral",
-                        "order_books", "limit_and_market_orders", "liquidity_and_market_makers", "news_and_markets"),
+                        "order_books", "limit_and_market_orders", "liquidity_and_market_makers", "news_and_markets", "reading_a_chart"),
                 guides.all().stream().map(Guides.Guide::id).toList());
         for (Guides.Guide g : guides.all()) {
             int words = g.wordCount();
@@ -269,6 +269,13 @@ class GuidesTest {
         assertTrue(t.contains("News takes time to spread") && t.contains("The sooner you act"));
         assertTrue(!t.contains("midday") && !t.contains("hours"), "the delay is felt, not stated");
         assertTrue(t.contains("half as much as last time, or half as much again"), "event scale 0.5-1.5");
+    }
+
+    @Test
+    void chartGuideMatchesThePrintedChart() {
+        assertEquals(7, com.realisticmarkets.exchange.PriceChart.DAYS);
+        assertEquals(4, com.realisticmarkets.exchange.PriceHistory.PERIODS_PER_DAY);
+        assertTrue(text("reading_a_chart").contains("the last seven days of trading, four points a day"));
     }
 
     @Test

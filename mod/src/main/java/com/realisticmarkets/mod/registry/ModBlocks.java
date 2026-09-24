@@ -11,6 +11,7 @@ import com.realisticmarkets.mod.floor.FloorService;
 import com.realisticmarkets.mod.menu.AlmanacMenu;
 import com.realisticmarkets.mod.menu.DraftingTableMenu;
 import com.realisticmarkets.mod.menu.NewsstandMenu;
+import com.realisticmarkets.mod.menu.TickerTapeMenu;
 import com.realisticmarkets.mod.menu.TradingFloorMenu;
 import com.realisticmarkets.mod.progression.ProgressionService;
 import net.minecraft.network.chat.Component;
@@ -36,6 +37,7 @@ public final class ModBlocks {
     public static Block BANK_VAULT;
     public static Block TRADING_FLOOR;
     public static Block NEWSSTAND;
+    public static Block TICKER_TAPE;
 
     public static void init() {
         ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("basic_exchange"));
@@ -90,6 +92,8 @@ public final class ModBlocks {
 
         NEWSSTAND = registerMenuBlock("newsstand", (id, inv, access) ->
                 new NewsstandMenu(id, inv, access, ProgressionService.get(), DealerService.get()));
+        TICKER_TAPE = registerMenuBlock("ticker_tape", (id, inv, access) ->
+                new TickerTapeMenu(id, inv, access, FloorService.get(), ProgressionService.get(), DealerService.get()));
     }
 
     private static Block registerMenuBlock(String name, MenuBlock.Factory factory) {

@@ -170,14 +170,18 @@ public final class TradingFloor {
         return t;
     }
 
-    /** Runs one auction on {@code item}: NPC recovery and orders, the auction, receipts for finished orders. */
-    public List<Receipt> auction(String item, long fairCents, double daysSinceLast, long day) {
+    /**
+     * Runs one auction on {@code item} at {@code now} (fractional in-game day): NPC recovery and orders, the auction,
+     * receipts for finished orders.
+     */
+    public List<Receipt> auction(String item, long fairCents, double daysSinceLast, double now) {
+        long day = (long) Math.floor(now);
         AgentPopulation pop = pops.get(item);
         pop.recover(daysSinceLast, fairCents);
         pop.submitOrders(fairCents);
         AuctionResult r = ex.runAuction(item);
         pop.onAuction(r);
-        if (r.traded()) history.record(item, day, r.clearingPrice().getAsLong(), r.volume());
+        if (r.traded()) history.record(item, now, r.clearingPrice().getAsLong(), r.volume());
         for (Fill f : r.fills()) {
             credit(f.buyOrderId(), f);
             credit(f.sellOrderId(), f);

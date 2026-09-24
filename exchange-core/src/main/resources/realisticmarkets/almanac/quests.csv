@@ -3,6 +3,7 @@
 #       | groups_in_day:<cents per group>:<groups> | net_worth:<cents> | hold_cash:<cents> | ship_beats_local
 #       | interest_earned:<cents> | cd_matured | loan_repaid | limit_filled | beat_dealer
 #       | two_books:<big item>:<small item>:<small per big>
+#       | chart_printed
 # reward_cents is paid in bills; grants are ;-separated (guide:, perk:, blueprint:).
 id,goal,reward_cents,grants,title
 first_sale,any_sale,500,guide:money_and_dealer,First Sale
@@ -19,3 +20,4 @@ leverage,loan_repaid,2500,,Leverage
 name_your_price,limit_filled,1000,guide:liquidity_and_market_makers,Name Your Price
 beat_the_dealer,beat_dealer,1500,,Beat the Dealer
 two_books,two_books:minecraft:iron_block:minecraft:iron_ingot:9,2500,,Two Books
+read_the_tape,chart_printed,1000,,Read the Tape

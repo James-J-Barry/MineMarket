@@ -77,7 +77,7 @@ public final class TraderSim {
             for (int i = 0; i < n; i++) {
                 double before = day;
                 day += DAY_STEP;
-                for (FloorCatalog.Book b : floor.catalog().all()) floor.auction(b.item(), fair(b.item()), DAY_STEP, (long) day);
+                for (FloorCatalog.Book b : floor.catalog().all()) floor.auction(b.item(), fair(b.item()), DAY_STEP, day);
                 if (Math.floor(day + 1e-9) > Math.floor(before + 1e-9)) floor.dawn((long) Math.floor(day + 1e-9));
             }
         }

@@ -34,5 +34,8 @@
   "item.realisticmarkets.order_slip": "Order Slip",
   "item.realisticmarkets.trade_receipt": "Trade Receipt",
   "block.realisticmarkets.newsstand": "Newsstand",
-  "container.realisticmarkets.newsstand": "Newsstand"
+  "container.realisticmarkets.newsstand": "Newsstand",
+  "block.realisticmarkets.ticker_tape": "Ticker Tape",
+  "container.realisticmarkets.ticker_tape": "Ticker Tape",
+  "item.realisticmarkets.price_chart": "Price Chart"
 }

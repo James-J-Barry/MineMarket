@@ -28,7 +28,7 @@ import net.minecraft.world.item.ItemStack;
  * Order Slip, watch your open orders, and collect fills, refunds and receipts from the output slots.
  */
 public class TradingFloorMenu extends AbstractContainerMenu {
-    public static final int WIDTH = 212, HEIGHT = 230, INVENTORY_X = 26, INVENTORY_Y = 148;
+    public static final int WIDTH = 236, HEIGHT = 230, INVENTORY_X = 38, INVENTORY_Y = 148;
     public static final int OUTPUT_X = 8, OUTPUT_Y = 122, OUTPUT_SLOTS = 6;
     public static final int INV_START = OUTPUT_SLOTS, INV_END = INV_START + 36;
     public static final int MAX_SHOWN_ORDERS = 3;
@@ -43,7 +43,8 @@ public class TradingFloorMenu extends AbstractContainerMenu {
 
     private static final int D_BOOK = 0, D_SELL = 1, D_MARKET = 2, D_QTY = 3, D_PRICE = 5, D_BID = 7, D_ASK = 9;
     private static final int D_LAST = 11, D_SECONDS = 13, D_ORDERS = 14, D_ORDER_BASE = 15, ORDER_STRIDE = 8;
-    private static final int D_SIZE = D_ORDER_BASE + MAX_SHOWN_ORDERS * ORDER_STRIDE;
+    private static final int D_TODAY = D_ORDER_BASE + MAX_SHOWN_ORDERS * ORDER_STRIDE; // avg, low, high (pairs)
+    private static final int D_SIZE = D_TODAY + 6;
     private static final long MAX_SYNCED = (1L << 30) - 1;
 
     private final Container output = new SimpleContainer(OUTPUT_SLOTS);
@@ -102,6 +103,10 @@ public class TradingFloorMenu extends AbstractContainerMenu {
     public long orderQty(int i) { return pair(D_ORDER_BASE + i * ORDER_STRIDE + 2); }
     public long orderFilled(int i) { return pair(D_ORDER_BASE + i * ORDER_STRIDE + 4); }
     public long orderPrice(int i) { return pair(D_ORDER_BASE + i * ORDER_STRIDE + 6); }
+    /** Today's volume-weighted average price, low and high (0 if nothing has traded today). */
+    public long todayAvg() { return pair(D_TODAY); }
+    public long todayLow() { return pair(D_TODAY + 2); }
+    public long todayHigh() { return pair(D_TODAY + 4); }
 
     private long pair(int i) {
         return (long) data.get(i) | ((long) data.get(i + 1) << 15);
@@ -144,6 +149,10 @@ public class TradingFloorMenu extends AbstractContainerMenu {
         setPair(D_ASK, q[1]);
         setPair(D_LAST, floor.floor().exchange().lastPrice(item).orElse(0));
         data.set(D_SECONDS, (int) Math.ceil(floor.ticksToAuction() / 20.0));
+        var today = floor.floor().history().day(item, (long) Math.floor(day()));
+        setPair(D_TODAY, today.map(b -> b.average()).orElse(0L));
+        setPair(D_TODAY + 2, today.map(b -> b.low()).orElse(0L));
+        setPair(D_TODAY + 4, today.map(b -> b.high()).orElse(0L));
         shown = floor.floor().openTickets(FloorService.account(player));
         data.set(D_ORDERS, Math.min(shown.size(), MAX_SHOWN_ORDERS));
         for (int i = 0; i < Math.min(shown.size(), MAX_SHOWN_ORDERS); i++) {

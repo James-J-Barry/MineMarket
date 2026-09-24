@@ -54,9 +54,9 @@ public class TradingFloorScreen extends AbstractContainerScreen<TradingFloorMenu
         priceButtons.add(button("+10%", TradingFloorMenu.BUTTON_PRICE_PLUS_10PCT, 80, 88, 26));
         button("Place order", TradingFloorMenu.BUTTON_PLACE, 8, 104, 70);
         for (int i = 0; i < cancel.length; i++) {
-            reprice[i] = button("=", TradingFloorMenu.BUTTON_REPRICE_BASE + i, 181, 104 + i * 11, 12);
+            reprice[i] = button("=", TradingFloorMenu.BUTTON_REPRICE_BASE + i, 205, 104 + i * 11, 12);
             reprice[i].setTooltip(Tooltip.create(Component.literal("Move this order to the price you've set (no new slip)")));
-            cancel[i] = button("x", TradingFloorMenu.BUTTON_CANCEL_BASE + i, 194, 104 + i * 11, 12);
+            cancel[i] = button("x", TradingFloorMenu.BUTTON_CANCEL_BASE + i, 218, 104 + i * 11, 12);
             cancel[i].setTooltip(Tooltip.create(Component.literal("Cancel: goods or cash come back")));
         }
         updateWidgets();
@@ -128,19 +128,29 @@ public class TradingFloorScreen extends AbstractContainerScreen<TradingFloorMenu
         for (int i = 0; i < TradingFloorMenu.BOOKS.size(); i++) g.item(icon(i), BOOK_X + (i % COLS) * 18 + 1, BOOK_Y + (i / COLS) * 18 + 1);
         String name = icon(m.book()).getHoverName().getString();
         g.text(font, Panels.trim(font, name, imageWidth - INFO_X - 6), INFO_X, 18, BLUE, false);
-        g.text(font, "Bid " + cents(m.bidCents()), INFO_X, 29, GREY, false);
-        g.text(font, "Ask " + cents(m.askCents()), INFO_X, 38, GREY, false);
-        g.text(font, m.lastCents() > 0 ? "Last " + cents(m.lastCents()) : "No trades yet", INFO_X, 47, LIGHT_GREY, false);
+        g.text(font, "Bid " + cents(m.bidCents()), INFO_X, 27, GREY, false);
+        g.text(font, "Ask " + cents(m.askCents()), INFO_X, 36, GREY, false);
+        int infoW = imageWidth - INFO_X - 6;
+        g.text(font, Panels.trim(font, m.lastCents() > 0 ? "Last trade " + cents(m.lastCents()) : "No trades yet", infoW),
+                INFO_X, 47, LIGHT_GREY, false);
+        if (m.todayAvg() > 0) {
+            g.text(font, Panels.trim(font, "Today avg " + cents(m.todayAvg()), infoW), INFO_X, 58, GREY, false);
+            g.text(font, Panels.trim(font, "(" + cents(m.todayLow()) + "-" + cents(m.todayHigh()) + ")", infoW), INFO_X, 67,
+                    LIGHT_GREY, false);
+        } else {
+            g.text(font, Panels.trim(font, "Nothing traded today", infoW), INFO_X, 58, LIGHT_GREY, false);
+        }
         g.text(font, "Qty " + m.qty(), 98, 75, GREY, false);
         g.text(font, m.market() ? "At market" : cents(m.priceCents()), 110, 91, m.market() ? LIGHT_GREY : GREY, false);
-        g.text(font, "Auction in " + m.secondsToAuction() + "s", 98, 60, LIGHT_GREY, false);
+        String auction = "Auction in " + m.secondsToAuction() + "s";
+        g.text(font, auction, imageWidth - 8 - font.width(auction), 6, LIGHT_GREY, false);
         if (m.orderCount() == 0) {
             g.text(font, "No open orders", 84, 107, LIGHT_GREY, false);
         }
         for (int i = 0; i < m.orderCount(); i++) {
             String line = (m.orderSelling(i) ? "S " : "B ") + m.orderFilled(i) + "/" + m.orderQty(i) + " @" + cents(m.orderPrice(i));
             g.item(icon(m.orderBook(i)), 80, 102 + i * 11);
-            g.text(font, Panels.trim(font, line, 82), 96, 107 + i * 11, GREEN, false);
+            g.text(font, Panels.trim(font, line, 106), 96, 107 + i * 11, GREEN, false);
         }
     }
 }
