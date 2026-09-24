@@ -2,6 +2,7 @@ package com.realisticmarkets.mod.menu;
 
 import com.realisticmarkets.agents.FloorCatalog;
 import com.realisticmarkets.agents.TradingFloor;
+import com.realisticmarkets.dealer.WorldEvents;
 import com.realisticmarkets.exchange.Side;
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.floor.FloorService;
@@ -28,7 +29,7 @@ import net.minecraft.world.item.ItemStack;
  * Order Slip, watch your open orders, and collect fills, refunds and receipts from the output slots.
  */
 public class TradingFloorMenu extends AbstractContainerMenu {
-    public static final int WIDTH = 176, HEIGHT = 230, INVENTORY_Y = 148;
+    public static final int WIDTH = 176, HEIGHT = 254, INVENTORY_Y = 172, NEWS_Y = 143, NEWS_LINES = 2;
     public static final int OUTPUT_X = 8, OUTPUT_Y = 122, OUTPUT_SLOTS = 6;
     public static final int INV_START = OUTPUT_SLOTS, INV_END = INV_START + 36;
     public static final int MAX_SHOWN_ORDERS = 3;
@@ -42,7 +43,8 @@ public class TradingFloorMenu extends AbstractContainerMenu {
 
     private static final int D_BOOK = 0, D_SELL = 1, D_MARKET = 2, D_QTY = 3, D_PRICE = 5, D_BID = 7, D_ASK = 9;
     private static final int D_LAST = 11, D_SECONDS = 13, D_ORDERS = 14, D_ORDER_BASE = 15, ORDER_STRIDE = 8;
-    private static final int D_SIZE = D_ORDER_BASE + MAX_SHOWN_ORDERS * ORDER_STRIDE;
+    private static final int D_NEWS = D_ORDER_BASE + MAX_SHOWN_ORDERS * ORDER_STRIDE; // per line: type index + 1, age in days
+    private static final int D_SIZE = D_NEWS + NEWS_LINES * 2;
     private static final long MAX_SYNCED = (1L << 30) - 1;
 
     private final Container output = new SimpleContainer(OUTPUT_SLOTS);
@@ -101,6 +103,9 @@ public class TradingFloorMenu extends AbstractContainerMenu {
     public long orderQty(int i) { return pair(D_ORDER_BASE + i * ORDER_STRIDE + 2); }
     public long orderFilled(int i) { return pair(D_ORDER_BASE + i * ORDER_STRIDE + 4); }
     public long orderPrice(int i) { return pair(D_ORDER_BASE + i * ORDER_STRIDE + 6); }
+    /** Index into {@code WorldEvents.loadTypes()} of news line {@code i}, or -1. */
+    public int newsType(int i) { return data.get(D_NEWS + i * 2) - 1; }
+    public int newsAge(int i) { return data.get(D_NEWS + i * 2 + 1); }
 
     private long pair(int i) {
         return (long) data.get(i) | ((long) data.get(i + 1) << 15);
@@ -155,6 +160,12 @@ public class TradingFloorMenu extends AbstractContainerMenu {
             setPair(base + 2, t.qty());
             setPair(base + 4, t.filledQty());
             setPair(base + 6, t.limitCents());
+        }
+        List<WorldEvents.Event> news = floor.news(day());
+        long today = (long) Math.floor(day());
+        for (int i = 0; i < NEWS_LINES; i++) {
+            data.set(D_NEWS + i * 2, i < news.size() ? news.get(i).type().index() + 1 : 0);
+            data.set(D_NEWS + i * 2 + 1, i < news.size() ? (int) (today - news.get(i).day()) : 0);
         }
     }
 

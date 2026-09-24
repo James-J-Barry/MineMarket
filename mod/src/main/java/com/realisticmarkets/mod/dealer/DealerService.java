@@ -4,6 +4,7 @@ import com.realisticmarkets.dealer.Dealer;
 import com.realisticmarkets.dealer.DealerCatalog;
 import com.realisticmarkets.dealer.DealerParams;
 import com.realisticmarkets.dealer.DealerStateIO;
+import com.realisticmarkets.dealer.WorldEvents;
 import com.realisticmarkets.mod.RealisticMarkets;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,6 +45,8 @@ public final class DealerService {
     private final Path stateFile; // null for test instances
     private double dayOffset; // dev time-shift for testing recovery without waiting
     private int ticksSinceSave;
+    private WorldEvents events; // null: no world events (tests)
+    private long eventSeed;
 
     private DealerService(Dealer dealer, Path configDir, Path stateFile) {
         this.dealer = dealer;
@@ -58,6 +61,7 @@ public final class DealerService {
         long seed = server.overworld().getSeed();
         Path state = server.getWorldPath(LevelResource.ROOT).resolve(RealisticMarkets.MOD_ID).resolve("dealer_state.txt");
         DealerService svc = new DealerService(new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), seed), dir, state);
+        svc.useEvents(seed ^ 0x4576656E7473L); // "Events"
         String msg = svc.reload();
         String loaded = svc.load();
         instance = svc;
@@ -123,6 +127,18 @@ public final class DealerService {
         return dealer;
     }
 
+    /** World events (bumper harvests, droughts, ...) move this Dealer's fair values from now on. */
+    public void useEvents(long seed) {
+        this.eventSeed = seed;
+        this.events = WorldEvents.loadDefault(dealer.catalog(), seed);
+        dealer.setShocks(events);
+    }
+
+    /** The world's events, or null if this Dealer has none. */
+    public WorldEvents events() {
+        return events;
+    }
+
     /** Fractional in-game days since world creation, plus any dev time-shift. */
     public double day(long gameTime) {
         return gameTime / (double) TICKS_PER_DAY + dayOffset;
@@ -153,6 +169,7 @@ public final class DealerService {
             }
             DealerParams params = DealerParams.fromProperties(props);
             dealer.reload(catalog, params);
+            if (events != null) useEvents(eventSeed);
             return String.format(Locale.ROOT, "%d markets (%d pools), spread %.0f%%, recovery %.1f days",
                     catalog.all().size(), catalog.basePools().size(), params.spread() * 100, params.recoveryDays());
         } catch (IOException | RuntimeException e) {

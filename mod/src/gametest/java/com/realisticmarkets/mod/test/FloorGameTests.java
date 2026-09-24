@@ -235,6 +235,29 @@ public class FloorGameTests {
         helper.succeed();
     }
 
+    @GameTest
+    public void worldEventsShowOnTheFloorAndMoveTheDealer(GameTestHelper helper) {
+        ServerPlayer p = helper.makeMockServerPlayerInLevel();
+        DealerService dealer = DealerService.forTest(1234L);
+        dealer.useEvents(77L);
+        FloorService floor = FloorService.forTest(dealer, 99L);
+        com.realisticmarkets.dealer.WorldEvents ev = dealer.events();
+        long day = 1;
+        while (ev.startingOn(day).isEmpty()) day++;
+        com.realisticmarkets.dealer.WorldEvents.Event e = ev.startingOn(day).getFirst();
+        double now = dealer.day(helper.getLevel().getGameTime());
+        dealer.shiftDays(day + 0.5 - now); // the middle of the event's first day
+        TradingFloorMenu menu = new TradingFloorMenu(1, p.getInventory(), ContainerLevelAccess.NULL, floor,
+                ProgressionService.forTest(), dealer);
+        check(menu.newsType(0) == e.type().index() && menu.newsAge(0) == 0, "today's headline is first: " + e.type().id()
+                + ", menu shows " + menu.newsType(0));
+        String item = ev.affects(e.type()).iterator().next();
+        double moved = dealer.dealer().fairValue(item, day + 0.5) / dealer.dealer().fairValue(item, day);
+        check(Math.signum(moved - 1) == Math.signum(e.type().shock()) && Math.abs(moved - 1) > 0.1,
+                e.type().id() + " moved " + item + " by " + moved);
+        helper.succeed();
+    }
+
     static void check(boolean condition, String message) {
         if (!condition) throw new IllegalStateException(message);
     }

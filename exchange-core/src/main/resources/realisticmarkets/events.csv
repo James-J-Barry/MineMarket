@@ -1,0 +1,15 @@
+# Realistic Markets: world events (M5c). Deterministic from the world seed and the in-game day.
+# targets: ;-separated base items or group:<name>. shock: change in log fair value at its peak (0.20 = about +22%),
+# building over the first hours after dawn and fading with half_life_days. permanent: the part that never fades.
+# chance_per_day: probability the event starts on any given day.
+id,targets,shock,half_life_days,permanent,chance_per_day,headline
+bumper_harvest,group:farm,-0.20,3,-0.03,0.025,Bumper harvest: granaries overflow
+drought,minecraft:wheat;minecraft:carrot;minecraft:potato;minecraft:beetroot,0.30,4,0.04,0.02,Drought: crop fields parched
+cattle_sickness,minecraft:beef;minecraft:leather,0.30,4,0.05,0.015,Cattle sickness: herds thinned
+mine_collapse,minecraft:iron_ingot;minecraft:gold_ingot;minecraft:coal;minecraft:copper_ingot,0.25,3,0.03,0.02,Mine collapse: ore deliveries halt
+rich_vein,minecraft:iron_ingot;minecraft:gold_ingot;minecraft:copper_ingot,-0.20,3,-0.04,0.02,Rich vein: ore floods in
+building_boom,group:wood_and_stone;minecraft:iron_ingot,0.18,5,0.05,0.02,Building boom: villages raise walls
+diamond_rush,minecraft:diamond;minecraft:emerald,-0.25,4,-0.05,0.015,Diamond rush: prospectors swarm
+redstone_craze,minecraft:redstone,0.35,3,0.05,0.02,Redstone craze: tinkerers want dust
+pillager_raid,minecraft:iron_ingot;minecraft:emerald;minecraft:arrow,0.20,2,0.0,0.02,Pillager raid: villages rearm
+coal_shortage,minecraft:coal,0.30,3,0.02,0.015,Cold snap: furnaces need coal

@@ -70,6 +70,7 @@ public final class CapitalService {
         Dealer local = DealerService.get().dealer();
         Capital.Config cfg = Capital.loadDefault();
         Dealer capital = Capital.dealer(local.catalog(), local.params(), cfg, server.overworld().getSeed() ^ SEED_SALT);
+        capital.setShocks(DealerService.get().events()); // the same world events move both markets
         CapitalService svc = new CapitalService(cfg, capital,
                 server.getWorldPath(LevelResource.ROOT).resolve(RealisticMarkets.MOD_ID));
         svc.load();
