@@ -17,7 +17,7 @@ package com.realisticmarkets.progression;
  * limit_filled                (a Trading Floor limit order at least partly filled)
  * beat_dealer                 (a Floor sale averaging more than the Dealer's bid)
  * two_books:<big>:<small>:<n> (in one day, buy one of the pair and sell the other at a profit per base unit)
- * chart_printed               (a Price Chart printed at the Ticker Tape)
+ * chart_read               (a book's chart read at the Ticker Tape)
  * </pre>
  */
 public sealed interface QuestGoal {
@@ -35,7 +35,7 @@ public sealed interface QuestGoal {
     record LimitFilled() implements QuestGoal {}
     record BeatDealer() implements QuestGoal {}
     record TwoBooks(String big, String small, int ratio) implements QuestGoal {}
-    record ChartPrinted() implements QuestGoal {}
+    record ChartRead() implements QuestGoal {}
 
     static QuestGoal parse(String s) {
         String[] p = s.strip().split(":");
@@ -51,7 +51,7 @@ public sealed interface QuestGoal {
             case "interest_earned" -> new InterestEarned(Long.parseLong(p[1]));
             case "cd_matured" -> new CdMatured();
             case "loan_repaid" -> new LoanRepaid();
-            case "chart_printed" -> new ChartPrinted();
+            case "chart_read" -> new ChartRead();
             case "limit_filled" -> new LimitFilled();
             case "beat_dealer" -> new BeatDealer();
             case "two_books" -> new TwoBooks(p[1] + ":" + p[2], p[3] + ":" + p[4], Integer.parseInt(p[5]));

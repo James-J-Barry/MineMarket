@@ -318,7 +318,7 @@ public class FloorGameTests {
     }
 
     @GameTest
-    public void tickerTapePrintsASevenDayChart(GameTestHelper helper) {
+    public void tickerTapeShowsASevenDayChart(GameTestHelper helper) {
         ServerPlayer p = helper.makeMockServerPlayerInLevel();
         DealerService dealer = DealerService.forTest(1234L);
         dealer.shiftDays(10);
@@ -333,24 +333,18 @@ public class FloorGameTests {
         for (double d = now - 3; d <= now; d += 0.05) floor.runAuctions(d); // three days of trading
 
         var tape = new com.realisticmarkets.mod.menu.TickerTapeMenu(1, p.getInventory(), ContainerLevelAccess.NULL, floor, prog, dealer);
-        check(!tape.clickMenuButton(p, com.realisticmarkets.mod.menu.TickerTapeMenu.BUTTON_PRINT), "no paper, no chart");
-        p.getInventory().add(new ItemStack(ModItems.LEDGER_PAPER));
-        p.getInventory().add(new ItemStack(ModItems.INK_BOTTLE));
+        check(prog.progress(p).hasCompleted("read_the_tape"), "opening the Ticker Tape reads a chart: Read the Tape");
         int wheat = book(WHEAT);
         check(tape.clickMenuButton(p, com.realisticmarkets.mod.menu.TickerTapeMenu.BUTTON_BOOK_BASE + wheat), "pick wheat");
-        check(tape.clickMenuButton(p, com.realisticmarkets.mod.menu.TickerTapeMenu.BUTTON_PRINT), "print");
-        ItemStack chartStack = tape.output().getItem(0);
-        check(chartStack.is(ModItems.PRICE_CHART), "a Price Chart in the output");
-        var chart = com.realisticmarkets.mod.item.PriceChartItem.read(chartStack).orElseThrow();
         long today = (long) Math.floor(now);
-        check(chart.equals(com.realisticmarkets.exchange.PriceChart.of(floor.floor().history(), WHEAT, today)),
-                "the chart is the last 7 days of wheat");
-        check(!chart.empty() && chart.close()[com.realisticmarkets.exchange.PriceChart.POINTS - 1] > 0, "with prices in it");
-        check(p.getInventory().countItem(ModItems.LEDGER_PAPER) == 0 && p.getInventory().countItem(ModItems.INK_BOTTLE) == 0,
-                "1 Ledger Paper + 1 Ink Bottle used");
-        String lore = chartStack.get(DataComponents.LORE).lines().getFirst().getString();
-        check(lore.equals(chart.sparkline()), "tooltip sparkline: " + lore);
-        check(prog.progress(p).hasCompleted("read_the_tape"), "Read the Tape");
+        var expected = com.realisticmarkets.exchange.PriceChart.of(floor.floor().history(), WHEAT, today);
+        check(tape.chart().equals(expected), "the screen's chart is the last 7 days of wheat: " + tape.chart());
+        check(!expected.empty() && expected.totalVolume() > 0, "with prices and volume in it");
+        floor.runAuctions(now + 0.01);
+        for (int t = 0; t < 20; t++) tape.broadcastChanges();
+        check(tape.chart().equals(com.realisticmarkets.exchange.PriceChart.of(floor.floor().history(), WHEAT, today)),
+                "and it keeps up while open");
+        check(p.getInventory().countItem(ModItems.LEDGER_PAPER) == 0, "nothing to carry or pay for");
         helper.succeed();
     }
 

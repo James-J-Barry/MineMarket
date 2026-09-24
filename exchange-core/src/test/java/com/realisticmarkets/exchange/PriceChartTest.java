@@ -28,7 +28,11 @@ class PriceChartTest {
         assertEquals(48, c.first());
         assertEquals(48, c.min());
         assertEquals(60, c.max());
-        assertEquals(PriceChart.unpack(W, 10, c.packed()), c);
+        assertEquals(15, c.volume()[0], "10 + 5 traded in the first quarter");
+        assertEquals(0, c.volume()[5], "quiet quarters: no volume");
+        assertEquals(15, c.maxVolume());
+        assertEquals(20, c.totalVolume(), "the day-1 trade is outside the week");
+        assertEquals((55 - 48) / 48.0, c.change(), 1e-12);
     }
 
     @Test

@@ -29,7 +29,7 @@ public final class ModItems {
     public static Item LOCK_MECHANISM, SECURITY_PAPER;
 
     /** Tier 3: the Clockwork Gear component, Order Slips (spent per Floor order) and Trade Receipts. */
-    public static Item CLOCKWORK_GEAR, ORDER_SLIP, TRADE_RECEIPT, PRICE_CHART;
+    public static Item CLOCKWORK_GEAR, ORDER_SLIP, TRADE_RECEIPT;
 
     /** Bank papers: the Passbook (balance and history) and Certificates of Deposit (bearer papers). */
     public static Item PASSBOOK, CERTIFICATE_OF_DEPOSIT, LOAN_NOTE;
@@ -49,7 +49,6 @@ public final class ModItems {
         CLOCKWORK_GEAR = register("clockwork_gear", Item::new, new Item.Properties());
         ORDER_SLIP = register("order_slip", Item::new, new Item.Properties());
         TRADE_RECEIPT = register("trade_receipt", Item::new, new Item.Properties().stacksTo(1));
-        PRICE_CHART = register("price_chart", com.realisticmarkets.mod.item.PriceChartItem::new, new Item.Properties().stacksTo(1));
         PASSBOOK = register("passbook", PassbookItem::new, new Item.Properties().stacksTo(1));
         CERTIFICATE_OF_DEPOSIT = register("certificate_of_deposit", Item::new, new Item.Properties().stacksTo(1));
         LOAN_NOTE = register("loan_note", Item::new, new Item.Properties().stacksTo(1));

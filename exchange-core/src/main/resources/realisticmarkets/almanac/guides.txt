@@ -235,13 +235,11 @@ Headlines say which way, not how far. The same kind of story can move prices hal
 Real world: news moves prices within seconds today, so traders pay to hear it first. Before the telegraph, whoever carried news from a battle could make a fortune before anyone else knew.
 
 @reading_a_chart Reading a Chart
-You built a Ticker Tape. Feed it a Ledger Paper and an Ink Bottle and it prints a Price Chart for one Floor book: the last seven days of trading, four points a day. Right-click the chart to open it; its tooltip sketches each day's closing price in one line.
+You built a Ticker Tape. Pick any Floor book on it and it draws that book's last seven days of trading, four points a day, and keeps the chart up to date while you watch.
 
-Each point is where the book closed in that quarter of a day, with a thin bar from its high to its low. A long bar means the price swung around; a short one means a calm market.
+Each point is where the price closed in that quarter of a day, with a thin bar from its high to its low. A long bar means the price swung around; a short one means a calm market. The bars along the bottom show how much traded: a price move on heavy trading means more than one on a handful of items.
 
 Look for three things. The trend: are the closes climbing or sliding over the week? Jumps: a sudden step up or down, often news reaching the market. Did it hold, or fade over the next days? And the range: the gap between the week's high and low tells you how far this book usually moves, so you know what a normal day looks like.
-
-A chart is a snapshot. It shows the market up to the moment it was printed and nothing after, so print a fresh one before a big trade.
 
 Charts show what happened, not what will. A trend can keep going or stop dead. Use a chart to judge how risky a trade is, not to promise yourself a profit.
 

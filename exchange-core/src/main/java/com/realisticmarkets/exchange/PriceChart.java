@@ -4,18 +4,18 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * What a printed Price Chart holds: {@link #DAYS} in-game days of one book in quarter-day points (high, low and close
- * of each quarter), ending with the day it was printed. Quarters with no trade carry the last close forward so the
- * line stays unbroken; quarters before the first trade in the window are {@link #NONE}.
+ * What the Ticker Tape shows: {@link #DAYS} in-game days of one book in quarter-day points (high, low, close and
+ * volume of each quarter), ending today. Quarters with no trade carry the last close forward so the line stays
+ * unbroken (with zero volume); quarters before the first trade in the window are {@link #NONE}.
  */
-public record PriceChart(String item, long toDay, long[] high, long[] low, long[] close) {
+public record PriceChart(String item, long toDay, long[] high, long[] low, long[] close, long[] volume) {
     public static final int DAYS = 7;
     public static final int POINTS = DAYS * PriceHistory.PERIODS_PER_DAY;
     public static final long NONE = -1;
     private static final String BLOCKS = "▁▂▃▄▅▆▇█";
 
     public static PriceChart of(PriceHistory h, String item, long toDay) {
-        long[] hi = new long[POINTS], lo = new long[POINTS], cl = new long[POINTS];
+        long[] hi = new long[POINTS], lo = new long[POINTS], cl = new long[POINTS], vol = new long[POINTS];
         Arrays.fill(hi, NONE);
         Arrays.fill(lo, NONE);
         Arrays.fill(cl, NONE);
@@ -25,6 +25,7 @@ public record PriceChart(String item, long toDay, long[] high, long[] low, long[
             hi[i] = b.high();
             lo[i] = b.low();
             cl[i] = b.close();
+            vol[i] = b.volume();
         }
         for (int i = 1; i < POINTS; i++) {
             if (cl[i] == NONE && cl[i - 1] != NONE) {
@@ -33,7 +34,7 @@ public record PriceChart(String item, long toDay, long[] high, long[] low, long[
                 lo[i] = cl[i];
             }
         }
-        return new PriceChart(item, toDay, hi, lo, cl);
+        return new PriceChart(item, toDay, hi, lo, cl, vol);
     }
 
     /** True if nothing traded in the whole window. */
@@ -84,32 +85,24 @@ public record PriceChart(String item, long toDay, long[] high, long[] low, long[
         return sb.toString();
     }
 
-    /** For item data: the three series as one int array (high, then low, then close). */
-    public int[] packed() {
-        int[] out = new int[POINTS * 3];
-        for (int i = 0; i < POINTS; i++) {
-            out[i] = (int) high[i];
-            out[POINTS + i] = (int) low[i];
-            out[2 * POINTS + i] = (int) close[i];
-        }
-        return out;
+    /** Change from the first close in the window to the last, as a fraction (0.05 = up 5%). */
+    public double change() {
+        long f = first();
+        return f == 0 ? 0 : (last() - f) / (double) f;
     }
 
-    public static PriceChart unpack(String item, long toDay, int[] packed) {
-        if (packed.length != POINTS * 3) throw new IllegalArgumentException("chart data has " + packed.length + " values");
-        long[] hi = new long[POINTS], lo = new long[POINTS], cl = new long[POINTS];
-        for (int i = 0; i < POINTS; i++) {
-            hi[i] = packed[i];
-            lo[i] = packed[POINTS + i];
-            cl[i] = packed[2 * POINTS + i];
-        }
-        return new PriceChart(item, toDay, hi, lo, cl);
+    public long totalVolume() {
+        return Arrays.stream(volume).sum();
+    }
+
+    public long maxVolume() {
+        return Arrays.stream(volume).max().orElse(0);
     }
 
     @Override
     public boolean equals(Object o) {
         return o instanceof PriceChart p && item.equals(p.item) && toDay == p.toDay && Arrays.equals(high, p.high)
-                && Arrays.equals(low, p.low) && Arrays.equals(close, p.close);
+                && Arrays.equals(low, p.low) && Arrays.equals(close, p.close) && Arrays.equals(volume, p.volume);
     }
 
     @Override

@@ -41,7 +41,7 @@ Each pass through the loop should take longer and pay more than the last, with a
 | 0 | Barter | Basic Exchange, Almanac Lectern, dollars | Money as a medium of exchange; bid/ask spread | Crafted, no cost | First session |
 | 1 | Merchant | Price Board, Bill Clip, Merchant License, Trade Route Crate | Quotes, transaction costs, arbitrage between markets | $40–$300 | \~2 h |
 | 2 | Banking | Bank Vault + Passbook, Certificate of Deposit, Loan Note | Interest, compounding, leverage, collateral | $500–$2,500 | \~5 h |
-| 3 | Exchange | Trading Floor, Order Slips, Newsstand, Ticker Tape, Price Chart | Order books, limit vs market orders, liquidity, news | $1,000–$8,000 | \~10 h |
+| 3 | Exchange | Trading Floor, Order Slips, Newsstand, Ticker Tape | Order books, limit vs market orders, liquidity, news | $1,000–$8,000 | \~10 h |
 | 4 | Equities | Stock Exchange, Share Certificates, Electronic Newsfeed, Portfolio Binder, Safe Deposit Box | Ownership, dividends, valuation, news | $5,000–$25,000 | \~15 h |
 | 5 | Fixed income | Bond Desk, Treasury and Corporate Bonds, Records Terminal | Yield, rate risk, default risk, bookkeeping | $25,000–$60,000 | \~22 h |
 | 6 | Forwards and futures | Forward Contracts, Clearing House, Futures | Hedging, margin, mark-to-market | $40,000–$120,000 | \~30 h |
@@ -210,7 +210,7 @@ What the player can see about markets and their own money is itself a progressio
 | 1 | Price Board | Live quotes for up to 4 chosen items on a wall |
 | 2 | Passbook | A handwritten-style record of the player's bank balance, deposits, withdrawals and interest; the only place the balance is shown |
 | 3 | Newsstand | The market news as it breaks (droughts, harvests, strikes, gluts) and which goods to expect up or down, before most of the market has heard |
-| 3 | Ticker Tape and Price Chart | A 7-day price history for one Trading Floor book per chart, four points a day (close, with each quarter's high and low), printed as a snapshot |
+| 3 | Ticker Tape | A live 7-day chart of any Trading Floor book on the block's screen: four points a day (close over each quarter's high-low), traded volume, the week's change and range |
 | 4 | Portfolio Binder, Safe Deposit Box | Total value of the papers in one binder; safe storage for papers and bills, with no summary of its own |
 | 5 | Digital Record Keeping | A Records Terminal showing net worth, every holding, income by source, and upcoming payments across all linked blocks |
 | 7 | Risk Report Module | Terminal add-on: collateral coverage, distance to margin calls, portfolio Greeks, simple stress tests |
@@ -292,8 +292,7 @@ The mod adds 42 items and blocks plus 10 components (see Crafting) across nine t
 | 3 | Order Slip | Item | Drafting Table: 1 Ledger Paper -> 32 slips | One slip per order: a limit order good until the next dawn (repriced for free from the Floor screen), or a market order (filled now or refunded) | Limit vs market orders, transaction costs |
 | 3 | Trade Receipt | Item | One per finished order | Item, side, filled quantity, average price and day; can be recycled to paper | Settlement records |
 | 3 | Newsstand | Block | $1,000 | Opens the Overworld Gazette: the last three days' market stories, each with the goods it should push up or down. News breaks here at dawn, before most of the market has heard | Information, being early |
-| 3 | Ticker Tape | Block | $1,500 | Prints a Price Chart for any Trading Floor book, for 1 Ledger Paper + 1 Ink Bottle | Price history |
-| 3 | Price Chart | Item | Produced by Ticker Tape | A snapshot of 7 days in quarter-day points: line chart with high-low bars on right-click, a sparkline of daily closes in the tooltip (item-frame display later) | Reading charts, volatility |
+| 3 | Ticker Tape | Block | $1,500 | Its screen charts any Trading Floor book over the last 7 days, four points a day with high-low bars and volume, updating live. Free to read | Price history, reading charts |
 | 4 | Stock Exchange | Block | $10,000 | Buy and sell shares of fictional companies; claim dividends | Equity ownership |
 | 4 | Share Certificate | Item | Bought at Stock Exchange | Bearer certificate for 1, 10 or 100 shares of one company | Ownership, dividends |
 | 4 | Annual Report | Item | Free each earnings period per holding | Book with the company's revenue, costs, earnings and outlook | Fundamental analysis |
@@ -587,7 +586,7 @@ Build in tier order, and make each milestone a complete, playable loop before st
 | M4a | Banking | Bank Vault, Passbook, interest, CD; `registry` package; Nest Egg and Locked In quests | Interest compounds correctly; a CD settles once and a copy is VOID |
 | M4b | Collateral and loans | Loan Note, escrow, `collateral` package, margin calls and liquidation; Leverage quest | The worked loan example matches the table; a margin call liquidates correctly in a GameTest |
 | M5a | Trading Floor | Order Slips, receipts, custody at the Floor, NPC trader population on the existing batch auction, `agents` package, three guides and three quests | Books stay liquid with no player; prices track fair value in sim |
-| M5b | Ticker Tape | Ticker Tape, Price Chart, Reading a Chart guide, Read the Tape quest | A chart holds the last 7 days of a book |
+| M5b | Ticker Tape | Ticker Tape (chart on its screen), Reading a Chart guide, Read the Tape quest | A chart holds the last 7 days of a book |
 | M6 | Equities | Stock Exchange, certificates, six companies, Annual Reports, Electronic Newsfeed, Portfolio Binder, Safe Deposit Box | Dividends pay on presentation; earnings react to commodity prices |
 | M7 | Bonds | Bond Desk, Treasury and Corporate Bonds, central-rate events, defaults; Digital Record Keeping (Records Terminal, Record Link) | Bond prices fall when the rate rises; the Records Terminal's net worth equals the sum of linked holdings in a GameTest |
 | M8 | Forwards and futures | Forward Contract, Clearing House, daily mark-to-market | A wheat hedge offsets a price drop in sim |

@@ -272,10 +272,10 @@ class GuidesTest {
     }
 
     @Test
-    void chartGuideMatchesThePrintedChart() {
+    void chartGuideMatchesTheTickerTape() {
         assertEquals(7, com.realisticmarkets.exchange.PriceChart.DAYS);
         assertEquals(4, com.realisticmarkets.exchange.PriceHistory.PERIODS_PER_DAY);
-        assertTrue(text("reading_a_chart").contains("the last seven days of trading, four points a day"));
+        assertTrue(text("reading_a_chart").contains("last seven days of trading, four points a day"));
     }
 
     @Test
