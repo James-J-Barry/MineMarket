@@ -34,6 +34,8 @@ package com.realisticmarkets.progression;
  * option_multiple:<n>      (options closed for at least n times what they cost)
  * covered_call_written     (a call written against the goods themselves)
  * written_expired_worthless (a written option expired paying nothing)
+ * atm_used                 (the account opened at an ATM or a Pocket ATM)
+ * book_entry               (papers put into book entry)
  * </pre>
  */
 public sealed interface QuestGoal {
@@ -68,6 +70,8 @@ public sealed interface QuestGoal {
     record OptionMultiple(int times) implements QuestGoal {}
     record CoveredCallWritten() implements QuestGoal {}
     record WrittenExpiredWorthless() implements QuestGoal {}
+    record AtmUsed() implements QuestGoal {}
+    record BookEntry() implements QuestGoal {}
 
     static QuestGoal parse(String s) {
         String[] p = s.strip().split(":");
@@ -100,6 +104,8 @@ public sealed interface QuestGoal {
             case "option_multiple" -> new OptionMultiple(Integer.parseInt(p[1]));
             case "covered_call_written" -> new CoveredCallWritten();
             case "written_expired_worthless" -> new WrittenExpiredWorthless();
+            case "atm_used" -> new AtmUsed();
+            case "book_entry" -> new BookEntry();
             case "limit_filled" -> new LimitFilled();
             case "beat_dealer" -> new BeatDealer();
             case "two_books" -> new TwoBooks(p[1] + ":" + p[2], p[3] + ":" + p[4], Integer.parseInt(p[5]));

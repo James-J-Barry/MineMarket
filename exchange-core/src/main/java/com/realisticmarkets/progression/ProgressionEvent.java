@@ -111,4 +111,13 @@ public sealed interface ProgressionEvent {
      */
     record OptionWrittenSettled(long premiumCents, long paidOutCents, long strikeReceivedCents, boolean worthless, long day)
             implements ProgressionEvent {}
+
+    /** The account opened away from the vault: at an ATM or with a Pocket ATM. */
+    record AtmUsed(long day) implements ProgressionEvent {}
+
+    /** Papers put into book entry at a Brokerage Terminal. */
+    record BookEntryDeposited(long papers, long day) implements ProgressionEvent {}
+
+    /** Income credited automatically to a brokerage cash account at dawn (dividends, coupons, maturities, settlements). */
+    record BrokerageIncome(long dividendCents, long couponCents, long otherCents, long day) implements ProgressionEvent {}
 }

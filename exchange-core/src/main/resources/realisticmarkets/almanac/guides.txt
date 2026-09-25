@@ -431,3 +431,25 @@ Implied volatility is the swing an option's price assumes. At the desk it's the 
 Buying an option is betting the market will move more than its price assumes. Writing one is betting it will move less. When the board shows volatility far above normal, options are expensive and writers are paid well for the risk; when it's low, protection is cheap.
 
 Real world: the VIX index measures the implied volatility of the S&P 500. Traders call it the fear gauge, because it jumps when markets panic.
+
+@electronic_money Electronic Money
+You built an ATM. Your money no longer has to be dollars in your pocket: it's a number in the bank's books, and the card lets you reach it from any machine.
+
+That was always half true. Your vault balance was never a pile of bills in a block: the bank lent them out and kept a record of what it owes you. The Passbook is that record on paper. An ATM just lets you read and change the record without walking to the branch.
+
+Most money in the real world is like this. Coins and notes are a small slice of it; the rest is entries in bank accounts, moved by cards and transfers. It's safer: a card can be lost and replaced, and the money stays put. But you're trusting the bank's books instead of your own chest.
+
+With the Pocket ATM, the card opens your account anywhere. CDs and loans still need a visit to your vault, the way a real branch handles the paperwork.
+
+Real world: the first cash machines appeared in the 1960s. Today most payments are electronic, and some countries barely use cash at all. When too many people want their cash at once and the bank can't pay, that's a bank run, which is why governments now insure deposits.
+
+@book_entry Book Entry
+You built a Brokerage Terminal. Your shares, bonds and options can now live as entries in its books instead of papers in your chests.
+
+Paper securities were dangerous. A certificate could burn, be lost on a bad night in a cave, or be stolen, and whoever held it owned it. Every dividend meant carrying the papers to the exchange to be stamped.
+
+In book entry the terminal keeps the record. Dividends, coupons, bond maturities and option settlements are credited to your brokerage cash automatically at dawn: no queue at the desk. The Markets tab opens every exchange from the same block. And you can always print your papers back out if you want them in your hand.
+
+What changes is who you trust. A paper belongs to whoever holds it. A book entry belongs to whoever the books say, so the books had better be right. The terminal's records are keyed to your account, the same as your bank balance.
+
+Real world: stock certificates are nearly extinct. Shares are held electronically by brokers and central depositories, which is why a trade can settle in a day instead of weeks of couriers carrying paper.

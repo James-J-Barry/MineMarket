@@ -24,3 +24,6 @@ clearing_house,6,8000000,forward_contract,,blueprint:realisticmarkets:clearing_h
 options_desk,7,15000000,,,blueprint:realisticmarkets:options_desk;guide:options,Options Desk
 volatility_board,7,8000000,options_desk,,blueprint:realisticmarkets:volatility_board;guide:volatility,Volatility Board
 risk_report_module,7,6000000,digital_record_keeping,,blueprint:realisticmarkets:risk_report_module,Risk Report Module
+atm,8,30000000,,,blueprint:realisticmarkets:atm;blueprint:realisticmarkets:bank_card;component:realisticmarkets:computer_chip;guide:electronic_money,ATM
+pocket_atm,8,20000000,atm,,perk:pocket_atm,Pocket ATM
+brokerage_terminal,8,50000000,,,blueprint:realisticmarkets:brokerage_terminal;component:realisticmarkets:computer_chip;guide:book_entry,Brokerage Terminal

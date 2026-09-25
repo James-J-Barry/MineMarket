@@ -52,7 +52,7 @@ public class BankVaultMenu extends AbstractContainerMenu {
     private static final int D_CD_VALUE = 8, D_PASSBOOKS = 10, D_DAY = 11;
     private static final int D_HAS_LOAN_PERK = 13, D_LOAN_OPEN = 14, D_OWED = 15, D_RATE = 17, D_COVERAGE = 18, D_CALL = 19;
     private static final int D_SLOT_VALUE = 20, D_MAX_LOAN = 22, D_QUALITY = 24, D_REFUSED = 25, D_LOAN_AMOUNT = 26;
-    private static final int D_SLOT_RATE = 28, D_SIZE = 29;
+    private static final int D_SLOT_RATE = 28, D_REMOTE = 29, D_SIZE = 30;
     private static final long MAX_SYNCED = (1L << 30) - 1;
 
     private final Container vaultSlots = new SimpleContainer(2 + COLLATERAL_SLOTS);
@@ -66,6 +66,7 @@ public class BankVaultMenu extends AbstractContainerMenu {
     private final LongSupplier day;
     private long lastWritten = Long.MIN_VALUE;
     private int ticks;
+    private boolean remote; // an ATM or a Pocket ATM: the Account tab only
 
     public BankVaultMenu(int containerId, Inventory inv) {
         this(containerId, inv, null, ContainerLevelAccess.NULL, null, null, null, () -> 0);
@@ -121,6 +122,22 @@ public class BankVaultMenu extends AbstractContainerMenu {
         }
     }
 
+    /**
+     * The account reached from an ATM (or, with {@code access} NULL, a Pocket ATM): the Account tab only; CDs and loans
+     * stay at the vault.
+     */
+    public static BankVaultMenu remote(int containerId, Inventory inv, ContainerLevelAccess access, BankService bank,
+                                       ProgressionService progression, DealerService dealer, LongSupplier day) {
+        BankVaultMenu m = new BankVaultMenu(containerId, inv, null, access, bank, progression, dealer, day);
+        m.remote = true;
+        m.data.set(D_REMOTE, 1);
+        if (bank != null) m.refresh();
+        return m;
+    }
+
+    /** True at an ATM or Pocket ATM (the screen hides the CD and loan tabs). */
+    public boolean isRemote() { return data.get(D_REMOTE) != 0; }
+
     // ---- reads (client and server)
 
     public int tab() { return data.get(D_TAB); }
@@ -174,7 +191,7 @@ public class BankVaultMenu extends AbstractContainerMenu {
         ItemStack passbook = vaultSlots.getItem(PASSBOOK_SLOT);
         boolean has = !passbook.isEmpty();
         data.set(D_HAS_PASSBOOK, has ? 1 : 0);
-        setPair(D_BALANCE, has ? a.balanceCents() : 0);
+        setPair(D_BALANCE, has || remote ? a.balanceCents() : 0); // an ATM shows the balance on its screen
         long stamp = a.balanceCents() * 31 + a.log().size() * 7L + today;
         if (has && stamp != lastWritten) {
             PassbookItem.write(passbook, player.getName().getString(), a, today, bank.vaultRate(today));
@@ -231,6 +248,13 @@ public class BankVaultMenu extends AbstractContainerMenu {
         long today = day.getAsLong();
         Optional<String> why = Optional.empty();
         boolean handled = true;
+        if (remote && id != BUTTON_TAB_ACCOUNT && id != BUTTON_DEPOSIT_ALL && id != BUTTON_PASSBOOK
+                && (id < BUTTON_WITHDRAW_1 || id > BUTTON_WITHDRAW_ALL)) {
+            if (p instanceof net.minecraft.server.level.ServerPlayer sp) {
+                sp.sendOverlayMessage(net.minecraft.network.chat.Component.literal("CDs and loans are at your Bank Vault"));
+            }
+            return false;
+        }
         switch (id) {
             case BUTTON_TAB_ACCOUNT -> data.set(D_TAB, TAB_ACCOUNT);
             case BUTTON_TAB_CDS -> data.set(D_TAB, TAB_CDS);
@@ -306,6 +330,7 @@ public class BankVaultMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player p) {
+        if (remote) return stillValid(access, p, ModBlocks.ATM);
         return stillValid(access, p, ModBlocks.BANK_VAULT) && (vault == null || vault.isOwner(p));
     }
 

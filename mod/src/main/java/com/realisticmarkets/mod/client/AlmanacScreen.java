@@ -319,6 +319,8 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             case QuestGoal.MarginCallMet() -> "Get a margin call from the Clearing House and meet it before the next dawn.";
             case QuestGoal.FuturesProfit() -> "Close a futures position at the Clearing House at a profit.";
             case QuestGoal.PutPaid() -> "Hold a put to expiry and collect when it pays out.";
+            case QuestGoal.AtmUsed() -> "Reach your bank account from an ATM (or a Pocket ATM).";
+            case QuestGoal.BookEntry() -> "Put papers into book entry at a Brokerage Terminal.";
             case QuestGoal.CoveredCallWritten() -> "Write a call at the Options Desk backed by the goods themselves.";
             case QuestGoal.WrittenExpiredWorthless() -> "Write an option and keep the whole premium: it expires worthless.";
             case QuestGoal.OptionMultiple g -> "Get " + g.times() + " times what you paid for an option, at expiry or by selling it back.";

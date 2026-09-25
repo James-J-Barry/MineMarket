@@ -20,3 +20,6 @@ realisticmarkets:clearing_house,clearing_house,realisticmarkets:engraved_plate*2
 realisticmarkets:options_desk,options_desk,realisticmarkets:engraved_plate*2,realisticmarkets:display_screen*1,realisticmarkets:circuit_board*1,minecraft:emerald*4,#minecraft:planks*8
 realisticmarkets:volatility_board,volatility_board,realisticmarkets:display_screen*1,realisticmarkets:clockwork_gear*2,minecraft:iron_ingot*4
 realisticmarkets:risk_report_module,risk_report_module,realisticmarkets:circuit_board*1,realisticmarkets:display_screen*1,minecraft:gold_ingot*2
+realisticmarkets:atm,atm,realisticmarkets:computer_chip*1,realisticmarkets:display_screen*1,realisticmarkets:lock_mechanism*1,minecraft:iron_block*4
+realisticmarkets:bank_card,atm,realisticmarkets:computer_chip*1,minecraft:gold_ingot*1
+realisticmarkets:brokerage_terminal,brokerage_terminal,realisticmarkets:computer_chip*2,realisticmarkets:display_screen*2,realisticmarkets:circuit_board*1,realisticmarkets:engraved_plate*2,#minecraft:planks*8

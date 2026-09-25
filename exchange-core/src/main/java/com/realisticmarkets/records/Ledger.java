@@ -89,6 +89,11 @@ public final class Ledger {
             case ProgressionEvent.ForwardDefaulted f -> record(account, Source.TRADING_GAINS, f.day(), -f.depositCents());
             case ProgressionEvent.FuturesMarked m -> record(account, Source.TRADING_GAINS, m.day(), m.cents());
             case ProgressionEvent.FuturesClosed c -> record(account, Source.TRADING_GAINS, c.day(), c.realizedCents());
+            case ProgressionEvent.BrokerageIncome b -> {
+                record(account, Source.DIVIDENDS, b.day(), b.dividendCents());
+                record(account, Source.COUPONS, b.day(), b.couponCents());
+                record(account, Source.TRADING_GAINS, b.day(), b.otherCents());
+            }
             case ProgressionEvent.OptionWrittenSettled w -> {
                 record(account, Source.TRADING_GAINS, w.day(), w.premiumCents() - w.paidOutCents());
                 record(account, Source.DEALER_SALES, w.day(), w.strikeReceivedCents());

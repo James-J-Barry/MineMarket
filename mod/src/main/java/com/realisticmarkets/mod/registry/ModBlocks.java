@@ -47,6 +47,7 @@ public final class ModBlocks {
     public static Block CLEARING_HOUSE;
     public static Block OPTIONS_DESK;
     public static Block VOLATILITY_BOARD;
+    public static Block ATM;
 
     public static void init() {
         ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("basic_exchange"));
@@ -138,6 +139,15 @@ public final class ModBlocks {
                 access, com.realisticmarkets.mod.options.OptionsService.get(), ProgressionService.get(), DealerService.get()));
         VOLATILITY_BOARD = registerMenuBlock("volatility_board", (id, inv, access) -> new com.realisticmarkets.mod.menu.VolatilityBoardMenu(id,
                 inv, access, com.realisticmarkets.mod.options.OptionsService.get(), ProgressionService.get(), DealerService.get()));
+        ResourceKey<Block> atmKey = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("atm"));
+        ATM = Registry.register(BuiltInRegistries.BLOCK, atmKey,
+                new com.realisticmarkets.mod.block.AtmBlock(BlockBehaviour.Properties.of()
+                        .setId(atmKey)
+                        .mapColor(MapColor.METAL)
+                        .strength(5.0f, 1200.0f)
+                        .requiresCorrectToolForDrops()
+                        .sound(SoundType.METAL)));
+        ModItems.register("atm", props -> new BlockItem(ATM, props), new Item.Properties().useBlockDescriptionPrefix());
         NEWSFEED = registerMenuBlock("electronic_newsfeed", (id, inv, access) -> new com.realisticmarkets.mod.menu.NewsfeedMenu(id, inv,
                 access, com.realisticmarkets.mod.stocks.StockService.get(), ProgressionService.get(), DealerService.get()));
     }

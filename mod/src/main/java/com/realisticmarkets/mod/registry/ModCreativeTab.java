@@ -66,6 +66,9 @@ public final class ModCreativeTab {
                             output.accept(ModItems.OPTION_CONTRACT);
                             output.accept(ModBlocks.VOLATILITY_BOARD);
                             output.accept(ModItems.RISK_REPORT_MODULE);
+                            output.accept(ModBlocks.ATM);
+                            output.accept(ModItems.BANK_CARD);
+                            output.accept(ModItems.COMPUTER_CHIP);
                         })
                         .build());
     }

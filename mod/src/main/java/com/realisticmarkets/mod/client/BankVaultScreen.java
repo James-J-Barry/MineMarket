@@ -91,6 +91,7 @@ public class BankVaultScreen extends AbstractContainerScreen<BankVaultMenu> {
         accountTab.active = !account;
         cdTab.active = !cds;
         loanTab.active = !loans;
+        cdTab.visible = loanTab.visible = !m.isRemote();
         for (Button b : accountButtons) b.visible = account;
         for (Button b : cdButtons) b.visible = cds && m.hasCdPerk();
         for (Button b : borrowButtons) b.visible = loans && m.hasLoanPerk() && !m.loanOpen();
@@ -151,7 +152,7 @@ public class BankVaultScreen extends AbstractContainerScreen<BankVaultMenu> {
         super.extractLabels(g, mouseX, mouseY);
         BankVaultMenu m = getMenu();
         if (m.tab() == BankVaultMenu.TAB_ACCOUNT) {
-            if (m.hasPassbook()) {
+            if (m.hasPassbook() || m.isRemote()) {
                 g.text(font, "Balance " + Money.format(m.balanceCents()), 30, 25, GREEN, false);
             } else {
                 g.text(font, "Put your Passbook here", 30, 21, LIGHT_GREY, false);

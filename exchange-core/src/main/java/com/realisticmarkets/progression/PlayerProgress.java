@@ -111,6 +111,9 @@ public final class PlayerProgress {
             case ProgressionEvent.OptionClosed e -> e.day();
             case ProgressionEvent.OptionWritten e -> e.day();
             case ProgressionEvent.OptionWrittenSettled e -> e.day();
+            case ProgressionEvent.AtmUsed e -> e.day();
+            case ProgressionEvent.BookEntryDeposited e -> e.day();
+            case ProgressionEvent.BrokerageIncome e -> e.day();
         };
         if (day != trackedDay) {
             trackedDay = day;
@@ -187,6 +190,12 @@ public final class PlayerProgress {
         }
         if (event instanceof ProgressionEvent.BondSold b) {
             return goal instanceof QuestGoal.RateWatcher && b.rateCutSince() && b.costCents() >= 0 && b.proceedsCents() > b.costCents();
+        }
+        if (event instanceof ProgressionEvent.AtmUsed) {
+            return goal instanceof QuestGoal.AtmUsed;
+        }
+        if (event instanceof ProgressionEvent.BookEntryDeposited b) {
+            return goal instanceof QuestGoal.BookEntry && b.papers() > 0;
         }
         if (event instanceof ProgressionEvent.OptionWritten w) {
             return goal instanceof QuestGoal.CoveredCallWritten && w.call() && w.covered();
