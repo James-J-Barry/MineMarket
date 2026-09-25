@@ -47,7 +47,7 @@ import java.util.Set;
  */
 public final class ProgressionSim {
     static final double MINUTES_PER_DAY = 20.0;
-    static final int MAX_DAYS = 1200;
+    static final int MAX_DAYS = 3000;
     static final String DUMP_ITEM = "minecraft:cobblestone";
     static final double HOLD_BELOW = 0.90;
     static final long GROUP_TARGET_CENTS = 2050;
@@ -169,6 +169,17 @@ public final class ProgressionSim {
                     Money.format(r.nodeCents() + r.componentCents()), Money.format(r.questCents()));
         }
         System.out.println("Design target: Tier 6 by about 30 h.");
+
+        System.out.println();
+        System.out.println("Tier 7 (M9): all of Tiers 1-7 owned (Options Desk, Volatility Board, Risk Report Module) and every blueprint crafted once.");
+        System.out.printf(Locale.ROOT, "%-16s  %6s  %7s  %12s  %14s%n", "profile", "days", "hours", "total spend", "quest rewards");
+        for (String name : new LinkedHashSet<>(List.of(profile, "farm_heavy"))) {
+            Result r = run(loadProfile(name), 1.0, null, 7);
+            System.out.printf(Locale.ROOT, "%-16s  %6s  %7s  %12s  %14s%n", name,
+                    r.done() ? String.valueOf(r.day()) : ">" + MAX_DAYS, r.done() ? String.format(Locale.ROOT, "%.1f", r.hours()) : "-",
+                    Money.format(r.nodeCents() + r.componentCents()), Money.format(r.questCents()));
+        }
+        System.out.println("Design target: Tier 7 by about 40 h.");
     }
 
     static final int CRATE_DAYS = 30;

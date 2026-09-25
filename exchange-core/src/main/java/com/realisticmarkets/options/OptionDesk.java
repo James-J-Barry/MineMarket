@@ -17,16 +17,17 @@ import java.util.OptionalLong;
 /**
  * The Options Desk's prices. European calls and puts on the six futures goods (in futures lots) and the six companies'
  * shares (10 a contract), expiring on the next two quarter days, five strikes each around the forward price. Priced
- * with Black-76 at a volatility of the underlying's realized volatility over the last {@link #VOL_DAYS} dawns times a
- * smile; the desk sells at fair +{@link #HALF_SPREAD} and buys back at fair -{@link #HALF_SPREAD}, a dime at least, and
+ * with Black-76 at a volatility blending the underlying's realized volatility over the last {@link #VOL_DAYS} dawns with
+ * its long-run level, times a smile; the desk sells at fair +{@link #HALF_SPREAD} and buys back at fair -{@link #HALF_SPREAD}, a dime at least, and
  * leans {@link #SKEW_PER_CONTRACT} further per contract of the series an account has already traded today. At each
  * expiry dawn it records the settlement price of every underlying; in-the-money papers then pay their intrinsic value.
  */
 public final class OptionDesk {
     public static final String HEADER = "# Realistic Markets options desk v1";
-    public static final double HALF_SPREAD = 0.04, SKEW_PER_CONTRACT = 0.005, SMILE = 0.8;
-    public static final double DEFAULT_GOODS_VOL = 0.03, DEFAULT_SHARE_VOL = 0.025, MIN_VOL = 0.005, MAX_VOL = 0.25;
-    public static final int VOL_DAYS = 20, MIN_CLOSES = 5, SHARES_PER_CONTRACT = 10;
+    public static final double HALF_SPREAD = 0.04, SKEW_PER_CONTRACT = 0.005, SMILE = 2.0;
+    /** Long-run daily volatility (goods measured over 32 worlds x 40 weeks of week-long moves; shares an estimate). */
+    public static final double LONG_RUN_GOODS_VOL = 0.055, LONG_RUN_SHARE_VOL = 0.04, MIN_VOL = 0.005, MAX_VOL = 0.25;
+    public static final int VOL_DAYS = 28, MIN_CLOSES = 5, WEEKLY_CLOSES = 14, HORIZON = 7, SHARES_PER_CONTRACT = 10;
     public static final double[] MONEYNESS = {0.8, 0.9, 1.0, 1.1, 1.2};
 
     /** Where the desk gets prices: each underlying's price per contract now, forward to a day, and the day's rate. */
@@ -115,25 +116,46 @@ public final class OptionDesk {
         while (d.size() > VOL_DAYS + 1) d.removeFirst();
     }
 
-    /** Daily volatility of the log price over the recorded closes, or the class default with too few. */
+    /**
+     * Daily volatility of the log price, or the class default with fewer than {@link #MIN_CLOSES} closes. With at least
+     * {@link #WEEKLY_CLOSES} it's measured on overlapping {@link #HORIZON}-day moves (then divided back to a day), because
+     * that's how long options run and prices partly reverse from day to day (a news shock fades): daily moves alone would
+     * overstate a week's swing. With fewer, on daily moves.
+     */
     public double realizedVol(String underlying) {
         Deque<double[]> d = closes.get(underlying);
-        if (d == null || d.size() < MIN_CLOSES) return isGood(underlying) ? DEFAULT_GOODS_VOL : DEFAULT_SHARE_VOL;
-        List<Double> r = new ArrayList<>();
-        double[] prev = null;
-        for (double[] c : d) {
-            if (prev != null) r.add(Math.log(c[1] / prev[1]) / Math.sqrt(c[0] - prev[0]));
-            prev = c;
+        if (d == null || d.size() < MIN_CLOSES) return longRunVol(underlying);
+        List<double[]> c = new ArrayList<>(d);
+        int k = c.size() >= WEEKLY_CLOSES ? HORIZON : 1;
+        double sum = 0;
+        int n = 0;
+        for (int i = k; i < c.size(); i++) {
+            double[] from = c.get(i - k), to = c.get(i);
+            double r = Math.log(to[1] / from[1]);
+            sum += r * r / (to[0] - from[0]);
+            n++;
         }
-        double mean = r.stream().mapToDouble(Double::doubleValue).average().orElse(0);
-        double var = r.stream().mapToDouble(x -> (x - mean) * (x - mean)).sum() / Math.max(1, r.size() - 1);
+        double var = n == 0 ? 0 : sum / n;
         return Math.max(MIN_VOL, Math.min(MAX_VOL, Math.sqrt(var)));
     }
 
-    /** The volatility the desk prices a strike at: realized, times the smile (away-from-the-money strikes cost more). */
+    public static double longRunVol(String underlying) {
+        return isGood(underlying) ? LONG_RUN_GOODS_VOL : LONG_RUN_SHARE_VOL;
+    }
+
+    /**
+     * The at-the-money volatility the desk prices at: recent realized volatility blended half and half (in variance)
+     * with the long-run level, because news can break any day: a quiet month doesn't make a drought impossible.
+     */
+    public double baseVol(String underlying) {
+        double r = realizedVol(underlying), l = longRunVol(underlying);
+        return Math.sqrt(0.5 * r * r + 0.5 * l * l);
+    }
+
+    /** The volatility the desk prices a strike at: the base, times the smile (away-from-the-money strikes cost more). */
     public double impliedVol(String underlying, double strikeCents, double forwardCents) {
         double m = Math.log(strikeCents / forwardCents);
-        return realizedVol(underlying) * (1 + SMILE * m * m);
+        return baseVol(underlying) * (1 + SMILE * m * m);
     }
 
     // ------------------------------------------------------------------ prices

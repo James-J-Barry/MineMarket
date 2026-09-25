@@ -6,6 +6,7 @@
 #       | chart_read | dividend_collected | shares_held:<n> | beat_market | companies_held:<n>
 #       | coupon_collected | held_to_maturity | rate_watcher | balance_sheet:<cents> | forward_beat_spot
 #       | variation_received | margin_call_met | futures_profit | put_paid | option_multiple:<n>
+#       | covered_call_written | written_expired_worthless
 # reward_cents is paid in bills; grants are ;-separated (guide:, perk:, blueprint:).
 id,goal,reward_cents,grants,title
 first_sale,any_sale,500,guide:money_and_dealer,First Sale
@@ -37,3 +38,5 @@ met_the_call,margin_call_met,8000,,Met the Call
 speculator,futures_profit,8000,,Speculator
 insured,put_paid,10000,guide:the_greeks,Insured
 long_shot,option_multiple:3,15000,,Long Shot
+covered_call,covered_call_written,10000,guide:covered_and_naked,Covered Call
+premium_collector,written_expired_worthless,12000,,Premium Collector

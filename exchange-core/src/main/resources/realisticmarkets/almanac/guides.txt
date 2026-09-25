@@ -385,9 +385,9 @@ Real world: in 2008 and again in 2020, margin calls forced traders to sell whate
 @options Options
 An option is a right, not a promise. A call is the right to buy at a set price, the strike, on the expiry day. A put is the right to sell. You pay for the right up front: the premium.
 
-Say a lot of wheat is worth $128 today. A wheat call with a $130 strike, expiring in a week, costs $3.30 at the Options Desk. If wheat ends the week 20% up, the lot is worth $153.60 and your call pays $23.60, seven times what it cost. If wheat ends at $130 or below, the call pays nothing. You lose the $3.30 and not a dime more.
+Say a lot of wheat is worth $128 today. A wheat call with a $130 strike, expiring in a week, costs $6.70 at the Options Desk. If wheat ends the week 20% up, the lot is worth $153.60 and your call pays $23.60, three times what it cost. If wheat ends at $130 or below, the call pays nothing. You lose the $6.70 and not a dime more.
 
-A put works the other way. A $120 put costs $1.20. If wheat falls 20% to $102.40, it pays $17.60. For a farmer that's insurance: whatever happens to wheat, the harvest plus the put can't be worth much less than $120.
+A put works the other way. A $120 put costs $4.10. If wheat falls 20% to $102.40, it pays $17.60. For a farmer that's insurance: whatever happens to wheat, the harvest plus the put can't be worth much less than $120.
 
 That lopsided shape is the whole point. A future gains and loses the same on each side. An option caps what you can lose at its price, and keeps most of the upside.
 
@@ -398,12 +398,36 @@ Real world: options on rice were traded in Japan in the 1700s, and today more op
 @the_greeks The Greeks
 Your put paid out. Before the next one, learn how an option's price moves. Traders use Greek letters for it, and the Options Desk shows each one for the paper you pick.
 
-Delta: how much the option moves when the price does. Our $130 wheat call has a delta of 0.43, so it moves like 110 wheat: if a lot rises $1, the call rises about 43 cents. Puts have negative delta, because they gain when prices fall.
+Delta: how much the option moves when the price does. Our $130 wheat call has a delta of 0.48, so it moves like 120 wheat: if a lot rises $1, the call rises about 48 cents. Puts have negative delta, because they gain when prices fall.
 
-Theta: what the option loses each day if nothing happens. The call loses about $0.28 a day, and faster near expiry. Time is on the seller's side.
+Theta: what the option loses each day if nothing happens. The call loses about $0.52 a day, and faster near expiry. Time is on the seller's side.
 
-Vega: how much the price depends on how much the market moves. The desk prices options on how far each good has been swinging lately, so after a wild week options cost more. One point more of daily volatility adds $1.31 to our call.
+Vega: how much the price depends on how much the market moves. The desk prices options on how far each good has been swinging lately, so after a wild week options cost more. One point more of daily volatility adds $1.32 to our call.
 
 Strikes far from today's price cost a little extra: the desk charges for surprises. That's the smile, and the Volatility Board draws it.
 
 Real world: in 1973 Fischer Black and Myron Scholes published the formula that prices options from these same ingredients, and a whole industry grew around it.
+
+@covered_and_naked Covered and Naked
+You wrote an option. You're the insurer now: the desk pays you the premium, and you owe whatever the option is worth at expiry.
+
+Write our $130 wheat call against 256 wheat of your own and the desk pays $6.10, the full premium. If wheat ends above $130 your wheat is called away: the desk takes it and pays you $130, however high wheat went. You keep the premium either way. That's a covered call: you trade away the upside above the strike for cash today.
+
+Write the same call with no wheat behind it and it's naked. If wheat soars you owe the difference, with no limit. So the desk wants collateral worth what a 20% jump would cost, plus a quarter: $29.50 here. And it pays less for promises it may struggle to collect: backed by cash you get $5.90, by 192 oak logs only $4.90, because logs sell badly in a hurry.
+
+Each dawn the desk checks your collateral still covers the risk. If not, you get a margin call, and a day later it buys the option back out of your escrow at the price of the moment.
+
+Writing options earns small, steady money and now and then loses a lot. Size it so the bad week doesn't finish you.
+
+Real world: covered calls are one of the most common strategies for people who own shares, and selling naked options has ruined more than one trader who thought the premium was free money.
+
+@volatility Volatility
+The Volatility Board shows how much each market is expected to swing, and what that does to option prices.
+
+Realized volatility is how much a price actually moved: the desk measures it from each week's move over the last 28 dawns, as a percent a day. After a quiet fortnight options are cheap. After a drought, a glut or a run of news, prices swing harder and every option costs more, calls and puts alike.
+
+Implied volatility is the swing an option's price assumes. At the desk it's the realized volatility with a smile on top: strikes far from today's price are priced a little more volatile, about 7% more at 20% away, because big surprises happen more often than a calm market suggests. On the board that curve looks like a smile.
+
+Buying an option is betting the market will move more than its price assumes. Writing one is betting it will move less. When the board shows volatility far above normal, options are expensive and writers are paid well for the risk; when it's low, protection is cheap.
+
+Real world: the VIX index measures the implied volatility of the S&P 500. Traders call it the fear gauge, because it jumps when markets panic.

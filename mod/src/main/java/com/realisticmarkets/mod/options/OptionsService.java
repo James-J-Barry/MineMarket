@@ -46,6 +46,7 @@ public final class OptionsService {
     private final StockService stocks; // null: no share options priced (tests)
     private final BankService bank;    // null: a flat 0.3% a day
     private final OptionDesk desk;
+    private final com.realisticmarkets.options.WrittenBook written;
     private final Path file; // null in tests
     private final Map<String, long[]> book = new LinkedHashMap<>(); // account|series -> {contracts, cents}
     private long lastDawn = Long.MIN_VALUE;
@@ -78,7 +79,18 @@ public final class OptionsService {
                 return bank == null ? 0.003 : bank.centralBank().marketRate(day);
             }
         };
-        this.desk = saved == null ? new OptionDesk(market) : OptionDesk.read(saved, market);
+        String text = saved == null ? null : readAll(saved);
+        this.desk = text == null ? new OptionDesk(market) : OptionDesk.read(new java.io.StringReader(text), market);
+        this.written = text == null ? new com.realisticmarkets.options.WrittenBook()
+                : com.realisticmarkets.options.WrittenBook.read(new java.io.StringReader(text));
+    }
+
+    private static String readAll(Reader r) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        char[] buf = new char[4096];
+        int n;
+        while ((n = r.read(buf)) > 0) sb.append(buf, 0, n);
+        return sb.toString();
     }
 
     public static void start(MinecraftServer server) {
@@ -122,6 +134,7 @@ public final class OptionsService {
     }
 
     public OptionDesk desk() { return desk; }
+    public com.realisticmarkets.options.WrittenBook written() { return written; }
 
     public static String account(Player p) {
         return p.getUUID().toString();
@@ -145,6 +158,42 @@ public final class OptionsService {
 
     // ------------------------------------------------------------------ dawn
 
+    /** Records closes and settlements, then settles and checks written options; tells their writers if online. */
+    public void dawn(long day, java.util.function.Function<java.util.UUID, Player> online, ProgressionService prog) {
+        dawn(day);
+        List<com.realisticmarkets.options.WrittenBook.Written> called = new ArrayList<>();
+        var settled = written.dawn(day, desk, dealer.dealer(), called);
+        for (var w : called) {
+            Player p = online.apply(java.util.UUID.fromString(w.account()));
+            if (p == null) continue;
+            long need = Math.max(0, Math.round(com.realisticmarkets.options.WrittenBook.DAWN_COVER
+                    * com.realisticmarkets.options.WrittenBook.exposureCents(w, desk, day))
+                    - com.realisticmarkets.options.WrittenBook.collateralCents(w, dealer.dealer(), day));
+            if (p instanceof net.minecraft.server.level.ServerPlayer sp) {
+                sp.sendSystemMessage(net.minecraft.network.chat.Component.literal("MARGIN CALL on your written " + OptionPapers.title(w.series())
+                        + ": add " + Money.format(need) + " at the Options Desk by dawn, or the desk buys it back out of your collateral.")
+                        .withStyle(net.minecraft.ChatFormatting.RED));
+            }
+            p.getInventory().placeItemBackInInventory(com.realisticmarkets.mod.futures.FuturesService.notice(day, need));
+        }
+        for (var st : settled) {
+            Player p = online.apply(java.util.UUID.fromString(st.account()));
+            if (p == null) continue;
+            if (p instanceof net.minecraft.server.level.ServerPlayer sp) {
+                String what = st.boughtBack() ? "bought back by the desk for " + Money.format(st.paidOutCents())
+                        : st.calledAwayUnits() > 0 ? "exercised: your goods were called away for " + Money.format(st.strikeReceivedCents())
+                        : st.worthless() ? "expired worthless: the premium is yours" : "expired in the money: paid " + Money.format(st.paidOutCents());
+                sp.sendSystemMessage(net.minecraft.network.chat.Component.literal("Written " + OptionPapers.title(st.series()) + " " + what
+                        + ". Collect your collateral at the Options Desk.").withStyle(net.minecraft.ChatFormatting.GOLD));
+            }
+            if (prog != null) {
+                prog.emit(p, new ProgressionEvent.OptionWrittenSettled(st.premiumCents(), st.paidOutCents(), st.strikeReceivedCents(),
+                        st.worthless(), day));
+            }
+        }
+        if (!called.isEmpty() || !settled.isEmpty()) save();
+    }
+
     /** Records closes for volatility and, on quarter days (including any missed), settlement prices. */
     public void dawn(long day) {
         long from = lastDawn == Long.MIN_VALUE ? day : lastDawn + 1;
@@ -162,7 +211,15 @@ public final class OptionsService {
     public static void tick(MinecraftServer server) {
         if (instance == null || ++instance.ticks % 100 != 0) return;
         long day = (long) Math.floor(instance.dealer.day(server));
-        if (day > instance.lastDawn) instance.dawn(day);
+        if (day > instance.lastDawn) {
+            ProgressionService prog;
+            try {
+                prog = ProgressionService.get();
+            } catch (IllegalStateException notRunning) {
+                prog = null;
+            }
+            instance.dawn(day, id -> server.getPlayerList().getPlayer(id), prog);
+        }
     }
 
     // ------------------------------------------------------------------ trading
@@ -279,6 +336,90 @@ public final class OptionsService {
         return Wallet.count(player.getInventory()) - before;
     }
 
+    // ------------------------------------------------------------------ writing
+
+    /** Collateral in a container: bills as cash, everything else as goods by item id. */
+    public record Collateral(Map<String, Integer> items, long cashCents, List<String> refused) {}
+
+    public Collateral collateral(net.minecraft.world.Container c) {
+        Map<String, Integer> items = new LinkedHashMap<>();
+        long cash = 0;
+        List<String> refused = new ArrayList<>();
+        for (int i = 0; i < c.getContainerSize(); i++) {
+            ItemStack st = c.getItem(i);
+            if (st.isEmpty()) continue;
+            var d = ModItems.denominationOf(st);
+            if (d != null) {
+                cash += d.cents() * st.getCount();
+                continue;
+            }
+            String id = DealerService.itemId(st);
+            if (!com.realisticmarkets.collateral.CollateralValuer.gradeOf(dealer.dealer().catalog(), id).accepted()
+                    || st.has(net.minecraft.core.component.DataComponents.CUSTOM_DATA)) {
+                refused.add(st.getHoverName().getString());
+                continue;
+            }
+            items.merge(id, st.getCount(), Integer::sum);
+        }
+        return new Collateral(items, cash, refused);
+    }
+
+    public com.realisticmarkets.options.WrittenBook.Terms writeTerms(OptionDesk.Series s, int contracts, Collateral c, double day) {
+        return com.realisticmarkets.options.WrittenBook.terms(desk, dealer.dealer(), s, contracts, c.items(), c.cashCents(), day);
+    }
+
+    /** Writes an option against the collateral in {@code slots} (emptied into escrow) and pays the premium. */
+    public Optional<String> write(Player player, OptionDesk.Series s, int contracts, net.minecraft.world.Container slots, double day,
+                                  ProgressionService prog) {
+        if (!OptionDesk.isGood(s.underlying())) return Optional.of("Only options on goods can be written");
+        Collateral c = collateral(slots);
+        if (!c.refused().isEmpty()) return Optional.of(c.refused().get(0) + " can't back an option");
+        com.realisticmarkets.options.WrittenBook.Written w;
+        try {
+            w = written.write(account(player), desk, dealer.dealer(), s, contracts, c.items(), c.cashCents(), day);
+        } catch (com.realisticmarkets.exchange.RejectedException e) {
+            return Optional.of(e.getMessage());
+        }
+        slots.clearContent();
+        Wallet.give(player, w.premiumCents());
+        if (prog != null) {
+            prog.emit(player, new ProgressionEvent.OptionWritten(s.underlying(), s.call(), contracts, w.premiumCents(),
+                    w.coveredShare() >= 1, (long) Math.floor(day)));
+        }
+        save();
+        return Optional.empty();
+    }
+
+    /** Moves every bill the player carries into a written option's escrow (meeting a margin call). */
+    public Optional<String> topUp(Player player, long id, double day) {
+        var w = written.get(id).filter(x -> x.account().equals(account(player)));
+        if (w.isEmpty()) return Optional.of("No such written option");
+        long cash = Wallet.takeAll(player);
+        if (cash <= 0) return Optional.of("You carry no cash");
+        written.addCash(id, cash, desk, dealer.dealer(), day);
+        save();
+        return Optional.empty();
+    }
+
+    /** Hands back escrow released after settlement. Returns whether there was any. */
+    public boolean collectReturns(Player player) {
+        var r = written.collect(account(player));
+        if (r.items().isEmpty() && r.cashCents() <= 0) return false;
+        for (Map.Entry<String, Integer> e : r.items().entrySet()) {
+            var item = net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(net.minecraft.resources.Identifier.parse(e.getKey()));
+            int left = e.getValue();
+            while (left > 0) {
+                int n = Math.min(left, item.getDefaultMaxStackSize());
+                player.getInventory().placeItemBackInInventory(new ItemStack(item, n));
+                left -= n;
+            }
+        }
+        long cash = Money.roundDownToDime(r.cashCents());
+        if (cash > 0) Wallet.give(player, cash);
+        save();
+        return true;
+    }
+
     /** Average cost (cents) of one contract of a series this account bought here, or -1. */
     public double averageCost(String account, OptionDesk.Series s) {
         long[] e = book.get(account + "|" + s.key());
@@ -312,6 +453,7 @@ public final class OptionsService {
             Files.createDirectories(file.getParent());
             StringWriter w = new StringWriter();
             desk.write(w);
+            written.write(w);
             for (Map.Entry<String, long[]> e : book.entrySet()) {
                 w.write("book\t" + e.getKey() + "\t" + e.getValue()[0] + "\t" + e.getValue()[1] + "\n");
             }

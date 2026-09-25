@@ -46,6 +46,7 @@ public final class ModBlocks {
     public static Block RECORDS_TERMINAL;
     public static Block CLEARING_HOUSE;
     public static Block OPTIONS_DESK;
+    public static Block VOLATILITY_BOARD;
 
     public static void init() {
         ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("basic_exchange"));
@@ -135,6 +136,8 @@ public final class ModBlocks {
         ModItems.register("clearing_house", props -> new BlockItem(CLEARING_HOUSE, props), new Item.Properties().useBlockDescriptionPrefix());
         OPTIONS_DESK = registerMenuBlock("options_desk", (id, inv, access) -> new com.realisticmarkets.mod.menu.OptionsDeskMenu(id, inv,
                 access, com.realisticmarkets.mod.options.OptionsService.get(), ProgressionService.get(), DealerService.get()));
+        VOLATILITY_BOARD = registerMenuBlock("volatility_board", (id, inv, access) -> new com.realisticmarkets.mod.menu.VolatilityBoardMenu(id,
+                inv, access, com.realisticmarkets.mod.options.OptionsService.get(), ProgressionService.get(), DealerService.get()));
         NEWSFEED = registerMenuBlock("electronic_newsfeed", (id, inv, access) -> new com.realisticmarkets.mod.menu.NewsfeedMenu(id, inv,
                 access, com.realisticmarkets.mod.stocks.StockService.get(), ProgressionService.get(), DealerService.get()));
     }

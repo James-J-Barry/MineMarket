@@ -150,7 +150,8 @@ public final class RecordsService {
     public record Row(Line line, ItemStack icon) {}
 
     /** Everything a terminal shows: the balance sheet, its rows, the calendar, and how many links still stand. */
-    public record View(NetWorth netWorth, List<Row> rows, Calendar calendar, Map<String, ItemStack> icons, int links) {}
+    public record View(NetWorth netWorth, List<Row> rows, Calendar calendar, Map<String, ItemStack> icons, int links,
+                       Map<String, Long> goodsUnits, Map<com.realisticmarkets.options.OptionDesk.Series, Long> optionsHeld) {}
 
     /** Values what {@code terminal} can see for its owner {@code owner} on {@code day}. */
     public View view(RecordsTerminalBlockEntity terminal, UUID owner, double day) {
@@ -176,6 +177,7 @@ public final class RecordsService {
             }
         }
         v.forwards();
+        v.written();
         v.calendar.add(Calendar.nextEvery(today, com.realisticmarkets.rates.CentralBank.REVIEW_DAYS), Calendar.Kind.RATE_DECISION, "", 0);
         for (String ticker : v.tickers) {
             v.calendar.add(Calendar.nextEvery(today, Company.QUARTER_DAYS), Calendar.Kind.EARNINGS, ticker, 0);
@@ -192,7 +194,7 @@ public final class RecordsService {
             if (nw.lines().size() > before) rows.add(new Row(line, v.icons.getOrDefault(e.getKey(), ItemStack.EMPTY)));
         }
         rows.sort((a, b) -> Long.compare(b.line().value(), a.line().value()));
-        return new View(nw, rows, v.calendar, v.icons, blocks.size());
+        return new View(nw, rows, v.calendar, v.icons, blocks.size(), v.goodsUnits, v.optionsHeld);
     }
 
     /** The icon for a calendar entry: the paper that falls due, or a company's certificate. */
@@ -209,6 +211,8 @@ public final class RecordsService {
         final Map<String, ItemStack> icons = new LinkedHashMap<>();
         final Set<String> tickers = new LinkedHashSet<>();
         final Calendar calendar = new Calendar();
+        final Map<String, Long> goodsUnits = new LinkedHashMap<>();
+        final Map<com.realisticmarkets.options.OptionDesk.Series, Long> optionsHeld = new LinkedHashMap<>();
 
         Valuer(String account, double day) {
             this.account = account;
@@ -312,6 +316,7 @@ public final class RecordsService {
             double avg = os.averageCost(account, series.get());
             String label = com.realisticmarkets.mod.options.OptionPapers.title(series.get());
             add(Kind.OPTIONS, label, where, s.getCount(), mark, avg < 0 ? -1 : Math.round(avg * s.getCount()), s);
+            if (!settle.isPresent()) optionsHeld.merge(series.get(), (long) s.getCount(), Long::sum);
             if (!settle.isPresent() && series.get().expiry() > today) {
                 icons.putIfAbsent("C|" + label, s.copyWithCount(1));
                 calendar.add(series.get().expiry(), Calendar.Kind.OPTION_EXPIRY, label, 0);
@@ -341,6 +346,7 @@ public final class RecordsService {
                 return;
             }
             add(Kind.GOODS, s.getHoverName().getString(), where, s.getCount(), cents / s.getCount(), -1, s);
+            goodsUnits.merge(id, (long) s.getCount(), Long::sum);
         }
 
         /** A linked Clearing House: the futures account at its equity (a debt if negative), expiries and dawn marks. */
@@ -362,6 +368,31 @@ public final class RecordsService {
                 calendar.add(p.expiry(), Calendar.Kind.FUTURES_EXPIRY, label, 0);
             }
             if (!acct.get().positions().isEmpty()) calendar.add(today + 1, Calendar.Kind.MARGIN_CHECK, "", 0);
+        }
+
+        /**
+         * Options the account wrote: the escrow is still its own (an asset at what it would fetch), and each option is
+         * a liability at what it would cost to buy back. Expiries go on the calendar.
+         */
+        void written() {
+            var os = sources.options();
+            if (os == null) return;
+            for (var w : os.written().open(account)) {
+                long escrow = w.cashCents();
+                try {
+                    escrow += com.realisticmarkets.collateral.CollateralValuer.value(w.items(), 0, sources.dealer().dealer(), day)
+                            .liquidationCents();
+                } catch (RuntimeException ignored) {
+                    // a good the Dealer no longer trades: counts at nothing
+                }
+                String label = com.realisticmarkets.mod.options.OptionPapers.title(w.series());
+                ItemStack paper = com.realisticmarkets.mod.options.OptionPapers.create(w.series(), 1);
+                add(Kind.GOODS, "Escrow: " + label, "Dealer", 1, escrow, escrow, new ItemStack(ModItems.LOCK_MECHANISM));
+                long owe = Math.round(os.desk().fair(w.series(), day) * (1 + com.realisticmarkets.options.OptionDesk.HALF_SPREAD) * w.contracts());
+                add(Kind.DEBTS, "Written " + label, "Dealer", 1, owe, -1, paper);
+                icons.putIfAbsent("C|W " + label, paper);
+                calendar.add(w.series().expiry(), Calendar.Kind.OPTION_EXPIRY, "W " + label, 0);
+            }
         }
 
         /** Open forwards are contracts on the account: their deposits count, and their deliveries go on the calendar. */
@@ -387,6 +418,85 @@ public final class RecordsService {
                         new ItemStack(com.realisticmarkets.mod.registry.ModBlocks.TRADE_ROUTE_CRATE));
             });
         }
+    }
+
+    // ------------------------------------------------------------------ risk (the Risk Report Module)
+
+    /** One contract's cover: {@code ratio} = collateral over what it must cover; {@code cushion} = the move left before a call. */
+    public record Cover(String what, double ratio, double cushion) {}
+
+    /** Per good: exposure in units (delta), the gain or loss if it falls 20%, and vega (cents per point of volatility). */
+    public record Exposure(String code, double units, long stressCents, long vegaCents) {}
+
+    public record Risk(List<Cover> covers, List<Exposure> exposures) {}
+
+    public static final double STRESS = 0.20;
+
+    /** The Risk tab: cover on every contract and exposure to each of the six goods, from a terminal's view. */
+    public Risk risk(View view, UUID owner, double day) {
+        String account = owner == null ? "" : owner.toString();
+        List<Cover> covers = new ArrayList<>();
+        var dealerNow = sources.dealer().dealer();
+        if (sources.bank() != null && owner != null) {
+            sources.bank().loan(owner).filter(l -> !l.repaid()).ifPresent(l -> {
+                long c = l.value(dealerNow, day).valueCents();
+                double ratio = l.owedCents() == 0 ? 99 : c / (double) l.owedCents();
+                covers.add(new Cover("Loan", ratio, c == 0 ? -1 : 1 - com.realisticmarkets.collateral.CollateralValuer.MAINTENANCE * l.owedCents() / (double) c));
+            });
+        }
+        Map<String, double[]> by = new LinkedHashMap<>(); // code -> {units, vega}
+        for (var p : com.realisticmarkets.futures.ClearingHouse.PRODUCTS) {
+            by.put(p.code(), new double[] {view.goodsUnits().getOrDefault(p.item(), 0L), 0});
+        }
+        var fs = sources.futures();
+        if (fs != null && fs.house().existing(account).isPresent()) {
+            var h = fs.house();
+            var acct = h.account(account);
+            if (!acct.positions().isEmpty()) {
+                long equity = h.equity(account, day), maint = h.required(account, day, false), initial = h.required(account, day, true);
+                double notional = initial / com.realisticmarkets.futures.ClearingHouse.INITIAL_MARGIN;
+                covers.add(new Cover("Futures", maint == 0 ? 99 : equity / (double) maint, notional == 0 ? -1 : (equity - maint) / notional));
+                for (var pos : acct.positions()) {
+                    by.get(pos.code())[0] += pos.lots() * (double) com.realisticmarkets.futures.ClearingHouse.product(pos.code()).lot();
+                }
+            }
+        }
+        var fw = sources.forwards();
+        if (fw != null) {
+            for (var f : fw.book().open(account)) {
+                for (var p : com.realisticmarkets.futures.ClearingHouse.PRODUCTS) if (p.item().equals(f.item())) by.get(p.code())[0] -= f.quantity();
+            }
+        }
+        var os = sources.options();
+        if (os != null) {
+            for (var e : view.optionsHeld().entrySet()) {
+                double[] x = by.get(e.getKey().underlying());
+                if (x == null) continue;
+                var g = os.desk().greeks(e.getKey(), day);
+                x[0] += g.delta() * com.realisticmarkets.options.OptionDesk.contractSize(e.getKey().underlying()) * e.getValue();
+                x[1] += g.vega() * e.getValue();
+            }
+            for (var w : os.written().open(account)) {
+                double[] x = by.get(w.series().underlying());
+                var g = os.desk().greeks(w.series(), day);
+                x[0] -= g.delta() * com.realisticmarkets.options.OptionDesk.contractSize(w.series().underlying()) * w.contracts();
+                x[1] -= g.vega() * w.contracts();
+                String good = com.realisticmarkets.futures.ClearingHouse.product(w.series().underlying()).item();
+                x[0] += w.items().getOrDefault(good, 0); // goods in escrow are still yours until called away
+                long need = Math.round(com.realisticmarkets.options.WrittenBook.DAWN_COVER
+                        * com.realisticmarkets.options.WrittenBook.exposureCents(w, os.desk(), day));
+                long c = com.realisticmarkets.options.WrittenBook.collateralCents(w, dealerNow, day);
+                covers.add(new Cover("Written " + com.realisticmarkets.mod.options.OptionPapers.title(w.series()),
+                        need == 0 ? 99 : c / (double) need, -1));
+            }
+        }
+        List<Exposure> exposures = new ArrayList<>();
+        for (var p : com.realisticmarkets.futures.ClearingHouse.PRODUCTS) {
+            double[] x = by.get(p.code());
+            double unit = dealerNow.fairValue(p.item(), day) * 100;
+            exposures.add(new Exposure(p.code(), x[0], Math.round(-STRESS * x[0] * unit), Math.round(x[1])));
+        }
+        return new Risk(covers, exposures);
     }
 
     // ------------------------------------------------------------------ persistence

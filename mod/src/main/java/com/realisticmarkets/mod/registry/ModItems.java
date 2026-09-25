@@ -44,7 +44,7 @@ public final class ModItems {
     public static Item FORWARD_CONTRACT, MARGIN_CALL_NOTICE;
 
     /** Tier 7: Option Contract papers (bearer, one contract a paper, stackable series). */
-    public static Item OPTION_CONTRACT;
+    public static Item OPTION_CONTRACT, RISK_REPORT_MODULE;
 
     /** Bank papers: the Passbook (balance and history) and Certificates of Deposit (bearer papers). */
     public static Item PASSBOOK, CERTIFICATE_OF_DEPOSIT, LOAN_NOTE;
@@ -71,6 +71,7 @@ public final class ModItems {
         CIRCUIT_BOARD = register("circuit_board", Item::new, new Item.Properties());
         FORWARD_CONTRACT = register("forward_contract", Item::new, new Item.Properties().stacksTo(1));
         OPTION_CONTRACT = register("option_contract", Item::new, new Item.Properties());
+        RISK_REPORT_MODULE = register("risk_report_module", Item::new, new Item.Properties().stacksTo(1));
         MARGIN_CALL_NOTICE = register("margin_call_notice", Item::new, new Item.Properties().stacksTo(1));
         RECORD_LINK = register("record_link", com.realisticmarkets.mod.records.RecordLinkItem::new, new Item.Properties().stacksTo(1));
         PORTFOLIO_BINDER = register("portfolio_binder", com.realisticmarkets.mod.item.PortfolioBinderItem::new,

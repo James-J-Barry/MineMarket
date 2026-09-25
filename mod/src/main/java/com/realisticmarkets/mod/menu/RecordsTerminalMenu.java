@@ -28,7 +28,8 @@ import net.minecraft.world.item.ItemStack;
  */
 public class RecordsTerminalMenu extends AbstractContainerMenu {
     public static final int WIDTH = 256, HEIGHT = 206, ROWS_PER_PAGE = 9, CAL_MAX = 9, LINE_DAYS = 30;
-    public static final int TAB_OVERVIEW = 0, TAB_HOLDINGS = 1, TAB_INCOME = 2, TAB_CALENDAR = 3;
+    public static final int TAB_OVERVIEW = 0, TAB_HOLDINGS = 1, TAB_INCOME = 2, TAB_CALENDAR = 3, TAB_RISK = 6, MAX_COVERS = 5;
+    public static final int COVER_LOAN = 1, COVER_FUTURES = 2, COVER_WRITTEN = 3;
     public static final int BUTTON_PREV = 4, BUTTON_NEXT = 5;
     public static final int LOC_VAULT = 1, LOC_BOX = 2, LOC_CRATE = 3, LOC_DEALER = 4, LOC_CLEARING = 5;
     public static final long NO_DATA = Long.MIN_VALUE;
@@ -41,7 +42,9 @@ public class RecordsTerminalMenu extends AbstractContainerMenu {
     private static final int D_LEDGER = D_INCOME + Ledger.Source.values().length * 2 * L;
     private static final int D_ROWS = D_LEDGER + 1, D_ROW = D_ROWS + 1, ROW_STRIDE = 2 + 3 * L + 1;
     private static final int D_CAL_COUNT = D_ROW + ROWS_PER_PAGE * ROW_STRIDE, D_CAL = D_CAL_COUNT + 1, CAL_STRIDE = 3 + L;
-    private static final int D_SIZE = D_CAL + CAL_MAX * CAL_STRIDE;
+    private static final int D_MODULE = D_CAL + CAL_MAX * CAL_STRIDE, D_COVERS = D_MODULE + 1, D_COVER = D_COVERS + 1, COVER_STRIDE = 3;
+    private static final int D_EXPOSURE = D_COVER + MAX_COVERS * COVER_STRIDE, EXP_STRIDE = 3 * L;
+    private static final int D_SIZE = D_EXPOSURE + 6 * EXP_STRIDE;
 
     private final ContainerData data = new SimpleContainerData(D_SIZE);
     private final SimpleContainer icons = new SimpleContainer(ROWS_PER_PAGE + CAL_MAX);
@@ -111,6 +114,19 @@ public class RecordsTerminalMenu extends AbstractContainerMenu {
     public Calendar.Kind calendarKind(int i) { return Calendar.Kind.values()[data.get(D_CAL + i * CAL_STRIDE + 2)]; }
     public long calendarCents(int i) { return getLong(D_CAL + i * CAL_STRIDE + 3); }
     public ItemStack calendarIcon(int i) { return icons.getItem(ROWS_PER_PAGE + i); }
+    public boolean riskModule() { return data.get(D_MODULE) != 0; }
+    public int coverCount() { return data.get(D_COVERS); }
+    public int coverKind(int i) { return data.get(D_COVER + i * COVER_STRIDE); }
+    /** Collateral over what it must cover, x100. */
+    public int coverRatioPct(int i) { return data.get(D_COVER + i * COVER_STRIDE + 1); }
+    /** The move left before a margin call, in tenths of a percent; Integer.MIN_VALUE when not applicable. */
+    public int coverCushionPermille(int i) {
+        int v = data.get(D_COVER + i * COVER_STRIDE + 2);
+        return v == 0 ? Integer.MIN_VALUE : v - 20_000;
+    }
+    public long exposureUnits(int good) { return getLong(D_EXPOSURE + good * EXP_STRIDE); }
+    public long exposureStress(int good) { return getLong(D_EXPOSURE + good * EXP_STRIDE + L); }
+    public long exposureVega(int good) { return getLong(D_EXPOSURE + good * EXP_STRIDE + 2 * L); }
 
     private static String location(int code) {
         int type = code / 100, n = code % 100;
@@ -215,6 +231,25 @@ public class RecordsTerminalMenu extends AbstractContainerMenu {
             data.set(base + 2 + 3 * L, profit.isPresent() ? 1 : 0);
             icons.setItem(i, r.icon());
         }
+        data.set(D_MODULE, terminal.hasRiskModule() ? 1 : 0);
+        if (terminal.hasRiskModule()) {
+            RecordsService.Risk risk = records.risk(v, terminal.owner(), records.sources().dealer().day(player.level().getGameTime()));
+            int nc = Math.min(MAX_COVERS, risk.covers().size());
+            data.set(D_COVERS, nc);
+            for (int i = 0; i < nc; i++) {
+                var c = risk.covers().get(i);
+                int base = D_COVER + i * COVER_STRIDE;
+                data.set(base, c.what().equals("Loan") ? COVER_LOAN : c.what().equals("Futures") ? COVER_FUTURES : COVER_WRITTEN);
+                data.set(base + 1, (int) Math.max(0, Math.min(32_000, Math.round(c.ratio() * 100))));
+                data.set(base + 2, c.cushion() == -1 ? 0 : (int) Math.max(1, Math.min(32_000, Math.round(c.cushion() * 1000) + 20_000)));
+            }
+            for (int g = 0; g < risk.exposures().size() && g < 6; g++) {
+                var e = risk.exposures().get(g);
+                setLong(D_EXPOSURE + g * EXP_STRIDE, Math.round(e.units()));
+                setLong(D_EXPOSURE + g * EXP_STRIDE + L, e.stressCents());
+                setLong(D_EXPOSURE + g * EXP_STRIDE + 2 * L, e.vegaCents());
+            }
+        }
         List<Calendar.Entry> due = v.calendar().upcoming(today, CAL_MAX);
         data.set(D_CAL_COUNT, due.size());
         for (int i = 0; i < CAL_MAX; i++) {
@@ -242,6 +277,10 @@ public class RecordsTerminalMenu extends AbstractContainerMenu {
         if (records == null) return false;
         switch (id) {
             case TAB_OVERVIEW, TAB_HOLDINGS, TAB_INCOME, TAB_CALENDAR -> data.set(D_TAB, id);
+            case TAB_RISK -> {
+                if (!terminal.hasRiskModule()) return false;
+                data.set(D_TAB, id);
+            }
             case BUTTON_PREV -> data.set(D_PAGE, Math.max(0, page() - 1));
             case BUTTON_NEXT -> data.set(D_PAGE, Math.min(pages() - 1, page() + 1));
             default -> {

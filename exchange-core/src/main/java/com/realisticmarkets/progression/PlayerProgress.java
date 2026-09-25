@@ -109,6 +109,8 @@ public final class PlayerProgress {
             case ProgressionEvent.FuturesClosed e -> e.day();
             case ProgressionEvent.MarginCallMet e -> e.day();
             case ProgressionEvent.OptionClosed e -> e.day();
+            case ProgressionEvent.OptionWritten e -> e.day();
+            case ProgressionEvent.OptionWrittenSettled e -> e.day();
         };
         if (day != trackedDay) {
             trackedDay = day;
@@ -185,6 +187,12 @@ public final class PlayerProgress {
         }
         if (event instanceof ProgressionEvent.BondSold b) {
             return goal instanceof QuestGoal.RateWatcher && b.rateCutSince() && b.costCents() >= 0 && b.proceedsCents() > b.costCents();
+        }
+        if (event instanceof ProgressionEvent.OptionWritten w) {
+            return goal instanceof QuestGoal.CoveredCallWritten && w.call() && w.covered();
+        }
+        if (event instanceof ProgressionEvent.OptionWrittenSettled w) {
+            return goal instanceof QuestGoal.WrittenExpiredWorthless && w.worthless();
         }
         if (event instanceof ProgressionEvent.OptionClosed o) {
             return switch (goal) {

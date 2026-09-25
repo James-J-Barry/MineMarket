@@ -19,7 +19,7 @@ class GuidesTest {
                         "cash_on_hand", "reading_a_quote", "transaction_costs", "two_markets",
                         "interest_and_compounding", "term_and_liquidity", "leverage_and_collateral",
                         "order_books", "limit_and_market_orders", "liquidity_and_market_makers", "news_and_markets", "reading_a_chart", "owning_a_share", "valuing_a_company",
-                        "risk_and_return", "custody", "bonds_and_yield", "interest_rate_risk", "credit_risk", "net_worth", "hedging", "futures_and_margin", "margin_calls", "options", "the_greeks"),
+                        "risk_and_return", "custody", "bonds_and_yield", "interest_rate_risk", "credit_risk", "net_worth", "hedging", "futures_and_margin", "margin_calls", "options", "the_greeks", "covered_and_naked", "volatility"),
                 guides.all().stream().map(Guides.Guide::id).toList());
         for (Guides.Guide g : guides.all()) {
             int words = g.wordCount();
@@ -374,14 +374,15 @@ class GuidesTest {
     @Test
     void optionNumbersMatchTheDesk() {
         String o = text("options"), g = text("the_greeks");
-        double f = 12_800, r = 0.003, s = com.realisticmarkets.options.OptionDesk.DEFAULT_GOODS_VOL;
-        var call = com.realisticmarkets.options.OptionMath.greeks(true, f, 13_000, 7, s, r);
-        var put = com.realisticmarkets.options.OptionMath.greeks(false, f, 12_000, 7, s, r);
+        double f = 12_800, r = 0.003, s = com.realisticmarkets.options.OptionDesk.LONG_RUN_GOODS_VOL;
+        double smile = com.realisticmarkets.options.OptionDesk.SMILE;
+        var call = com.realisticmarkets.options.OptionMath.greeks(true, f, 13_000, 7, s * (1 + smile * Math.pow(Math.log(13_000 / f), 2)), r);
+        var put = com.realisticmarkets.options.OptionMath.greeks(false, f, 12_000, 7, s * (1 + smile * Math.pow(Math.log(12_000 / f), 2)), r);
         long callAsk = com.realisticmarkets.money.Money.roundUpToDime(call.price() * (1 + com.realisticmarkets.options.OptionDesk.HALF_SPREAD));
         long putAsk = com.realisticmarkets.money.Money.roundUpToDime(put.price() * (1 + com.realisticmarkets.options.OptionDesk.HALF_SPREAD));
         assertTrue(o.contains("a $130 strike, expiring in a week, costs " + com.realisticmarkets.money.Money.format(callAsk)), "call " + callAsk);
         assertTrue(o.contains("A $120 put costs " + com.realisticmarkets.money.Money.format(putAsk)), "put " + putAsk);
-        assertTrue(o.contains("your call pays $23.60, " + new String[] {"", "", "", "", "four", "five", "six", "seven", "eight"}[(int) (2_360 / callAsk)]
+        assertTrue(o.contains("your call pays $23.60, " + new String[] {"", "", "two", "three", "four", "five", "six", "seven"}[(int) (2_360 / callAsk)]
                 + " times"));
         assertTrue(o.contains("it pays $17.60"));
         assertTrue(g.contains(String.format(java.util.Locale.ROOT, "delta of %.2f, so it moves like %d wheat", call.delta(),
@@ -389,6 +390,31 @@ class GuidesTest {
         assertTrue(g.contains(String.format(java.util.Locale.ROOT, "about %d cents", Math.round(call.delta() * 100))));
         assertTrue(g.contains(String.format(java.util.Locale.ROOT, "about $%.2f a day", call.theta() / 100)));
         assertTrue(g.contains(String.format(java.util.Locale.ROOT, "adds $%.2f to our call", call.vega() / 100)));
+    }
+
+    @Test
+    void writingNumbersMatchTheDesk() {
+        var m = new com.realisticmarkets.options.OptionDesk.Market() {
+            public double spotCents(String u, double d) { return 12_800; }
+            public double forwardCents(String u, long e, double d) { return 12_800; }
+            public double rate(double d) { return 0.003; }
+        };
+        var desk = new com.realisticmarkets.options.OptionDesk(m);
+        var dealer = new com.realisticmarkets.dealer.Dealer(com.realisticmarkets.dealer.DealerCatalog.loadDefault(),
+                com.realisticmarkets.dealer.DealerParams.defaults(), 1L);
+        var call = new com.realisticmarkets.options.OptionDesk.Series("WHT", true, 13_000, 7);
+        var covered = com.realisticmarkets.options.WrittenBook.terms(desk, dealer, call, 1, java.util.Map.of("minecraft:wheat", 256), 0, 0);
+        var cash = com.realisticmarkets.options.WrittenBook.terms(desk, dealer, call, 1, java.util.Map.of(), 5_000, 0);
+        var logs = com.realisticmarkets.options.WrittenBook.terms(desk, dealer, call, 1, java.util.Map.of("minecraft:oak_log", 192), 0, 0);
+        String c = text("covered_and_naked");
+        assertTrue(c.contains("the desk pays " + com.realisticmarkets.money.Money.format(covered.premiumCents()) + ", the full premium"));
+        assertTrue(c.contains("backed by cash you get " + com.realisticmarkets.money.Money.format(cash.premiumCents())));
+        assertTrue(c.contains("by 192 oak logs only " + com.realisticmarkets.money.Money.format(logs.premiumCents())));
+        assertTrue(c.contains("plus a quarter: " + com.realisticmarkets.money.Money.format(cash.requiredCents())));
+        String v = text("volatility");
+        double smile = com.realisticmarkets.options.OptionDesk.SMILE * Math.pow(Math.log(1.2), 2);
+        assertTrue(v.contains("about " + Math.round(smile * 100) + "% more at 20% away"), "smile " + smile);
+        assertTrue(v.contains("last " + com.realisticmarkets.options.OptionDesk.VOL_DAYS + " dawns"));
     }
 
     @Test

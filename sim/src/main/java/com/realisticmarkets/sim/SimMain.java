@@ -13,6 +13,7 @@ import java.util.Arrays;
  *   ./scripts/dev.sh sim equities                  six companies' earnings, share prices and returns vs the vault
  *   ./scripts/dev.sh sim trader                    does the Floor make a player money? gatherer uplift, trading strategies
  *   ./scripts/dev.sh sim hedge                     a wheat farmer unhedged vs forwards vs futures; a crash; a speculator
+ *   ./scripts/dev.sh sim options                   writing premiums by collateral; buying calls and puts; covered calls; insurance
  * </pre>
  */
 public final class SimMain {
@@ -27,8 +28,9 @@ public final class SimMain {
             case "trader" -> TraderSim.main(rest);
             case "equities" -> EquitySim.main(rest);
             case "hedge" -> HedgeSim.main(rest);
+            case "options" -> OptionsSim.main(rest);
             default -> {
-                System.err.println("unknown sim '" + mode + "'. Try: farm, auction, progression, floor, trader, equities, hedge");
+                System.err.println("unknown sim '" + mode + "'. Try: farm, auction, progression, floor, trader, equities, hedge, options");
                 System.exit(2);
             }
         }

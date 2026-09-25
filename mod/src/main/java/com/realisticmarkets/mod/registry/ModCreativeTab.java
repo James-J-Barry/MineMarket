@@ -64,6 +64,8 @@ public final class ModCreativeTab {
                             output.accept(ModItems.MARGIN_CALL_NOTICE);
                             output.accept(ModBlocks.OPTIONS_DESK);
                             output.accept(ModItems.OPTION_CONTRACT);
+                            output.accept(ModBlocks.VOLATILITY_BOARD);
+                            output.accept(ModItems.RISK_REPORT_MODULE);
                         })
                         .build());
     }

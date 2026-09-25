@@ -100,4 +100,15 @@ public sealed interface ProgressionEvent {
      */
     record OptionClosed(String underlying, boolean call, long contracts, long proceedsCents, long costCents, boolean expired,
                         long day) implements ProgressionEvent {}
+
+    /** An option written to the Options Desk; {@code covered} when the goods themselves back all of it. */
+    record OptionWritten(String underlying, boolean call, long contracts, long premiumCents, boolean covered, long day)
+            implements ProgressionEvent {}
+
+    /**
+     * A written option finished: at expiry ({@code worthless} if it paid nothing) or bought back after an unmet call.
+     * {@code strikeReceivedCents} is what the desk paid for goods called away.
+     */
+    record OptionWrittenSettled(long premiumCents, long paidOutCents, long strikeReceivedCents, boolean worthless, long day)
+            implements ProgressionEvent {}
 }

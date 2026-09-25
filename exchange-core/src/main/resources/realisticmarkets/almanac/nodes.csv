@@ -22,3 +22,5 @@ digital_record_keeping,5,2000000,bank_vault;safe_deposit_box,,blueprint:realisti
 forward_contract,6,4000000,,,perk:forwards;component:realisticmarkets:security_paper;guide:hedging,Forward Contract
 clearing_house,6,8000000,forward_contract,,blueprint:realisticmarkets:clearing_house;guide:futures_and_margin,Clearing House
 options_desk,7,15000000,,,blueprint:realisticmarkets:options_desk;guide:options,Options Desk
+volatility_board,7,8000000,options_desk,,blueprint:realisticmarkets:volatility_board;guide:volatility,Volatility Board
+risk_report_module,7,6000000,digital_record_keeping,,blueprint:realisticmarkets:risk_report_module,Risk Report Module

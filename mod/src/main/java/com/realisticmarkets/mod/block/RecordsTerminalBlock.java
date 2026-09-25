@@ -46,6 +46,24 @@ public class RecordsTerminalBlock extends Block implements EntityBlock {
         return InteractionResult.SUCCESS;
     }
 
+    /** Right-clicking the terminal with a Risk Report Module fits it (once). */
+    @Override
+    protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player,
+                                          net.minecraft.world.InteractionHand hand, BlockHitResult hit) {
+        if (!stack.is(com.realisticmarkets.mod.registry.ModItems.RISK_REPORT_MODULE)) return InteractionResult.TRY_WITH_EMPTY_HAND;
+        if (level.isClientSide()) return InteractionResult.SUCCESS;
+        if (level.getBlockEntity(pos) instanceof RecordsTerminalBlockEntity terminal && terminal.isOwner(player)) {
+            if (terminal.hasRiskModule()) {
+                if (player instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.literal("This terminal already has a Risk Report Module"));
+            } else {
+                terminal.installRiskModule();
+                stack.shrink(1);
+                if (player instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.literal("Risk Report Module fitted: a Risk tab appears"));
+            }
+        }
+        return InteractionResult.SUCCESS;
+    }
+
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new RecordsTerminalBlockEntity(pos, state);

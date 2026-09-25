@@ -89,6 +89,10 @@ public final class Ledger {
             case ProgressionEvent.ForwardDefaulted f -> record(account, Source.TRADING_GAINS, f.day(), -f.depositCents());
             case ProgressionEvent.FuturesMarked m -> record(account, Source.TRADING_GAINS, m.day(), m.cents());
             case ProgressionEvent.FuturesClosed c -> record(account, Source.TRADING_GAINS, c.day(), c.realizedCents());
+            case ProgressionEvent.OptionWrittenSettled w -> {
+                record(account, Source.TRADING_GAINS, w.day(), w.premiumCents() - w.paidOutCents());
+                record(account, Source.DEALER_SALES, w.day(), w.strikeReceivedCents());
+            }
             case ProgressionEvent.OptionClosed o when o.costCents() >= 0 ->
                     record(account, Source.TRADING_GAINS, o.day(), o.proceedsCents() - o.costCents());
             case ProgressionEvent.FloorOrderDone f when !f.buy() -> record(account, Source.FLOOR_SALES, f.day(), f.filledCents());

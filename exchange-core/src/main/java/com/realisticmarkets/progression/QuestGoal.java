@@ -32,6 +32,8 @@ package com.realisticmarkets.progression;
  * futures_profit           (futures closed at a profit)
  * put_paid                 (a put paid out at expiry)
  * option_multiple:<n>      (options closed for at least n times what they cost)
+ * covered_call_written     (a call written against the goods themselves)
+ * written_expired_worthless (a written option expired paying nothing)
  * </pre>
  */
 public sealed interface QuestGoal {
@@ -64,6 +66,8 @@ public sealed interface QuestGoal {
     record FuturesProfit() implements QuestGoal {}
     record PutPaid() implements QuestGoal {}
     record OptionMultiple(int times) implements QuestGoal {}
+    record CoveredCallWritten() implements QuestGoal {}
+    record WrittenExpiredWorthless() implements QuestGoal {}
 
     static QuestGoal parse(String s) {
         String[] p = s.strip().split(":");
@@ -94,6 +98,8 @@ public sealed interface QuestGoal {
             case "futures_profit" -> new FuturesProfit();
             case "put_paid" -> new PutPaid();
             case "option_multiple" -> new OptionMultiple(Integer.parseInt(p[1]));
+            case "covered_call_written" -> new CoveredCallWritten();
+            case "written_expired_worthless" -> new WrittenExpiredWorthless();
             case "limit_filled" -> new LimitFilled();
             case "beat_dealer" -> new BeatDealer();
             case "two_books" -> new TwoBooks(p[1] + ":" + p[2], p[3] + ":" + p[4], Integer.parseInt(p[5]));

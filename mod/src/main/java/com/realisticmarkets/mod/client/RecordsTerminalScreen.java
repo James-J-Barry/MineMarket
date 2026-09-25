@@ -25,7 +25,7 @@ import net.minecraft.world.item.ItemStack;
 public class RecordsTerminalScreen extends AbstractContainerScreen<RecordsTerminalMenu> {
     private static final String[] TABS = {"Overview", "Holdings", "Income", "Calendar"};
     private final Button[] tabs = new Button[TABS.length];
-    private Button prev, next;
+    private Button prev, next, riskTab;
 
     public RecordsTerminalScreen(RecordsTerminalMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title, RecordsTerminalMenu.WIDTH, RecordsTerminalMenu.HEIGHT);
@@ -40,7 +40,8 @@ public class RecordsTerminalScreen extends AbstractContainerScreen<RecordsTermin
     @Override
     protected void init() {
         super.init();
-        for (int i = 0; i < TABS.length; i++) tabs[i] = button(TABS[i], i, 8 + i * 61, 5, 59);
+        for (int i = 0; i < TABS.length; i++) tabs[i] = button(TABS[i], i, 8 + i * 50, 5, 48);
+        riskTab = button("Risk", RecordsTerminalMenu.TAB_RISK, 208, 5, 40);
         prev = button("<", RecordsTerminalMenu.BUTTON_PREV, 196, 187, 20);
         next = button(">", RecordsTerminalMenu.BUTTON_NEXT, 228, 187, 20);
         updateWidgets();
@@ -61,6 +62,8 @@ public class RecordsTerminalScreen extends AbstractContainerScreen<RecordsTermin
         if (prev == null) return;
         RecordsTerminalMenu m = getMenu();
         for (int i = 0; i < tabs.length; i++) tabs[i].active = m.tab() != i;
+        riskTab.visible = m.riskModule();
+        riskTab.active = m.tab() != RecordsTerminalMenu.TAB_RISK;
         boolean paged = m.owner() && m.tab() == RecordsTerminalMenu.TAB_HOLDINGS && m.pages() > 1;
         prev.visible = next.visible = paged;
         prev.active = m.page() > 0;
@@ -87,6 +90,7 @@ public class RecordsTerminalScreen extends AbstractContainerScreen<RecordsTermin
             case RecordsTerminalMenu.TAB_HOLDINGS -> holdings(g, m);
             case RecordsTerminalMenu.TAB_INCOME -> income(g, m);
             case RecordsTerminalMenu.TAB_CALENDAR -> calendar(g, m);
+            case RecordsTerminalMenu.TAB_RISK -> risk(g, m);
             default -> overview(g, m);
         }
     }
@@ -171,14 +175,15 @@ public class RecordsTerminalScreen extends AbstractContainerScreen<RecordsTermin
         return switch (m.rowKind(i)) {
             case CASH -> icon.is(com.realisticmarkets.mod.registry.ModItems.FORWARD_CONTRACT) ? "Forward deposit" : "Cash";
             case VAULT -> "Vault balance";
-            case DEBTS -> icon.is(com.realisticmarkets.mod.registry.ModItems.MARGIN_CALL_NOTICE) ? "Clearing House debt" : "Loan";
+            case DEBTS -> icon.is(com.realisticmarkets.mod.registry.ModItems.MARGIN_CALL_NOTICE) ? "Clearing House debt"
+                    : icon.is(com.realisticmarkets.mod.registry.ModItems.OPTION_CONTRACT) ? "Wrote " + icon.getHoverName().getString() : "Loan";
             case FUTURES -> "Futures account";
             case SHARES -> ShareCertificates.read(icon).map(p -> p.ticker() + " " + ShareCertificates.COMPANIES.company(p.ticker()).name())
                     .orElse("Shares");
             case BONDS -> BondPapers.read(icon).map(p -> BondPapers.issuerName(p.bond().issuer()) + " bond, day " + p.bond().maturityDay())
                     .orElse("Bonds");
             case GOODS -> icon.isEmpty() ? "Loan collateral" : icon.is(ModBlocks.TRADE_ROUTE_CRATE.asItem()) ? "Shipment in transit"
-                    : icon.getHoverName().getString();
+                    : icon.is(com.realisticmarkets.mod.registry.ModItems.LOCK_MECHANISM) ? "Option escrow" : icon.getHoverName().getString();
             default -> icon.isEmpty() ? m.rowKind(i).label() : icon.getHoverName().getString();
         };
     }
@@ -240,6 +245,52 @@ public class RecordsTerminalScreen extends AbstractContainerScreen<RecordsTermin
         right(g, Money.format(month), 240, y + 2, BLUE);
         g.text(font, "Trading gains count sales whose cost is on record.", 12, y + 20, LIGHT_GREY, false);
         g.text(font, "Sales are what you received, not profit.", 12, y + 30, LIGHT_GREY, false);
+    }
+
+    // ------------------------------------------------------------------ Risk
+
+    private void risk(GuiGraphicsExtractor g, RecordsTerminalMenu m) {
+        g.text(font, "Cover", 12, 28, LIGHT_GREY, false);
+        right(g, "collateral / need", 170, 28, LIGHT_GREY);
+        right(g, "room to a call", 244, 28, LIGHT_GREY);
+        if (m.coverCount() == 0) g.text(font, "No loans, futures or written options.", 12, 40, LIGHT_GREY, false);
+        int written = 0;
+        for (int i = 0; i < m.coverCount(); i++) {
+            int y = 40 + i * 11;
+            String what = switch (m.coverKind(i)) {
+                case RecordsTerminalMenu.COVER_LOAN -> "Bank loan";
+                case RecordsTerminalMenu.COVER_FUTURES -> "Futures account";
+                default -> "Written option " + ++written;
+            };
+            int pct = m.coverRatioPct(i);
+            boolean tight = pct < (m.coverKind(i) == RecordsTerminalMenu.COVER_FUTURES ? 110 : 120);
+            g.text(font, what, 12, y, GREY, false);
+            right(g, pct >= 32_000 ? "plenty" : pct + "%", 170, y, tight ? RED : GREEN);
+            int cushion = m.coverCushionPermille(i);
+            if (cushion != Integer.MIN_VALUE) {
+                String c = cushion <= 0 ? "under" : String.format(java.util.Locale.ROOT, "%.1f%%", cushion / 10.0);
+                right(g, c, 244, y, cushion <= 50 ? RED : GREY);
+            }
+        }
+        int top = 102;
+        g.fill(12, top - 4, 244, top - 3, 0xFFB0A890);
+        g.text(font, "Exposure", 12, top, LIGHT_GREY, false);
+        right(g, "like holding", 120, top, LIGHT_GREY);
+        right(g, "if it falls 20%", 190, top, LIGHT_GREY);
+        right(g, "vega", 244, top, LIGHT_GREY);
+        var products = com.realisticmarkets.futures.ClearingHouse.PRODUCTS;
+        long total = 0;
+        for (int i = 0; i < products.size(); i++) {
+            int y = top + 12 + i * 11;
+            long units = m.exposureUnits(i), stress = m.exposureStress(i), vega = m.exposureVega(i);
+            total += stress;
+            g.text(font, products.get(i).name(), 12, y, units == 0 && vega == 0 ? LIGHT_GREY : GREY, false);
+            right(g, units == 0 ? "-" : (units > 0 ? "+" : "") + units, 120, y, GREY);
+            right(g, stress == 0 ? "-" : signed(stress), 190, y, stress < 0 ? RED : stress > 0 ? GREEN : LIGHT_GREY);
+            right(g, vega == 0 ? "-" : signed(vega), 244, y, GREY);
+        }
+        g.text(font, "If all six fall 20% at once: " + signed(total), 12, top + 82, total < 0 ? RED : GREY, false);
+        g.text(font, "Goods in linked storage, futures, forwards and options.", 12, top + 94, LIGHT_GREY, false);
     }
 
     // ------------------------------------------------------------------ Calendar

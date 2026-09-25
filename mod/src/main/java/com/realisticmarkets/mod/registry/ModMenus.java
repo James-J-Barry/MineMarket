@@ -38,6 +38,7 @@ public final class ModMenus {
     public static MenuType<com.realisticmarkets.mod.menu.RecordsTerminalMenu> RECORDS_TERMINAL;
     public static MenuType<com.realisticmarkets.mod.menu.ClearingHouseMenu> CLEARING_HOUSE;
     public static MenuType<com.realisticmarkets.mod.menu.OptionsDeskMenu> OPTIONS_DESK;
+    public static MenuType<com.realisticmarkets.mod.menu.VolatilityBoardMenu> VOLATILITY_BOARD;
 
     public static void init() {
         ResourceKey<MenuType<?>> key = ResourceKey.create(Registries.MENU, RealisticMarkets.id("basic_exchange"));
@@ -91,5 +92,8 @@ public final class ModMenus {
         OPTIONS_DESK = Registry.register(BuiltInRegistries.MENU,
                 ResourceKey.create(Registries.MENU, RealisticMarkets.id("options_desk")),
                 new MenuType<>(com.realisticmarkets.mod.menu.OptionsDeskMenu::new, FeatureFlags.VANILLA_SET));
+        VOLATILITY_BOARD = Registry.register(BuiltInRegistries.MENU,
+                ResourceKey.create(Registries.MENU, RealisticMarkets.id("volatility_board")),
+                new MenuType<>(com.realisticmarkets.mod.menu.VolatilityBoardMenu::new, FeatureFlags.VANILLA_SET));
     }
 }

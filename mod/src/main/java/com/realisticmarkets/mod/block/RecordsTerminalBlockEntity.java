@@ -19,9 +19,30 @@ public class RecordsTerminalBlockEntity extends OwnedBlockEntity {
     public static final int MAX_LINKS = 16, RANGE = 64;
 
     private final List<BlockPos> links = new ArrayList<>();
+    private boolean riskModule;
 
     public RecordsTerminalBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.RECORDS_TERMINAL, pos, state);
+    }
+
+    /** True once a Risk Report Module has been fitted (it adds the Risk tab). */
+    public boolean hasRiskModule() {
+        return riskModule;
+    }
+
+    public void installRiskModule() {
+        riskModule = true;
+        setChanged();
+    }
+
+    /** The fitted module comes back out when the terminal is broken. */
+    @Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        super.preRemoveSideEffects(pos, state);
+        if (riskModule && level != null) {
+            net.minecraft.world.Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(),
+                    new net.minecraft.world.item.ItemStack(com.realisticmarkets.mod.registry.ModItems.RISK_REPORT_MODULE));
+        }
     }
 
     public List<BlockPos> links() {
@@ -83,12 +104,14 @@ public class RecordsTerminalBlockEntity extends OwnedBlockEntity {
             sb.append(p.getX()).append(',').append(p.getY()).append(',').append(p.getZ());
         }
         out.putString("Links", sb.toString());
+        out.putBoolean("RiskModule", riskModule);
     }
 
     @Override
     protected void loadAdditional(ValueInput in) {
         super.loadAdditional(in);
         links.clear();
+        riskModule = in.getBooleanOr("RiskModule", false);
         String s = in.getStringOr("Links", "");
         if (s.isEmpty()) return;
         for (String part : s.split(";")) {

@@ -24,6 +24,7 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 | `sim trader [free] [visits=N] [capital=C] [size=D] [cap=C] [seeds=N]` | Does the Floor make a player money? Gatherer uplift + payback; five trading strategies vs the vault | ~40 s |
 | `sim equities` | Six companies over 20 quarters: returns vs the vault, volatility, worst weeks, the even portfolio | ~10 s |
 | `sim hedge` | A wheat farmer unhedged vs forwards vs futures; a 20% crash; a leveraged speculator | ~5 s |
+| `sim options` | Writing premiums by collateral (the M9 done-when); buying calls and puts; covered calls; insurance | ~10 s |
 | `sim progression [profile]` | Tier 1-4 play time, Trade Route Crate uplift, vault interest, from gathering profiles in `sim/src/main/resources/profiles/` | ~15 s |
 | `build` | compile everything **and run the GameTests** (Loom's `check` includes them) | ~15 s |
 | `gametest` | server GameTests only, in a headless Minecraft server | ~10 s |
@@ -189,6 +190,8 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   player who sells on the Floor, trades or invests. Same deferred decision.
 - Tier 5 balance: the same gather-only player needs ~120-129 h for Tiers 1-5 vs ~22 h. Same deferred decision.
 - Tier 6 balance: ~235-252 h for Tiers 1-6 vs ~30 h (gather only). Same deferred decision.
+- Tier 7 balance: ~400-426 h for Tiers 1-7 vs ~40 h (gather only). `sim progression` needs an investing player before
+  these numbers mean much: the tier costs assume income from the tools themselves.
 - Wheat's fair value can move 50-75% in a week (drift + trends + events, M5c); futures at 4x leverage bust most
   speculators in `sim hedge`. Intended as a lesson, but worth a look when balancing.
 - `capital_catalog.csv` loads from the jar only (not copied to `config/` like the Dealer's files yet).

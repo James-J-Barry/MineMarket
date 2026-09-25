@@ -61,5 +61,8 @@
   "container.realisticmarkets.clearing_house": "Clearing House",
   "block.realisticmarkets.options_desk": "Options Desk",
   "container.realisticmarkets.options_desk": "Options Desk",
-  "item.realisticmarkets.option_contract": "Option Contract"
+  "item.realisticmarkets.option_contract": "Option Contract",
+  "block.realisticmarkets.volatility_board": "Volatility Board",
+  "container.realisticmarkets.volatility_board": "Volatility Board",
+  "item.realisticmarkets.risk_report_module": "Risk Report Module"
 }

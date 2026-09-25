@@ -64,17 +64,33 @@ class OptionsTest {
     @Test
     void volatilityIsRealizedFromClosesTimesTheSmile() {
         OptionDesk d = new OptionDesk(flat(10_000));
-        assertEquals(OptionDesk.DEFAULT_GOODS_VOL, d.realizedVol("WHT"), 0, "a default until 5 closes");
-        assertEquals(OptionDesk.DEFAULT_SHARE_VOL, d.realizedVol("OWL"), 0);
+        assertEquals(OptionDesk.LONG_RUN_GOODS_VOL, d.realizedVol("WHT"), 0, "the long-run level until 5 closes");
+        assertEquals(OptionDesk.LONG_RUN_SHARE_VOL, d.realizedVol("OWL"), 0);
         double p = 10_000;
-        for (int day = 1; day <= 21; day++) {
+        for (int day = 1; day <= 8; day++) {
             d.observe("WHT", day, p);
             p *= Math.exp(day % 2 == 0 ? 0.02 : -0.02);
         }
-        assertEquals(0.02, d.realizedVol("WHT"), 0.001, "2% a day up and down");
-        assertEquals(d.realizedVol("WHT"), d.impliedVol("WHT", 10_000, 10_000), 1e-12, "at the money: realized");
-        assertTrue(d.impliedVol("WHT", 12_000, 10_000) > d.realizedVol("WHT") * 1.02, "away from the money: the smile");
-        assertTrue(d.impliedVol("WHT", 8_000, 10_000) > d.realizedVol("WHT") * 1.02);
+        assertEquals(0.02, d.realizedVol("WHT"), 1e-9, "a few closes: daily moves, 2% a day up and down");
+        for (int day = 9; day <= 28; day++) {
+            d.observe("WHT", day, p);
+            p *= Math.exp(day % 2 == 0 ? 0.02 : -0.02);
+        }
+        assertTrue(d.realizedVol("WHT") < 0.01, "on week-long moves the zigzag cancels out: " + d.realizedVol("WHT"));
+        OptionDesk walk = new OptionDesk(flat(10_000));
+        java.util.Random rnd = new java.util.Random(3);
+        double q = 10_000;
+        for (int day = 1; day <= 28; day++) {
+            walk.observe("GLD", day, q);
+            q *= Math.exp(0.02 * rnd.nextGaussian());
+        }
+        assertEquals(0.02, walk.realizedVol("GLD"), 0.008, "a random walk at 2% a day measures about 2%");
+        d = walk;
+        double base = Math.sqrt(0.5 * Math.pow(d.realizedVol("GLD"), 2) + 0.5 * Math.pow(OptionDesk.LONG_RUN_GOODS_VOL, 2));
+        assertEquals(base, d.impliedVol("GLD", 10_000, 10_000), 1e-12, "at the money: realized blended with the long run");
+        assertTrue(base > d.realizedVol("GLD"), "a quiet month doesn't make options nearly free");
+        assertTrue(d.impliedVol("GLD", 12_000, 10_000) > base * 1.02, "away from the money: the smile");
+        assertTrue(d.impliedVol("GLD", 8_000, 10_000) > base * 1.02);
     }
 
     @Test
