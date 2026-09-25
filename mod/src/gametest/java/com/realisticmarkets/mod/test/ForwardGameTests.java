@@ -21,13 +21,20 @@ public class ForwardGameTests {
 
     /** Buys every node of Tiers 1..{@code tier} the gates allow (with plenty of cash), then {@code nodes}. */
     static void unlock(ServerPlayer p, ProgressionService prog, int tier, String... nodes) {
-        Wallet.give(p, 50_000_000);
-        for (int t = 1; t <= tier; t++) for (UnlockNode n : prog.tree().tier(t)) prog.buyNode(p, n.id());
+        for (int t = 1; t <= tier; t++) for (UnlockNode n : prog.tree().tier(t)) buy(p, prog, n.id());
         for (String n : nodes) {
-            var why = prog.buyNode(p, n);
+            var why = buy(p, prog, n);
             check(why.isEmpty() || prog.progress(p).hasNode(n), "buy " + n + ": " + why.orElse(""));
         }
+    }
+
+    /** Buys one node with exactly its cost in hand (a wallet of $500k wouldn't fit in an inventory). */
+    static java.util.Optional<String> buy(ServerPlayer p, ProgressionService prog, String node) {
         Wallet.takeAll(p);
+        Wallet.give(p, prog.tree().node(node).costCents());
+        var why = prog.buyNode(p, node);
+        Wallet.takeAll(p);
+        return why;
     }
 
     record Setup(ServerPlayer p, DealerService dealer, ProgressionService prog, ForwardService forwards, BasicExchangeMenu menu) {}
@@ -73,7 +80,7 @@ public class ForwardGameTests {
 
         // The Records Terminal counts the deposit and puts the delivery on its calendar, linked blocks or not.
         var records = com.realisticmarkets.mod.records.RecordsService.forTest(new com.realisticmarkets.mod.records.RecordsService.Sources(
-                s.dealer(), s.prog(), null, null, null, null, s.forwards(), null));
+                s.dealer(), s.prog(), null, null, null, null, s.forwards(), null, null));
         net.minecraft.core.BlockPos tPos = new net.minecraft.core.BlockPos(1, 1, 1);
         helper.setBlock(tPos, com.realisticmarkets.mod.registry.ModBlocks.RECORDS_TERMINAL);
         var terminal = helper.getBlockEntity(tPos, com.realisticmarkets.mod.block.RecordsTerminalBlockEntity.class);

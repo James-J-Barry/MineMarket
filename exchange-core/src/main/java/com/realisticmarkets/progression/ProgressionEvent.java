@@ -93,4 +93,11 @@ public sealed interface ProgressionEvent {
 
     /** A margin call met: the account is back to its initial margin before the next dawn. */
     record MarginCallMet(long day) implements ProgressionEvent {}
+
+    /**
+     * Option papers closed: presented after expiry ({@code expired}) or sold back to the desk. {@code costCents} is
+     * what the account paid for them at the desk, -1 if unknown.
+     */
+    record OptionClosed(String underlying, boolean call, long contracts, long proceedsCents, long costCents, boolean expired,
+                        long day) implements ProgressionEvent {}
 }

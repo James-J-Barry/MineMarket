@@ -19,7 +19,7 @@ class GuidesTest {
                         "cash_on_hand", "reading_a_quote", "transaction_costs", "two_markets",
                         "interest_and_compounding", "term_and_liquidity", "leverage_and_collateral",
                         "order_books", "limit_and_market_orders", "liquidity_and_market_makers", "news_and_markets", "reading_a_chart", "owning_a_share", "valuing_a_company",
-                        "risk_and_return", "custody", "bonds_and_yield", "interest_rate_risk", "credit_risk", "net_worth", "hedging", "futures_and_margin", "margin_calls"),
+                        "risk_and_return", "custody", "bonds_and_yield", "interest_rate_risk", "credit_risk", "net_worth", "hedging", "futures_and_margin", "margin_calls", "options", "the_greeks"),
                 guides.all().stream().map(Guides.Guide::id).toList());
         for (Guides.Guide g : guides.all()) {
             int words = g.wordCount();
@@ -369,6 +369,26 @@ class GuidesTest {
         assertTrue(h.contains("deposit (" + com.realisticmarkets.money.Money.format(com.realisticmarkets.contracts.ForwardBook.deposit(forward)) + " here)"));
         assertTrue(h.contains("about $" + Math.round(now * 0.8 / 100.0)), "a 20% fall");
         assertTrue(h.contains("delivery in 7 days"));
+    }
+
+    @Test
+    void optionNumbersMatchTheDesk() {
+        String o = text("options"), g = text("the_greeks");
+        double f = 12_800, r = 0.003, s = com.realisticmarkets.options.OptionDesk.DEFAULT_GOODS_VOL;
+        var call = com.realisticmarkets.options.OptionMath.greeks(true, f, 13_000, 7, s, r);
+        var put = com.realisticmarkets.options.OptionMath.greeks(false, f, 12_000, 7, s, r);
+        long callAsk = com.realisticmarkets.money.Money.roundUpToDime(call.price() * (1 + com.realisticmarkets.options.OptionDesk.HALF_SPREAD));
+        long putAsk = com.realisticmarkets.money.Money.roundUpToDime(put.price() * (1 + com.realisticmarkets.options.OptionDesk.HALF_SPREAD));
+        assertTrue(o.contains("a $130 strike, expiring in a week, costs " + com.realisticmarkets.money.Money.format(callAsk)), "call " + callAsk);
+        assertTrue(o.contains("A $120 put costs " + com.realisticmarkets.money.Money.format(putAsk)), "put " + putAsk);
+        assertTrue(o.contains("your call pays $23.60, " + new String[] {"", "", "", "", "four", "five", "six", "seven", "eight"}[(int) (2_360 / callAsk)]
+                + " times"));
+        assertTrue(o.contains("it pays $17.60"));
+        assertTrue(g.contains(String.format(java.util.Locale.ROOT, "delta of %.2f, so it moves like %d wheat", call.delta(),
+                Math.round(call.delta() * 256 / 10.0) * 10)));
+        assertTrue(g.contains(String.format(java.util.Locale.ROOT, "about %d cents", Math.round(call.delta() * 100))));
+        assertTrue(g.contains(String.format(java.util.Locale.ROOT, "about $%.2f a day", call.theta() / 100)));
+        assertTrue(g.contains(String.format(java.util.Locale.ROOT, "adds $%.2f to our call", call.vega() / 100)));
     }
 
     @Test

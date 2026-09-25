@@ -63,10 +63,10 @@ public final class RecordsService {
     /** The services marks come from; any but {@code dealer} and {@code prog} may be null. */
     public record Sources(DealerService dealer, ProgressionService prog, BankService bank, StockService stocks, BondService bonds,
                           CapitalService capital, com.realisticmarkets.mod.forwards.ForwardService forwards,
-                          com.realisticmarkets.mod.futures.FuturesService futures) {
+                          com.realisticmarkets.mod.futures.FuturesService futures, com.realisticmarkets.mod.options.OptionsService options) {
         public Sources(DealerService dealer, ProgressionService prog, BankService bank, StockService stocks, BondService bonds,
                        CapitalService capital) {
-            this(dealer, prog, bank, stocks, bonds, capital, null, null);
+            this(dealer, prog, bank, stocks, bonds, capital, null, null, null);
         }
     }
 
@@ -95,7 +95,7 @@ public final class RecordsService {
         }
         instance = new RecordsService(ledger, file, new Sources(DealerService.get(), ProgressionService.get(), BankService.get(),
                 StockService.get(), BondService.get(), CapitalService.get(), com.realisticmarkets.mod.forwards.ForwardService.get(),
-                com.realisticmarkets.mod.futures.FuturesService.get()));
+                com.realisticmarkets.mod.futures.FuturesService.get(), com.realisticmarkets.mod.options.OptionsService.get()));
     }
 
     public static void stop() {
@@ -262,6 +262,8 @@ public final class RecordsService {
                     bond(s, where);
                 } else if (s.is(ModItems.CERTIFICATE_OF_DEPOSIT)) {
                     cd(s, where);
+                } else if (s.is(ModItems.OPTION_CONTRACT)) {
+                    option(s, where);
                 } else if (!s.is(ModItems.LOAN_NOTE)) {
                     goods(s, where);
                 }
@@ -298,6 +300,22 @@ public final class RecordsService {
             int next = b.couponsDueBy(day) + 1;
             if (next <= b.coupons()) calendar.add(b.couponDay(next), Calendar.Kind.COUPON, label, b.couponCents() * n);
             calendar.add(b.maturityDay(), Calendar.Kind.BOND_MATURITY, label, (long) Bond.FACE_CENTS * n);
+        }
+
+        void option(ItemStack s, String where) {
+            var os = sources.options();
+            var series = com.realisticmarkets.mod.options.OptionPapers.read(s);
+            if (os == null || series.isEmpty()) return;
+            var settle = os.desk().settlement(series.get().underlying(), series.get().expiry());
+            long mark = settle.isPresent() ? series.get().intrinsic(settle.getAsLong())
+                    : series.get().expiry() <= today ? 0 : os.desk().bid(account, series.get(), day);
+            double avg = os.averageCost(account, series.get());
+            String label = com.realisticmarkets.mod.options.OptionPapers.title(series.get());
+            add(Kind.OPTIONS, label, where, s.getCount(), mark, avg < 0 ? -1 : Math.round(avg * s.getCount()), s);
+            if (!settle.isPresent() && series.get().expiry() > today) {
+                icons.putIfAbsent("C|" + label, s.copyWithCount(1));
+                calendar.add(series.get().expiry(), Calendar.Kind.OPTION_EXPIRY, label, 0);
+            }
         }
 
         void cd(ItemStack s, String where) {

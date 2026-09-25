@@ -43,6 +43,7 @@ public class PortfolioBinderMenu extends AbstractContainerMenu {
         List<String> k = new ArrayList<>();
         for (Company c : ShareCertificates.COMPANIES.all()) k.add(c.ticker());
         k.add(Securities.BONDS);
+        k.add(Securities.OPTIONS);
         k.add(Securities.CDS);
         k.add(Securities.LOAN_NOTES);
         return List.copyOf(k);

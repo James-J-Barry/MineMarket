@@ -113,7 +113,7 @@ public class FuturesGameTests {
         RecordLinkItem.use(s.p(), helper.getLevel(), helper.absolutePos(tPos), tool);
         check(RecordLinkItem.use(s.p(), helper.getLevel(), helper.absolutePos(hPos), tool).startsWith("Linked"), "link the Clearing House");
         RecordsService records = RecordsService.forTest(new RecordsService.Sources(s.dealer(), s.prog(), null, null, null, null, null,
-                s.futures()));
+                s.futures(), null));
         var view = records.view(terminal, s.p().getUUID(), s.today() + 0.3);
         check(view.netWorth().byKind().get(NetWorth.Kind.FUTURES) == s.futures().house().equity(a, s.today() + 0.3),
                 "the terminal counts the futures account at its equity");

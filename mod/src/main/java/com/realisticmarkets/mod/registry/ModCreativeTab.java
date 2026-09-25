@@ -62,6 +62,8 @@ public final class ModCreativeTab {
                             output.accept(ModItems.FORWARD_CONTRACT);
                             output.accept(ModBlocks.CLEARING_HOUSE);
                             output.accept(ModItems.MARGIN_CALL_NOTICE);
+                            output.accept(ModBlocks.OPTIONS_DESK);
+                            output.accept(ModItems.OPTION_CONTRACT);
                         })
                         .build());
     }

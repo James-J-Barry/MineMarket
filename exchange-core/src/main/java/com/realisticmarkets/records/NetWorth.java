@@ -20,6 +20,7 @@ public final class NetWorth {
         SHARES("Shares", false),
         BONDS("Bonds", false),
         GOODS("Goods", false),
+        OPTIONS("Options", false),
         FUTURES("Futures account", false),
         DEBTS("Debts", true);
 

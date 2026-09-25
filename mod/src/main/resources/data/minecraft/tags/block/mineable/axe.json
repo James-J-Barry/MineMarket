@@ -11,6 +11,7 @@
     "realisticmarkets:ticker_tape",
     "realisticmarkets:stock_exchange",
     "realisticmarkets:bond_desk",
-    "realisticmarkets:records_terminal"
+    "realisticmarkets:records_terminal",
+    "realisticmarkets:options_desk"
   ]
 }

@@ -37,6 +37,7 @@ public final class ModMenus {
     public static MenuType<com.realisticmarkets.mod.menu.BondDeskMenu> BOND_DESK;
     public static MenuType<com.realisticmarkets.mod.menu.RecordsTerminalMenu> RECORDS_TERMINAL;
     public static MenuType<com.realisticmarkets.mod.menu.ClearingHouseMenu> CLEARING_HOUSE;
+    public static MenuType<com.realisticmarkets.mod.menu.OptionsDeskMenu> OPTIONS_DESK;
 
     public static void init() {
         ResourceKey<MenuType<?>> key = ResourceKey.create(Registries.MENU, RealisticMarkets.id("basic_exchange"));
@@ -87,5 +88,8 @@ public final class ModMenus {
         CLEARING_HOUSE = Registry.register(BuiltInRegistries.MENU,
                 ResourceKey.create(Registries.MENU, RealisticMarkets.id("clearing_house")),
                 new MenuType<>(com.realisticmarkets.mod.menu.ClearingHouseMenu::new, FeatureFlags.VANILLA_SET));
+        OPTIONS_DESK = Registry.register(BuiltInRegistries.MENU,
+                ResourceKey.create(Registries.MENU, RealisticMarkets.id("options_desk")),
+                new MenuType<>(com.realisticmarkets.mod.menu.OptionsDeskMenu::new, FeatureFlags.VANILLA_SET));
     }
 }

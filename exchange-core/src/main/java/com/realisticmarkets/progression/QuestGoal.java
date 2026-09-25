@@ -30,6 +30,8 @@ package com.realisticmarkets.progression;
  * variation_received       (the Clearing House's dawn mark paid you)
  * margin_call_met          (a margin call met before the next dawn)
  * futures_profit           (futures closed at a profit)
+ * put_paid                 (a put paid out at expiry)
+ * option_multiple:<n>      (options closed for at least n times what they cost)
  * </pre>
  */
 public sealed interface QuestGoal {
@@ -60,6 +62,8 @@ public sealed interface QuestGoal {
     record VariationReceived() implements QuestGoal {}
     record MarginCallMet() implements QuestGoal {}
     record FuturesProfit() implements QuestGoal {}
+    record PutPaid() implements QuestGoal {}
+    record OptionMultiple(int times) implements QuestGoal {}
 
     static QuestGoal parse(String s) {
         String[] p = s.strip().split(":");
@@ -88,6 +92,8 @@ public sealed interface QuestGoal {
             case "variation_received" -> new VariationReceived();
             case "margin_call_met" -> new MarginCallMet();
             case "futures_profit" -> new FuturesProfit();
+            case "put_paid" -> new PutPaid();
+            case "option_multiple" -> new OptionMultiple(Integer.parseInt(p[1]));
             case "limit_filled" -> new LimitFilled();
             case "beat_dealer" -> new BeatDealer();
             case "two_books" -> new TwoBooks(p[1] + ":" + p[2], p[3] + ":" + p[4], Integer.parseInt(p[5]));

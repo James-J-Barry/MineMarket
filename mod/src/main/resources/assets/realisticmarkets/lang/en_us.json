@@ -58,5 +58,8 @@
   "item.realisticmarkets.forward_contract": "Forward Contract",
   "item.realisticmarkets.margin_call_notice": "Margin Call Notice",
   "block.realisticmarkets.clearing_house": "Clearing House",
-  "container.realisticmarkets.clearing_house": "Clearing House"
+  "container.realisticmarkets.clearing_house": "Clearing House",
+  "block.realisticmarkets.options_desk": "Options Desk",
+  "container.realisticmarkets.options_desk": "Options Desk",
+  "item.realisticmarkets.option_contract": "Option Contract"
 }

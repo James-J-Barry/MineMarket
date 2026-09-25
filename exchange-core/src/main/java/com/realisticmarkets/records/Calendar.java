@@ -17,7 +17,8 @@ public final class Calendar {
         RATE_DECISION("Rate decision"),
         MARGIN_CHECK("Margin check"),
         FORWARD_DELIVERY("Forward due"),
-        FUTURES_EXPIRY("Futures expire");
+        FUTURES_EXPIRY("Futures expire"),
+        OPTION_EXPIRY("Option expires");
 
         private final String label;
 

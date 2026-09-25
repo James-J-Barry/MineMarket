@@ -20,7 +20,7 @@ public final class Securities {
 
     public static boolean isSecurity(ItemStack s) {
         return !s.isEmpty() && (s.is(ModItems.SHARE_CERTIFICATE) || s.is(ModItems.CERTIFICATE_OF_DEPOSIT) || s.is(ModItems.LOAN_NOTE)
-                || s.is(ModItems.BOND));
+                || s.is(ModItems.BOND) || s.is(ModItems.OPTION_CONTRACT));
     }
 
     /** Securities, currency, and the holders of either (Bill Clip, Portfolio Binder): what a Safe Deposit Box takes. */
@@ -33,7 +33,7 @@ public final class Securities {
 
     public record Valuation(List<Line> lines, long totalCents) {}
 
-    public static final String CDS = "CDs", LOAN_NOTES = "Loan Notes", BONDS = "Bonds";
+    public static final String CDS = "CDs", LOAN_NOTES = "Loan Notes", BONDS = "Bonds", OPTIONS = "Options";
 
     /** Values {@code stacks} at live prices. {@code stocks} or {@code bank} may be null (then those papers count at 0). */
     public static Valuation value(Iterable<ItemStack> stacks, StockService stocks, BankService bank, long day) {
@@ -55,6 +55,16 @@ public final class Securities {
                 long v = bonds == null || paper.isEmpty() ? 0 : bonds.desk().bid(paper.get().bond(), day)
                         + bonds.desk().couponsOwed(paper.get().bond(), paper.get().paidThrough(), day);
                 add(byKind, BONDS, s.getCount(), v * s.getCount());
+            } else if (s.is(ModItems.OPTION_CONTRACT)) {
+                var options = com.realisticmarkets.mod.options.OptionsService.getOrNull();
+                var series = com.realisticmarkets.mod.options.OptionPapers.read(s);
+                long v = 0;
+                if (options != null && series.isPresent()) {
+                    var settle = options.desk().settlement(series.get().underlying(), series.get().expiry());
+                    v = settle.isPresent() ? series.get().intrinsic(settle.getAsLong())
+                            : series.get().expiry() <= day ? 0 : options.desk().bid("", series.get(), day);
+                }
+                add(byKind, OPTIONS, s.getCount(), v * s.getCount());
             } else if (s.is(ModItems.LOAN_NOTE)) {
                 add(byKind, LOAN_NOTES, s.getCount(), 0);
             }

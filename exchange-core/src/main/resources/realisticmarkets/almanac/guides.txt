@@ -381,3 +381,29 @@ This is the other side of leverage. With 10% margin, a 7.5% move against you can
 So keep spare cash in the account, trade fewer lots than you could, and decide in advance how much you're willing to lose.
 
 Real world: in 2008 and again in 2020, margin calls forced traders to sell whatever they could at the worst moment, which pushed prices down further and triggered still more calls.
+
+@options Options
+An option is a right, not a promise. A call is the right to buy at a set price, the strike, on the expiry day. A put is the right to sell. You pay for the right up front: the premium.
+
+Say a lot of wheat is worth $128 today. A wheat call with a $130 strike, expiring in a week, costs $3.30 at the Options Desk. If wheat ends the week 20% up, the lot is worth $153.60 and your call pays $23.60, seven times what it cost. If wheat ends at $130 or below, the call pays nothing. You lose the $3.30 and not a dime more.
+
+A put works the other way. A $120 put costs $1.20. If wheat falls 20% to $102.40, it pays $17.60. For a farmer that's insurance: whatever happens to wheat, the harvest plus the put can't be worth much less than $120.
+
+That lopsided shape is the whole point. A future gains and loses the same on each side. An option caps what you can lose at its price, and keeps most of the upside.
+
+Options here settle in cash. After the expiry day, bring the papers to the desk and it pays what they're worth; papers that finished out of the money pay nothing. Until then, the desk buys them back at today's price.
+
+Real world: options on rice were traded in Japan in the 1700s, and today more options change hands than shares.
+
+@the_greeks The Greeks
+Your put paid out. Before the next one, learn how an option's price moves. Traders use Greek letters for it, and the Options Desk shows each one for the paper you pick.
+
+Delta: how much the option moves when the price does. Our $130 wheat call has a delta of 0.43, so it moves like 110 wheat: if a lot rises $1, the call rises about 43 cents. Puts have negative delta, because they gain when prices fall.
+
+Theta: what the option loses each day if nothing happens. The call loses about $0.28 a day, and faster near expiry. Time is on the seller's side.
+
+Vega: how much the price depends on how much the market moves. The desk prices options on how far each good has been swinging lately, so after a wild week options cost more. One point more of daily volatility adds $1.31 to our call.
+
+Strikes far from today's price cost a little extra: the desk charges for surprises. That's the smile, and the Volatility Board draws it.
+
+Real world: in 1973 Fischer Black and Myron Scholes published the formula that prices options from these same ingredients, and a whole industry grew around it.

@@ -47,6 +47,7 @@ public final class RealisticMarkets implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(com.realisticmarkets.mod.records.RecordsService::tick);
         ServerTickEvents.END_SERVER_TICK.register(com.realisticmarkets.mod.forwards.ForwardService::tick);
         ServerTickEvents.END_SERVER_TICK.register(com.realisticmarkets.mod.futures.FuturesService::tick);
+        ServerTickEvents.END_SERVER_TICK.register(com.realisticmarkets.mod.options.OptionsService::tick);
         net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register(com.realisticmarkets.mod.records.RecordLinkItem::onUseBlock);
         ServerLifecycleEvents.SERVER_STARTED.register(DealerService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(ProgressionService::start);
@@ -57,6 +58,7 @@ public final class RealisticMarkets implements ModInitializer {
         ServerLifecycleEvents.SERVER_STARTED.register(com.realisticmarkets.mod.bonds.BondService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(com.realisticmarkets.mod.forwards.ForwardService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(com.realisticmarkets.mod.futures.FuturesService::start);
+        ServerLifecycleEvents.SERVER_STARTED.register(com.realisticmarkets.mod.options.OptionsService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(com.realisticmarkets.mod.records.RecordsService::start);
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> DealerService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> ProgressionService.stop());
@@ -68,6 +70,7 @@ public final class RealisticMarkets implements ModInitializer {
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> com.realisticmarkets.mod.records.RecordsService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> com.realisticmarkets.mod.forwards.ForwardService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> com.realisticmarkets.mod.futures.FuturesService.stop());
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> com.realisticmarkets.mod.options.OptionsService.stop());
 
         LOGGER.info("Realistic Markets loaded");
     }

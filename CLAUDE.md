@@ -6,8 +6,8 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 
 - **Design doc (source of truth for gameplay):** `docs/design.md`, exported from the "Realistic Markets —
   Game Design Document" Claude Doc. If a request conflicts with it, ask before building.
-- **Current milestone:** M8, forwards and futures. Spec `docs/milestones/M8.md` (decisions answered; M8a first, then M8b).
-  M7 (bonds, Digital Record Keeping) awaits James's in-game check of M7b: `docs/milestones/M7.md`. M6 (equities) is done: `docs/milestones/M6.md`. M5 (Trading Floor, M5a/M5b/M5c) is done:
+- **Current milestone:** M9, options. Spec `docs/milestones/M9.md` (decisions answered; M9a first, then M9b).
+  Awaiting James's in-game checks: M7b (`docs/milestones/M7.md`), M8a and M8b (`docs/milestones/M8.md`). M6 (equities) is done: `docs/milestones/M6.md`. M5 (Trading Floor, M5a/M5b/M5c) is done:
   `docs/milestones/M5.md`, `docs/milestones/M5c.md`. M4 (banking and collateral) is done. Spec `docs/milestones/M4.md`
   (decisions answered). Done: M2 (`docs/milestones/M2.md`),
   M3 (`docs/milestones/M3.md`).
@@ -55,6 +55,7 @@ mod/             Fabric layer. Thin: translate Minecraft events <-> core calls.
   floor/                  FloorService (Trading Floor: NPC books, auctions, tickets, receipts), TradeReceiptItem
   forwards/               ForwardService (Forward Contracts with the Dealer, Fwd tab on the Basic Exchange)
   futures/                FuturesService (Clearing House: margin accounts, dawn mark, margin calls)
+  options/                OptionsService (Options Desk: prices, dawn closes and settlements), OptionPapers
   records/                RecordsService (income ledger, net worth of linked blocks, calendar), RecordLinkItem
   gametest/               DealerGameTests, FloorGameTests, ...
 scripts/         dev.sh, mcapi.py (jar inspector), rcon.py
@@ -171,7 +172,9 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
 - [ ] **M7b: Digital Record Keeping.** → `docs/milestones/M7.md`
 - [ ] **M8a: Forwards.** → `docs/milestones/M8.md`
 - [ ] **M8b: Clearing House and futures.** → `docs/milestones/M8.md`
-- [ ] M9–M10: options, modern finance (ATM, Brokerage)
+- [ ] **M9a: Options Desk.** → `docs/milestones/M9.md`
+- [ ] **M9b: Writing options, Volatility Board, Risk Report Module.** → `docs/milestones/M9.md`
+- [ ] M10: modern finance (ATM, Brokerage)
 - [ ] M11: multiplayer
 
 ## Known gaps / ideas parked

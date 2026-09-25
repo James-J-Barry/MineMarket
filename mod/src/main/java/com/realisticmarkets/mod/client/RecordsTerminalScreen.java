@@ -263,6 +263,7 @@ public class RecordsTerminalScreen extends AbstractContainerScreen<RecordsTermin
                 case CD_MATURITY -> "CD matures";
                 case FORWARD_DELIVERY -> "Deliver " + (icon.isEmpty() ? "goods" : icon.getHoverName().getString());
                 case FUTURES_EXPIRY -> "Futures expire" + (icon.isEmpty() ? "" : ", " + icon.getHoverName().getString());
+                case OPTION_EXPIRY -> "Expires: " + (icon.isEmpty() ? "option" : icon.getHoverName().getString());
             };
             g.text(font, Panels.trim(font, what, 90), 128, y + 4, GREY, false);
             if (m.calendarCents(i) > 0) right(g, Money.format(m.calendarCents(i)), 246, y + 4, GREEN);

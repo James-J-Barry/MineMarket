@@ -318,6 +318,8 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             case QuestGoal.VariationReceived() -> "Hold futures through a dawn mark that pays you.";
             case QuestGoal.MarginCallMet() -> "Get a margin call from the Clearing House and meet it before the next dawn.";
             case QuestGoal.FuturesProfit() -> "Close a futures position at the Clearing House at a profit.";
+            case QuestGoal.PutPaid() -> "Hold a put to expiry and collect when it pays out.";
+            case QuestGoal.OptionMultiple g -> "Get " + g.times() + " times what you paid for an option, at expiry or by selling it back.";
         };
     }
 }
