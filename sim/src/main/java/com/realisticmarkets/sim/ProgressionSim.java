@@ -47,7 +47,7 @@ import java.util.Set;
  */
 public final class ProgressionSim {
     static final double MINUTES_PER_DAY = 20.0;
-    static final int MAX_DAYS = 200;
+    static final int MAX_DAYS = 600;
     static final String DUMP_ITEM = "minecraft:cobblestone";
     static final double HOLD_BELOW = 0.90;
     static final long GROUP_TARGET_CENTS = 2050;
@@ -146,6 +146,18 @@ public final class ProgressionSim {
                     Money.format(r.nodeCents() + r.componentCents()), Money.format(r.questCents()));
         }
         System.out.println("Design target: Tier 4 by about 15 h.");
+
+        System.out.println();
+        System.out.println("Tier 5 (M7): all of Tiers 1-5 owned (Bond Desk, Digital Record Keeping) and every blueprint crafted once.");
+        System.out.println("  Same gather-and-save player: no bonds, shares or trading, so this is the slowest way there.");
+        System.out.printf(Locale.ROOT, "%-16s  %6s  %7s  %12s  %14s%n", "profile", "days", "hours", "total spend", "quest rewards");
+        for (String name : new LinkedHashSet<>(List.of(profile, "farm_heavy"))) {
+            Result r = run(loadProfile(name), 1.0, null, 5);
+            System.out.printf(Locale.ROOT, "%-16s  %6s  %7s  %12s  %14s%n", name,
+                    r.done() ? String.valueOf(r.day()) : ">" + MAX_DAYS, r.done() ? String.format(Locale.ROOT, "%.1f", r.hours()) : "-",
+                    Money.format(r.nodeCents() + r.componentCents()), Money.format(r.questCents()));
+        }
+        System.out.println("Design target: Tier 5 by about 22 h.");
     }
 
     static final int CRATE_DAYS = 30;

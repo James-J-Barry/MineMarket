@@ -51,6 +51,7 @@ mod/             Fabric layer. Thin: translate Minecraft events <-> core calls.
   client/                   BasicExchangeScreen, RealisticMarketsClient (client entrypoint)
   dealer/                   DealerService (owns Dealer, config, persistence), Wallet, DealerCommands
   floor/                  FloorService (Trading Floor: NPC books, auctions, tickets, receipts), TradeReceiptItem
+  records/                RecordsService (income ledger, net worth of linked blocks, calendar), RecordLinkItem
   gametest/               DealerGameTests, FloorGameTests, ...
 scripts/         dev.sh, mcapi.py (jar inspector), rcon.py
 docs/            design.md, milestones/
@@ -177,6 +178,7 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
 - Tier 3 balance: Trading Floor + Newsstand + Ticker Tape land at ~22 h vs the design's ~10 h (`sim progression`). Deferred by James.
 - Tier 4 balance: a gather-only player needs ~57-61 h for Tiers 1-4 vs ~15 h; `sim progression` doesn't yet model a
   player who sells on the Floor, trades or invests. Same deferred decision.
+- Tier 5 balance: the same gather-only player needs ~120-129 h for Tiers 1-5 vs ~22 h. Same deferred decision.
 - `capital_catalog.csv` loads from the jar only (not copied to `config/` like the Dealer's files yet).
 - Floating price above the Basic Exchange (design doc) skipped; the screen covers it.
 - Placeholder art: currency, block and GUI textures are generated; James may repaint.
