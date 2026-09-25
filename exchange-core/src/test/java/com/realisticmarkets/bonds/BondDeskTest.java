@@ -64,6 +64,14 @@ class BondDeskTest {
         assertEquals(CreditModel.recoveryCents(), desk.redemption(dsmc, 15));
         assertEquals(dsmc.couponCents(), desk.couponsOwed(dsmc, 0, 30), "the coupon before the default is still owed; none after");
         assertTrue(desk.defaultDay(owl).isEmpty() || e.reports("OWL").get(1).earnings() < 0, "OWL has fees, not goods");
+        assertTrue(e.cashPerShareCents("DSMC") >= 0, "the default wrote off its debts");
+        Equities noRestructure = new Equities(CompanyCatalog.loadDefault(), BondDeskTest::base, 3);
+        for (long d = 0; d <= 14; d++) noRestructure.observe(d, d == 0 ? BondDeskTest::base : slump, List.of());
+        for (long d = 15; d <= 21; d++) {
+            e.observe(d, BondDeskTest::base, List.of());
+            noRestructure.observe(d, BondDeskTest::base, List.of());
+        }
+        assertTrue(e.reports("DSMC").get(2).costs() < e.reports("DSMC").get(0).costs(), "and cut its fixed costs");
         Bond afterwards = desk.issue("DSMC", 2, 15);
         assertTrue(desk.defaultDay(afterwards).isEmpty(), "a bond issued after the default isn't caught by it");
         assertTrue(afterwards.couponRate() > dsmc.couponRate(), "but the troubled company pays far more to borrow");

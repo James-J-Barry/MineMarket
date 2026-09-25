@@ -38,6 +38,8 @@ public final class Equities {
     public static final String HEADER = "# Realistic Markets equities v1";
     /** The general price level (1.0 at the start); every company tracks it for its fixed costs. */
     public static final String CPI = "cpi";
+    /** How much a default's restructuring cuts a company's fixed costs. */
+    public static final double RESTRUCTURING_CUT = 0.3;
     public static final int NORMALIZE_QUARTERS = 4;
     /** Fair value never drops below this share of the starting value (the company's assets are worth something). */
     public static final double VALUE_FLOOR = 0.1;
@@ -49,6 +51,7 @@ public final class Equities {
         double logOutput;
         double cash; // cents: retained earnings, reinvested at the required return (plus inflation)
         double lastCpi; // the price level averaged over the last reported quarter
+        double fixedScale = 1; // fixed costs after restructurings (each default cuts them)
         final Map<String, double[]> sums = new LinkedHashMap<>(); // key -> {sum, samples}
         final Map<String, Integer> events = new LinkedHashMap<>();
         final List<Report> reports = new ArrayList<>();
@@ -142,6 +145,12 @@ public final class Equities {
             s.cash = s.cash * (1 + c.quarterReturn()) * inflation + earn - (double) div * c.shares();
             Report r = new Report(c.ticker(), quarter, rc[0], rc[1], earn, div);
             s.reports.add(r);
+            if (com.realisticmarkets.bonds.CreditModel.defaultQuarters(s.reports).contains(quarter)) {
+                // A default: the company restructures. Its debts are written off (the bondholders' loss) and it cuts
+                // its fixed costs, so it can make money again rather than defaulting every two quarters.
+                s.cash = Math.max(0, s.cash);
+                s.fixedScale *= 1 - RESTRUCTURING_CUT;
+            }
             s.sums.clear();
             s.events.clear();
             out.add(r);
@@ -160,7 +169,7 @@ public final class Equities {
         for (Map.Entry<String, Long> e : c.revenue().entrySet()) revenue += e.getValue() * average(s, e.getKey());
         for (Map.Entry<String, Integer> e : s.events.entrySet()) revenue *= Math.pow(1 + c.events().get(e.getKey()), e.getValue());
         revenue *= scale;
-        double costs = c.fixedCost() * Math.pow(1 + c.growth(), quarter + 1) * average(s, CPI);
+        double costs = c.fixedCost() * s.fixedScale * Math.pow(1 + c.growth(), quarter + 1) * average(s, CPI);
         for (Map.Entry<String, Long> e : c.inputs().entrySet()) costs += scale * e.getValue() * average(s, e.getKey());
         return new long[] {Math.round(revenue * 100), Math.round(costs * 100)};
     }
@@ -283,7 +292,7 @@ public final class Equities {
         for (Map.Entry<String, Double> e : lastAverage.entrySet()) w.write("avg\t" + e.getKey() + "\t" + e.getValue() + "\n");
         for (Map.Entry<String, State> e : states.entrySet()) {
             State s = e.getValue();
-            w.write("company\t" + e.getKey() + "\t" + s.logOutput + "\t" + s.cash + "\t" + s.lastCpi + "\n");
+            w.write("company\t" + e.getKey() + "\t" + s.logOutput + "\t" + s.cash + "\t" + s.lastCpi + "\t" + s.fixedScale + "\n");
             for (Map.Entry<String, double[]> a : s.sums.entrySet()) {
                 w.write("sum\t" + e.getKey() + "\t" + a.getKey() + "\t" + a.getValue()[0] + "\t" + a.getValue()[1] + "\n");
             }
@@ -317,6 +326,7 @@ public final class Equities {
                             s.logOutput = Double.parseDouble(c[2]);
                             s.cash = c.length > 3 ? Double.parseDouble(c[3]) : 0;
                             s.lastCpi = c.length > 4 ? Double.parseDouble(c[4]) : 0;
+                            s.fixedScale = c.length > 5 ? Double.parseDouble(c[5]) : 1;
                         }
                     }
                     case "sum" -> {

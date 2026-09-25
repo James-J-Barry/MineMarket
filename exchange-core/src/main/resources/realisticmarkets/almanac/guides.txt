@@ -322,7 +322,7 @@ Real world: in 2022 central banks raised rates fast, and long-dated government b
 @credit_risk Credit Risk
 You collected your first coupon. On a company's bond, the next one isn't guaranteed.
 
-Each company pays more than the Treasury to borrow: its credit spread. Steady Overworld Utility pays 0.01% a day more; Redstone Dynamics pays 0.07% more. That extra is your pay for the chance of not being paid.
+Each company pays more than the Treasury to borrow: its credit spread. Steady Overworld Utility pays 0.01% a day more; Redstone Dynamics pays 0.30% more. That extra is your pay for the chance of not being paid.
 
 The spread moves. When a company's earnings fall, lenders get nervous and want more, so its old bonds lose value long before anything goes wrong. After two losing quarters in a row a company defaults: its coupons stop, and each bond pays back only $40 of its $100. The company carries on, but its new bonds must pay far more.
 

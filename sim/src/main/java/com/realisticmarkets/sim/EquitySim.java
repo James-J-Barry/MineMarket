@@ -32,7 +32,8 @@ public final class EquitySim {
     static final int AUCTIONS_PER_DAY = 120;
     static final int SEEDS = 8;
     static final double VAULT = 0.003;
-    static final String GOODS = "goods", CPI = "prices";
+    static final String GOODS = "goods", CPI = "prices", TREAS = "treas", CORP = "corp", VAULT_ROW = "vault";
+    static final List<String> BENCHMARKS = List.of(GOODS, CPI, TREAS, CORP, VAULT_ROW);
 
     record Path(double[] close, double[] dividend, double[] fair) {} // per day, dollars a share
 
@@ -50,6 +51,16 @@ public final class EquitySim {
         // loses what it rises).
         paths.put(GOODS, new Path(new double[DAYS + 1], new double[DAYS + 1], new double[DAYS + 1]));
         paths.put(CPI, new Path(new double[DAYS + 1], new double[DAYS + 1], new double[DAYS + 1]));
+        // Bonds: ladders reinvested every quarter into new 4-quarter bonds, held to maturity; and the vault, all on the
+        // same seeded central bank.
+        for (String k : List.of(TREAS, CORP, VAULT_ROW)) paths.put(k, new Path(new double[DAYS + 1], new double[DAYS + 1], new double[DAYS + 1]));
+        com.realisticmarkets.rates.CentralBank central = new com.realisticmarkets.rates.CentralBank(seed ^ 0x52617465L);
+        com.realisticmarkets.bonds.BondDesk desk = new com.realisticmarkets.bonds.BondDesk(central, eq);
+        Ladder treasuries = new Ladder(List.of(com.realisticmarkets.bonds.Bond.TREASURY));
+        List<String> tickers = new ArrayList<>();
+        for (Company c : companies.all()) tickers.add(c.ticker());
+        Ladder corporates = new Ladder(tickers);
+        double vault = 10_000_00;
         List<String> goods = new ArrayList<>();
         Map<String, Double> start = new LinkedHashMap<>();
         for (FloorCatalog.Book b : FloorCatalog.loadDefault().all()) {
@@ -76,6 +87,14 @@ public final class EquitySim {
             paths.get(GOODS).fair()[day] = basket;
             paths.get(CPI).close()[day] = dealer.priceLevel(day + 0.5);
             paths.get(CPI).fair()[day] = dealer.priceLevel(day + 0.5);
+            if (day >= 7) {
+                treasuries.step(desk, day);
+                corporates.step(desk, day);
+            }
+            paths.get(TREAS).close()[day] = paths.get(TREAS).fair()[day] = treasuries.value(desk, day + 0.5) / 100;
+            paths.get(CORP).close()[day] = paths.get(CORP).fair()[day] = corporates.value(desk, day + 0.5) / 100;
+            if (day > 0) vault *= 1 + central.rate(day - 1);
+            paths.get(VAULT_ROW).close()[day] = paths.get(VAULT_ROW).fair()[day] = vault / 100;
             for (Company c : companies.all()) {
                 long last = market.exchange().lastPrice(c.ticker()).orElse(eq.fairValueCents(c.ticker()));
                 paths.get(c.ticker()).close()[day] = last / 100.0;
@@ -83,6 +102,59 @@ public final class EquitySim {
             }
         }
         return paths;
+    }
+
+    /**
+     * A bond ladder: starts with $10,000 at day 7 and, at each quarter, collects coupons and maturities and puts all its
+     * cash into new 4-quarter bonds of its issuers, split evenly, at the desk's issue price.
+     */
+    static final class Ladder {
+        final List<String> issuers;
+        final List<long[]> held = new ArrayList<>(); // index into bonds, count
+        final List<com.realisticmarkets.bonds.Bond> bonds = new ArrayList<>();
+        final List<Integer> paid = new ArrayList<>();
+        double cash = 10_000_00;
+
+        Ladder(List<String> issuers) {
+            this.issuers = issuers;
+        }
+
+        void step(com.realisticmarkets.bonds.BondDesk desk, long day) {
+            for (int i = 0; i < bonds.size(); i++) {
+                var b = bonds.get(i);
+                long n = held.get(i)[1];
+                if (n == 0) continue;
+                cash += desk.couponsOwed(b, paid.get(i), day) * n;
+                paid.set(i, b.couponsDueBy(day));
+                long r = desk.redemption(b, day);
+                if (r > 0) {
+                    cash += r * n;
+                    held.get(i)[1] = 0;
+                }
+            }
+            if (day % 7 != 0) return;
+            double each = cash / issuers.size();
+            for (String issuer : issuers) {
+                var b = desk.issue(issuer, 4, day);
+                long n = (long) Math.floor(each / desk.issuePrice(b));
+                if (n <= 0) continue;
+                cash -= n * desk.issuePrice(b);
+                bonds.add(b);
+                held.add(new long[] {bonds.size() - 1, n});
+                paid.add(0);
+            }
+        }
+
+        double value(com.realisticmarkets.bonds.BondDesk desk, double day) {
+            double v = cash;
+            for (int i = 0; i < bonds.size(); i++) {
+                long n = held.get(i)[1];
+                if (n == 0) continue;
+                var b = bonds.get(i);
+                v += n * (desk.price(b, day) + desk.couponsOwed(b, paid.get(i), day));
+            }
+            return v;
+        }
     }
 
     /** Daily total returns (price change plus that day's dividend), from day 7 on (after the books settle). */
@@ -142,7 +214,7 @@ public final class EquitySim {
                 double[] r = returns(e.getValue());
                 byCompany.computeIfAbsent(e.getKey(), k -> new ArrayList<>()).add(r);
                 fairBy.computeIfAbsent(e.getKey(), k -> new ArrayList<>()).add(fairReturns(e.getValue()));
-                if (!e.getKey().equals(GOODS) && !e.getKey().equals(CPI)) {
+                if (!BENCHMARKS.contains(e.getKey())) {
                     for (int i = 0; i < r.length; i++) port[i] += r[i] / companies.all().size();
                 }
                 if (seed == 1) startEnd.put(e.getKey(), new double[] {e.getValue().close()[7], e.getValue().close()[DAYS]});
@@ -155,11 +227,12 @@ public final class EquitySim {
             print(e.getKey(), e.getValue(), fairBy.get(e.getKey()), startEnd.get(e.getKey()));
         }
         print("even 6", portfolio, null, null);
-        System.out.printf(Locale.ROOT, "%-6s %9.2f%% %8.1fx   (no risk; about %.2f%% a day after rising prices)%n", "vault",
-                VAULT * 100, 1.0, (VAULT - 0.001) * 100);
+        System.out.println("vault: the central bank's rate, which moves each quarter. treas / corp: every quarter, all the money");
+        System.out.println("  in new 4-quarter Treasuries / an even spread of the six companies' bonds, held to maturity.");
         System.out.println("goods: the Floor's 14 goods held at fair value, no trading costs. prices: the general price level");
         System.out.println("  (cash kept in a chest loses this much a day of buying power).");
         System.out.println("* worst week in the typical (median) world; worst 4 quarters in any world.");
+        System.out.println("Targets (M7): treasuries about the vault; corporates a little more with defaults; shares the most.");
         System.out.println("Targets (M6): the even portfolio beats the vault about 1.5-2x on average and has losing weeks;");
         System.out.println("  at least one company loses a third in a bad stretch; OWL steadiest, RSD most volatile.");
     }
