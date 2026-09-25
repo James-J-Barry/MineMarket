@@ -180,6 +180,40 @@ public final class ProgressionSim {
                     Money.format(r.nodeCents() + r.componentCents()), Money.format(r.questCents()));
         }
         System.out.println("Design target: Tier 7 by about 40 h.");
+        investorTable(profile);
+    }
+
+    /** Every tier's timing for a player who uses the tools, next to the gather-and-save floor. */
+    static void investorTable(String profile) throws IOException {
+        System.out.println();
+        System.out.println("An investing player (uses what they unlock: crate then Floor sales, news trading on up to $2,000, savings in shares).");
+        System.out.println("  Rates from sim trader and sim equities; no leverage, options or bonds. Cumulative hours to own and craft each tier:");
+        int[] targets = {2, 5, 10, 15, 22, 30, 40};
+        System.out.printf(Locale.ROOT, "%-16s", "profile");
+        for (int t = 1; t <= 7; t++) System.out.printf(Locale.ROOT, "  %8s", "Tier " + t);
+        System.out.println();
+        for (String name : new LinkedHashSet<>(List.of(profile, "farm_heavy"))) {
+            for (boolean inv : new boolean[] {false, true}) {
+                System.out.printf(Locale.ROOT, "%-16s", name + (inv ? " +invest" : ""));
+                for (int t = 1; t <= 7; t++) {
+                    Result r = run(loadProfile(name), 1.0, null, t, inv);
+                    System.out.printf(Locale.ROOT, "  %8s", r.done() ? String.format(Locale.ROOT, "%.0f h", r.hours()) : "-");
+                }
+                System.out.println();
+            }
+        }
+        System.out.printf(Locale.ROOT, "%-16s", "design target");
+        for (int t : targets) System.out.printf(Locale.ROOT, "  %8s", t + " h");
+        System.out.println();
+        System.out.println("Balance lever (deferred, for James): the investing early_survival player with Tier 3+ node costs scaled:");
+        for (double k : new double[] {0.5, 0.25, 0.1}) {
+            System.out.printf(Locale.ROOT, "%-16s", "costs x" + k);
+            for (int t = 1; t <= 7; t++) {
+                Result r = run(loadProfile(profile), 1.0, null, t, true, k);
+                System.out.printf(Locale.ROOT, "  %8s", r.done() ? String.format(Locale.ROOT, "%.0f h", r.hours()) : "-");
+            }
+            System.out.println();
+        }
     }
 
     static final int CRATE_DAYS = 30;
@@ -263,10 +297,47 @@ public final class ProgressionSim {
 
     /** Plays until every node of tier {@code <= maxTier} is owned and each of their blueprints crafted once. */
     static Result run(List<Source> sources, double scale, PrintWriter csv, int maxTier) {
+        return run(sources, scale, csv, maxTier, false);
+    }
+
+    /** The investing player's edges, from the other sims (see {@link #investorTable}). */
+    static final double CRATE_UPLIFT = 1.20, FLOOR_UPLIFT = 1.30, TRADING_DAILY = 0.012, SHARES_DAILY = 0.0055;
+    static final long TRADING_CAP_CENTS = 200_000;
+
+    /**
+     * Plays until every node of tier {@code <= maxTier} is owned and each of their blueprints crafted once. An
+     * {@code investor} also uses what they unlock: sells through the crate (+20%) and later the Trading Floor (+30%),
+     * trades the Newsstand's news on up to $2,000 (1.2% a day), and keeps savings in shares (0.55% a day) once the Stock
+     * Exchange is built.
+     */
+    static Result run(List<Source> sources, double scale, PrintWriter csv, int maxTier, boolean investor) {
+        return run(sources, scale, csv, maxTier, investor, 1.0);
+    }
+
+    /** The tree with every node from Tier 3 up costing {@code k} times as much (to explore balance). */
+    static UnlockTree scaledTree(double k) {
+        if (k == 1.0) return UnlockTree.loadDefault();
+        try (var in = ProgressionSim.class.getResourceAsStream("/realisticmarkets/almanac/nodes.csv")) {
+            StringBuilder sb = new StringBuilder();
+            for (String line : new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).split("\n")) {
+                String[] c = line.split(",", -1);
+                if (!line.startsWith("#") && c.length > 2 && c[1].matches("\\d+") && Integer.parseInt(c[1]) >= 3) {
+                    c[2] = Long.toString(Math.round(Long.parseLong(c[2]) * k / 10.0) * 10);
+                    line = String.join(",", c);
+                }
+                sb.append(line).append('\n');
+            }
+            return UnlockTree.parseCsv(new java.io.StringReader(sb.toString()));
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    static Result run(List<Source> sources, double scale, PrintWriter csv, int maxTier, boolean investor, double costScale) {
         DealerCatalog catalog = DealerCatalog.loadDefault();
         Dealer dealer = new Dealer(catalog, DealerParams.defaults(), 7L);
         dealer.setShocks(com.realisticmarkets.dealer.WorldEvents.loadDefault(catalog, 7L));
-        UnlockTree tree = UnlockTree.loadDefault();
+        UnlockTree tree = scaledTree(costScale);
         Quests quests = Quests.loadDefault();
         Blueprints blueprints = Blueprints.loadDefault();
         PlayerProgress p = new PlayerProgress();
@@ -301,6 +372,13 @@ public final class ProgressionSim {
             };
             emit.accept(new ProgressionEvent.DayRollover(day));
             long interestToday = 0;
+            if (investor && crafted.contains("realisticmarkets:trading_floor") && p.hasNode("newsstand")) {
+                cash[0] += Math.round(Math.min(cash[0], TRADING_CAP_CENTS) * TRADING_DAILY);
+            }
+            if (investor && crafted.contains("realisticmarkets:stock_exchange")) {
+                long extra = Math.round(Math.max(0, cash[0]) * (SHARES_DAILY - BANK.interestRate()));
+                cash[0] += extra; // shares instead of the vault: the difference on top of the vault's interest below
+            }
             if (vault != null) {
                 interestToday = vault.accrueTo(day, BANK.interestRate());
                 cash[0] += interestToday;
@@ -343,6 +421,11 @@ public final class ProgressionSim {
                 if (diversifyOpen && !dump && groupValue.get(group) < GROUP_TARGET_CENTS) continue;
                 ProgressionEvent.Sale sale = sell(dealer, e.getKey(), e.getValue(), day, licensed, cash);
                 if (sale == null) continue;
+                if (investor) {
+                    double uplift = crafted.contains("realisticmarkets:trading_floor") ? FLOOR_UPLIFT
+                            : crafted.contains("realisticmarkets:trade_route_crate") ? CRATE_UPLIFT : 1.0;
+                    cash[0] += Math.round(sale.proceedsCents() * (uplift - 1));
+                }
                 stock.merge(e.getKey(), (double) -e.getValue(), Double::sum);
                 soldToday += sale.proceedsCents();
                 emit.accept(sale);

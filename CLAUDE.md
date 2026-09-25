@@ -193,8 +193,9 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   player who sells on the Floor, trades or invests. Same deferred decision.
 - Tier 5 balance: the same gather-only player needs ~120-129 h for Tiers 1-5 vs ~22 h. Same deferred decision.
 - Tier 6 balance: ~235-252 h for Tiers 1-6 vs ~30 h (gather only). Same deferred decision.
-- Tier 7 balance: ~400-426 h for Tiers 1-7 vs ~40 h (gather only). `sim progression` needs an investing player before
-  these numbers mean much: the tier costs assume income from the tools themselves.
+- Tier 7 balance: ~400-426 h for Tiers 1-7 vs ~40 h (gather only). `sim progression` now also runs an investing player
+  (crate then Floor sales, news trading on $2,000, savings in shares): Tier 7 in ~311-329 h. Scaling Tier 3+ node costs
+  by 0.1 brings the investor to ~10/15/24/39/72 h for Tiers 3-7 (targets 10/15/22/30/40). Balance deferred (James).
 - Wheat's fair value can move 50-75% in a week (drift + trends + events, M5c); futures at 4x leverage bust most
   speculators in `sim hedge`. Intended as a lesson, but worth a look when balancing.
 - `capital_catalog.csv` loads from the jar only (not copied to `config/` like the Dealer's files yet).
