@@ -1,5 +1,7 @@
 package com.realisticmarkets.mod.menu;
 
+import com.realisticmarkets.mod.fx.Feedback;
+
 import com.realisticmarkets.custody.BookEntries;
 import com.realisticmarkets.mod.brokerage.BrokerageService;
 import com.realisticmarkets.mod.dealer.DealerService;
@@ -161,6 +163,7 @@ public class BrokerageMenu extends AbstractContainerMenu {
             if (p instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.literal(why.get()));
         }
         if (brokerage != null) refresh();
+        if (handled) Feedback.play(p, access, cueFor(id));
         return handled;
     }
 
@@ -196,5 +199,15 @@ public class BrokerageMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player p) {
         return stillValid(access, p, ModBlocks.BROKERAGE_TERMINAL);
+    }
+
+    /** The sound and particles for a successful button press, or null for none. */
+    private static Feedback.Cue cueFor(int id) {
+        return switch (id) {
+            case BUTTON_DEPOSIT -> Feedback.Cue.SIGNED;
+            case BUTTON_WITHDRAW -> Feedback.Cue.PURCHASE;
+            case BUTTON_CASH_OUT -> Feedback.Cue.SALE;
+            default -> null;
+        };
     }
 }

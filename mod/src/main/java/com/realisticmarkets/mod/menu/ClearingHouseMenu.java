@@ -1,5 +1,7 @@
 package com.realisticmarkets.mod.menu;
 
+import com.realisticmarkets.mod.fx.Feedback;
+
 import com.realisticmarkets.futures.ClearingHouse;
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.dealer.Wallet;
@@ -186,6 +188,7 @@ public class ClearingHouseMenu extends AbstractContainerMenu {
             if (p instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.literal(why.get()));
         }
         refresh();
+        if (handled) Feedback.play(p, access, cueFor(id));
         return handled;
     }
 
@@ -197,5 +200,15 @@ public class ClearingHouseMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player p) {
         return stillValid(access, p, ModBlocks.CLEARING_HOUSE);
+    }
+
+    /** The sound and particles for a successful button press, or null for none. */
+    private static Feedback.Cue cueFor(int id) {
+        return switch (id) {
+            case BUTTON_BUY, BUTTON_SELL -> Feedback.Cue.SIGNED;
+            case BUTTON_DEPOSIT -> Feedback.Cue.PURCHASE;
+            case BUTTON_WITHDRAW -> Feedback.Cue.SALE;
+            default -> null;
+        };
     }
 }

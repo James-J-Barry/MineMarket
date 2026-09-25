@@ -147,6 +147,9 @@ public final class FuturesService {
             if (prog != null && moved != 0) prog.emit(p, new ProgressionEvent.FuturesMarked(moved, day));
             if (prog != null && d.callMet()) prog.emit(p, new ProgressionEvent.MarginCallMet(day));
             if (!(p instanceof ServerPlayer sp)) continue;
+            com.realisticmarkets.mod.fx.Feedback.at(p, d.called() ? com.realisticmarkets.mod.fx.Feedback.Cue.ALARM
+                    : d.closedOut() || moved < 0 ? com.realisticmarkets.mod.fx.Feedback.Cue.LOSS
+                    : moved > 0 ? com.realisticmarkets.mod.fx.Feedback.Cue.GAIN : null);
             if (moved != 0) {
                 sp.sendSystemMessage(Component.literal("Clearing House mark: " + (moved > 0 ? "+" : "-") + Money.format(Math.abs(moved))
                         + " to your futures account").withStyle(moved > 0 ? ChatFormatting.GREEN : ChatFormatting.GOLD));

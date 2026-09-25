@@ -175,6 +175,7 @@ public final class OptionsService {
                         .withStyle(net.minecraft.ChatFormatting.RED));
             }
             p.getInventory().placeItemBackInInventory(com.realisticmarkets.mod.futures.FuturesService.notice(day, need));
+            com.realisticmarkets.mod.fx.Feedback.at(p, com.realisticmarkets.mod.fx.Feedback.Cue.ALARM);
         }
         for (var st : settled) {
             Player p = online.apply(java.util.UUID.fromString(st.account()));
@@ -186,6 +187,8 @@ public final class OptionsService {
                 sp.sendSystemMessage(net.minecraft.network.chat.Component.literal("Written " + OptionPapers.title(st.series()) + " " + what
                         + ". Collect your collateral at the Options Desk.").withStyle(net.minecraft.ChatFormatting.GOLD));
             }
+            com.realisticmarkets.mod.fx.Feedback.at(p, st.paidOutCents() > 0 || st.boughtBack() ? com.realisticmarkets.mod.fx.Feedback.Cue.LOSS
+                    : com.realisticmarkets.mod.fx.Feedback.Cue.GAIN);
             if (prog != null) {
                 prog.emit(p, new ProgressionEvent.OptionWrittenSettled(st.premiumCents(), st.paidOutCents(), st.strikeReceivedCents(),
                         st.worthless(), day));

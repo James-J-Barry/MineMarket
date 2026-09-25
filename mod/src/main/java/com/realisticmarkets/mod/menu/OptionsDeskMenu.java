@@ -1,5 +1,7 @@
 package com.realisticmarkets.mod.menu;
 
+import com.realisticmarkets.mod.fx.Feedback;
+
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.dealer.Wallet;
 import com.realisticmarkets.mod.options.OptionPapers;
@@ -328,6 +330,7 @@ public class OptionsDeskMenu extends AbstractContainerMenu {
             if (p instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.literal(why.get()));
         }
         refresh();
+        if (handled) Feedback.play(p, access, cueFor(id));
         return handled;
     }
 
@@ -373,5 +376,16 @@ public class OptionsDeskMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player p) {
         return stillValid(access, p, ModBlocks.OPTIONS_DESK);
+    }
+
+    /** The sound and particles for a successful button press, or null for none. */
+    private static Feedback.Cue cueFor(int id) {
+        return switch (id) {
+            case BUTTON_BUY -> Feedback.Cue.PURCHASE;
+            case BUTTON_WRITE -> Feedback.Cue.SIGNED;
+            case BUTTON_COLLECT, BUTTON_COLLECT_RETURNS -> Feedback.Cue.PAYOUT;
+            default -> id >= BUTTON_CLOSE_BASE && id < BUTTON_CLOSE_BASE + MAX_HOLDINGS ? Feedback.Cue.SALE
+                    : id >= BUTTON_TOPUP_BASE && id < BUTTON_TOPUP_BASE + MAX_WRITTEN ? Feedback.Cue.CLICK : null;
+        };
     }
 }

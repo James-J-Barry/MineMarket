@@ -1,5 +1,7 @@
 package com.realisticmarkets.mod.menu;
 
+import com.realisticmarkets.mod.fx.Feedback;
+
 import com.realisticmarkets.contracts.ForwardBook;
 import com.realisticmarkets.dealer.Dealer;
 import com.realisticmarkets.exchange.RejectedException;
@@ -427,6 +429,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
             handled = false;
         }
         if (handled) refresh();
+        if (handled) Feedback.play(p, access, cueFor(id));
         return handled;
     }
 
@@ -604,5 +607,15 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player p) {
         return stillValid(access, p, ModBlocks.BASIC_EXCHANGE);
+    }
+
+    /** The sound and particles for a successful button press, or null for none. */
+    private static Feedback.Cue cueFor(int id) {
+        return switch (id) {
+            case BUTTON_SELL -> Feedback.Cue.SALE;
+            case BUTTON_FWD_SIGN -> Feedback.Cue.SIGNED;
+            default -> id >= BUTTON_BUY_FIRST && id < BUTTON_BUY_FIRST + BUY_QUANTITIES.length ? Feedback.Cue.PURCHASE
+                    : id >= BUTTON_FWD_DELIVER_BASE && id < BUTTON_FWD_DELIVER_BASE + MAX_FORWARDS_SHOWN ? Feedback.Cue.PAYOUT : null;
+        };
     }
 }

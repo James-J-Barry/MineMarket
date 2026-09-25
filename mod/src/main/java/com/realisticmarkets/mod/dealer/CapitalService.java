@@ -175,7 +175,10 @@ public final class CapitalService {
             UUID owner = UUID.fromString(s.owner());
             TradeRouteCrateBlockEntity crate = crateAt.apply(s.location());
             long left = st.payoutCents();
-            if (crate != null && owner.equals(crate.owner())) left = crate.depositCash(left);
+            if (crate != null && owner.equals(crate.owner())) {
+                left = crate.depositCash(left);
+                com.realisticmarkets.mod.fx.Feedback.at(crate.getLevel(), crate.getBlockPos(), com.realisticmarkets.mod.fx.Feedback.Cue.PAYOUT);
+            }
             pending.add(new Pending(owner, left, s.localQuoteCents(), st.payoutCents(), (long) Math.floor(day)));
         }
         deliverPending(online, prog);

@@ -177,6 +177,7 @@ public final class ForwardService {
                         + " was due by day " + (f.deliveryDay() + 1) + ". Your " + Money.format(f.depositCents())
                         + " deposit is forfeit.").withStyle(ChatFormatting.RED));
             }
+            com.realisticmarkets.mod.fx.Feedback.at(p, com.realisticmarkets.mod.fx.Feedback.Cue.LOSS);
             if (prog != null) prog.emit(p, new ProgressionEvent.ForwardDefaulted(f.item(), f.depositCents(), day));
             voidPaper(p.getInventory(), f.id());
         }

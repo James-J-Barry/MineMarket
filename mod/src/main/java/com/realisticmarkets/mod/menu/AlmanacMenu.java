@@ -1,5 +1,7 @@
 package com.realisticmarkets.mod.menu;
 
+import com.realisticmarkets.mod.fx.Feedback;
+
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.dealer.Wallet;
 import com.realisticmarkets.mod.progression.ProgressionService;
@@ -138,6 +140,7 @@ public class AlmanacMenu extends AbstractContainerMenu {
             handled = false;
         }
         refresh();
+        if (handled) Feedback.play(p, access, cueFor(id));
         return handled;
     }
 
@@ -149,5 +152,13 @@ public class AlmanacMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player p) {
         return stillValid(access, p, ModBlocks.ALMANAC_LECTERN);
+    }
+
+    /** The sound and particles for a successful button press, or null for none. */
+    private static Feedback.Cue cueFor(int id) {
+        return switch (id) {
+            case BUTTON_BUY -> Feedback.Cue.UNLOCK;
+            default -> null;
+        };
     }
 }

@@ -162,6 +162,7 @@ public final class ProgressionService {
     public List<Quest> emit(Player player, ProgressionEvent event) {
         for (var l : listeners) l.accept(player, event);
         List<Quest> done = progress(player).apply(event, quests);
+        if (!done.isEmpty()) com.realisticmarkets.mod.fx.Feedback.at(player, com.realisticmarkets.mod.fx.Feedback.Cue.QUEST);
         for (Quest q : done) {
             if (q.rewardCents() > 0) Wallet.give(player, q.rewardCents());
             message(player, "Quest complete: " + q.title()

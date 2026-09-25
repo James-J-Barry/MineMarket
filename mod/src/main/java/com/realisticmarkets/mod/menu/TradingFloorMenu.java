@@ -1,5 +1,7 @@
 package com.realisticmarkets.mod.menu;
 
+import com.realisticmarkets.mod.fx.Feedback;
+
 import com.realisticmarkets.agents.FloorCatalog;
 import com.realisticmarkets.agents.TradingFloor;
 import com.realisticmarkets.exchange.Side;
@@ -205,6 +207,7 @@ public class TradingFloorMenu extends AbstractContainerMenu {
             if (p instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.literal(why.get()));
         }
         refresh();
+        if (handled) Feedback.play(p, access, cueFor(id));
         return handled;
     }
 
@@ -235,5 +238,13 @@ public class TradingFloorMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player p) {
         return stillValid(access, p, ModBlocks.TRADING_FLOOR);
+    }
+
+    /** The sound and particles for a successful button press, or null for none. */
+    private static Feedback.Cue cueFor(int id) {
+        return switch (id) {
+            case BUTTON_PLACE -> Feedback.Cue.SIGNED;
+            default -> null;
+        };
     }
 }

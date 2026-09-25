@@ -408,6 +408,7 @@ public final class BankService {
             switch (r.status()) {
                 case CALL_ISSUED -> {
                     alarm.accept(owner, true);
+                    com.realisticmarkets.mod.fx.Feedback.at(p, com.realisticmarkets.mod.fx.Feedback.Cue.ALARM);
                     tell(p, "MARGIN CALL: your collateral covers only " + pct(r.coverage()) + " of your loan (110% needed). "
                             + "Add collateral or repay by dawn tomorrow, or the bank will sell it.");
                 }

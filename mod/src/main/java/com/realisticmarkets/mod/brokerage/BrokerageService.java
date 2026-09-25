@@ -122,6 +122,7 @@ public final class BrokerageService {
             if (p instanceof ServerPlayer sp) {
                 sp.sendSystemMessage(Component.literal("Brokerage: " + Money.format(i.total()) + " credited to your cash account"));
             }
+            com.realisticmarkets.mod.fx.Feedback.at(p, com.realisticmarkets.mod.fx.Feedback.Cue.PAYOUT);
             if (prog != null) prog.emit(p, new ProgressionEvent.BrokerageIncome(i.dividends(), i.coupons(), i.other(), day));
         }
         if (!income.isEmpty()) save();

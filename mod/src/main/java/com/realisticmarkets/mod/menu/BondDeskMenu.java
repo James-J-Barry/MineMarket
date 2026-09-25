@@ -1,5 +1,7 @@
 package com.realisticmarkets.mod.menu;
 
+import com.realisticmarkets.mod.fx.Feedback;
+
 import com.realisticmarkets.bonds.Bond;
 import com.realisticmarkets.equities.Company;
 import com.realisticmarkets.mod.bonds.BondService;
@@ -173,6 +175,7 @@ public class BondDeskMenu extends AbstractContainerMenu {
             if (p instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.literal(why.get()));
         }
         refresh();
+        if (handled) Feedback.play(p, access, cueFor(id));
         return handled;
     }
 
@@ -190,5 +193,14 @@ public class BondDeskMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player p) {
         return stillValid(access, p, ModBlocks.BOND_DESK);
+    }
+
+    /** The sound and particles for a successful button press, or null for none. */
+    private static Feedback.Cue cueFor(int id) {
+        return switch (id) {
+            case BUTTON_BUY -> Feedback.Cue.PURCHASE;
+            case BUTTON_COLLECT -> Feedback.Cue.PAYOUT;
+            default -> id >= BUTTON_SELL_BASE && id < BUTTON_SELL_BASE + MAX_HOLDINGS ? Feedback.Cue.SALE : null;
+        };
     }
 }

@@ -1,5 +1,7 @@
 package com.realisticmarkets.mod.menu;
 
+import com.realisticmarkets.mod.fx.Feedback;
+
 import com.realisticmarkets.collateral.CollateralValuer;
 import com.realisticmarkets.contracts.BankAccount;
 import com.realisticmarkets.mod.bank.BankService;
@@ -297,6 +299,7 @@ public class BankVaultMenu extends AbstractContainerMenu {
         }
         lastWritten = Long.MIN_VALUE;
         refresh();
+        if (handled) Feedback.play(p, access, cueFor(id));
         return handled;
     }
 
@@ -357,5 +360,16 @@ public class BankVaultMenu extends AbstractContainerMenu {
     /** Server-side, for tests: the Passbook / CD slot container. */
     public Container vaultSlots() {
         return vaultSlots;
+    }
+
+    /** The sound and particles for a successful button press, or null for none. */
+    private static Feedback.Cue cueFor(int id) {
+        return switch (id) {
+            case BUTTON_DEPOSIT_ALL, BUTTON_WITHDRAW_1, BUTTON_WITHDRAW_10, BUTTON_WITHDRAW_100, BUTTON_WITHDRAW_ALL -> Feedback.Cue.PURCHASE;
+            case BUTTON_CD_ISSUE, BUTTON_BORROW -> Feedback.Cue.SIGNED;
+            case BUTTON_CD_REDEEM -> Feedback.Cue.PAYOUT;
+            case BUTTON_REPAY_10, BUTTON_REPAY_100, BUTTON_REPAY_ALL, BUTTON_ADD_COLLATERAL -> Feedback.Cue.CLICK;
+            default -> null;
+        };
     }
 }

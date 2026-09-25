@@ -40,6 +40,7 @@ public class RecordLinkItem extends Item {
         if (!(be instanceof RecordsTerminalBlockEntity) && !RecordsTerminalBlockEntity.linkable(be)) return InteractionResult.PASS;
         if (level.isClientSide()) return InteractionResult.SUCCESS;
         String msg = use(player, level, hit.getBlockPos(), stack);
+        com.realisticmarkets.mod.fx.Feedback.at(level, hit.getBlockPos(), com.realisticmarkets.mod.fx.Feedback.Cue.CLICK);
         if (player instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.literal(msg));
         return InteractionResult.SUCCESS;
     }

@@ -325,6 +325,7 @@ public final class StockService {
             stacks.addAll(ShareCertificates.stacksFor(e.getKey(), e.getValue(), equities.lastReportedQuarter()));
         }
         stacks.addAll(Wallet.toStacks(p.cents()));
+        if (!mine.isEmpty()) com.realisticmarkets.mod.fx.Feedback.at(player, com.realisticmarkets.mod.fx.Feedback.Cue.PAYOUT);
         for (TradingFloor.Receipt r : mine) {
             stacks.add(TradeReceiptItem.create(r, r.item() + " shares"));
             if (r.filledQty() <= 0) continue;
