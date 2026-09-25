@@ -19,3 +19,4 @@ portfolio_binder,4,500000,stock_exchange,,blueprint:realisticmarkets:portfolio_b
 safe_deposit_box,4,400000,,,blueprint:realisticmarkets:safe_deposit_box;guide:custody,Safe Deposit Box
 bond_desk,5,2500000,,,blueprint:realisticmarkets:bond_desk;guide:bonds_and_yield;guide:interest_rate_risk,Bond Desk
 digital_record_keeping,5,2000000,bank_vault;safe_deposit_box,,blueprint:realisticmarkets:records_terminal;blueprint:realisticmarkets:record_link;component:realisticmarkets:display_screen;component:realisticmarkets:circuit_board;guide:net_worth,Digital Record Keeping
+forward_contract,6,4000000,,,perk:forwards;component:realisticmarkets:security_paper;guide:hedging,Forward Contract

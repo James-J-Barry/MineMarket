@@ -4,7 +4,7 @@
 #       | interest_earned:<cents> | cd_matured | loan_repaid | limit_filled | beat_dealer
 #       | two_books:<big item>:<small item>:<small per big>
 #       | chart_read | dividend_collected | shares_held:<n> | beat_market | companies_held:<n>
-#       | coupon_collected | held_to_maturity | rate_watcher | balance_sheet:<cents>
+#       | coupon_collected | held_to_maturity | rate_watcher | balance_sheet:<cents> | forward_beat_spot
 # reward_cents is paid in bills; grants are ;-separated (guide:, perk:, blueprint:).
 id,goal,reward_cents,grants,title
 first_sale,any_sale,500,guide:money_and_dealer,First Sale
@@ -30,3 +30,4 @@ coupon_clipper,coupon_collected,1500,guide:credit_risk,Coupon Clipper
 held_to_maturity,held_to_maturity,3000,,Held to Maturity
 rate_watcher,rate_watcher,4000,,Rate Watcher
 balance_sheet,balance_sheet:5000000,5000,,Balance Sheet
+hedged,forward_beat_spot,6000,,Hedged

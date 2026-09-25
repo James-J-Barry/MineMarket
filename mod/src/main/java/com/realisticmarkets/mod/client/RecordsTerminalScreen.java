@@ -169,7 +169,7 @@ public class RecordsTerminalScreen extends AbstractContainerScreen<RecordsTermin
     private String name(RecordsTerminalMenu m, int i) {
         ItemStack icon = m.rowIcon(i);
         return switch (m.rowKind(i)) {
-            case CASH -> "Cash";
+            case CASH -> icon.is(com.realisticmarkets.mod.registry.ModItems.FORWARD_CONTRACT) ? "Forward deposit" : "Cash";
             case VAULT -> "Vault balance";
             case DEBTS -> "Loan";
             case SHARES -> ShareCertificates.read(icon).map(p -> p.ticker() + " " + ShareCertificates.COMPANIES.company(p.ticker()).name())
@@ -260,6 +260,8 @@ public class RecordsTerminalScreen extends AbstractContainerScreen<RecordsTermin
                 case COUPON -> "Coupon" + BondPapers.read(icon).map(p -> ", " + BondPapers.issuerName(p.bond().issuer())).orElse("");
                 case BOND_MATURITY -> "Matures" + BondPapers.read(icon).map(p -> ", " + BondPapers.issuerName(p.bond().issuer())).orElse("");
                 case CD_MATURITY -> "CD matures";
+                case FORWARD_DELIVERY -> "Deliver " + (icon.isEmpty() ? "goods" : icon.getHoverName().getString());
+                case FUTURES_EXPIRY -> "Futures expire" + (icon.isEmpty() ? "" : ", " + icon.getHoverName().getString());
             };
             g.text(font, Panels.trim(font, what, 90), 128, y + 4, GREY, false);
             if (m.calendarCents(i) > 0) right(g, Money.format(m.calendarCents(i)), 246, y + 4, GREEN);

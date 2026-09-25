@@ -49,7 +49,10 @@ public class BasicExchangeScreen extends AbstractContainerScreen<BasicExchangeMe
         int height() { return header() ? HEADER_H : CELL; }
     }
 
-    private Button sellTab, buyTab, sellButton;
+    private Button sellTab, buyTab, forwardTab, sellButton, signButton;
+    private final Button[] qtyButtons = new Button[BasicExchangeMenu.FWD_QTY_STEPS.length];
+    private final Button[] termButtons = new Button[com.realisticmarkets.contracts.ForwardBook.TERMS.length];
+    private final Button[] deliverButtons = new Button[BasicExchangeMenu.MAX_FORWARDS_SHOWN];
     private final Button[] buyButtons = new Button[BasicExchangeMenu.BUY_QUANTITIES.length];
     private int scroll;
 
@@ -61,9 +64,30 @@ public class BasicExchangeScreen extends AbstractContainerScreen<BasicExchangeMe
     protected void init() {
         super.init();
         sellTab = addRenderableWidget(Button.builder(Component.translatable("gui.realisticmarkets.tab_sell"),
-                b -> click(BasicExchangeMenu.BUTTON_TAB_SELL)).bounds(leftPos + 104, topPos + 3, 34, 13).build());
+                b -> click(BasicExchangeMenu.BUTTON_TAB_SELL)).bounds(leftPos + 88, topPos + 3, 28, 13).build());
         buyTab = addRenderableWidget(Button.builder(Component.translatable("gui.realisticmarkets.tab_buy"),
-                b -> click(BasicExchangeMenu.BUTTON_TAB_BUY)).bounds(leftPos + 138, topPos + 3, 34, 13).build());
+                b -> click(BasicExchangeMenu.BUTTON_TAB_BUY)).bounds(leftPos + 116, topPos + 3, 28, 13).build());
+        forwardTab = addRenderableWidget(Button.builder(Component.literal("Fwd"),
+                b -> click(BasicExchangeMenu.BUTTON_TAB_FORWARD)).bounds(leftPos + 144, topPos + 3, 28, 13).build());
+        forwardTab.setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.literal(
+                "Forward Contracts: agree today on a price for goods you deliver later")));
+        for (int i = 0; i < qtyButtons.length; i++) {
+            int id = BasicExchangeMenu.BUTTON_FWD_QTY_BASE + i, step = BasicExchangeMenu.FWD_QTY_STEPS[i];
+            qtyButtons[i] = addRenderableWidget(Button.builder(Component.literal((step > 0 ? "+" : "") + step), b -> click(id))
+                    .bounds(leftPos + 48 + i * 31, topPos + 32, 29, 13).build());
+        }
+        for (int i = 0; i < termButtons.length; i++) {
+            int id = BasicExchangeMenu.BUTTON_FWD_TERM_BASE + i;
+            termButtons[i] = addRenderableWidget(Button.builder(Component.literal(com.realisticmarkets.contracts.ForwardBook.TERMS[i] + " days"),
+                    b -> click(id)).bounds(leftPos + 48 + i * 42, topPos + 47, 40, 13).build());
+        }
+        signButton = addRenderableWidget(Button.builder(Component.literal("Sign"), b -> click(BasicExchangeMenu.BUTTON_FWD_SIGN))
+                .bounds(leftPos + 8, topPos + 52, 34, 14).build());
+        for (int i = 0; i < deliverButtons.length; i++) {
+            int id = BasicExchangeMenu.BUTTON_FWD_DELIVER_BASE + i;
+            deliverButtons[i] = addRenderableWidget(Button.builder(Component.literal("Deliver"), b -> click(id))
+                    .bounds(leftPos + 128, topPos + 88 + i * 13, 44, 12).build());
+        }
         sellButton = addRenderableWidget(Button.builder(Component.translatable("gui.realisticmarkets.sell"),
                 b -> click(BasicExchangeMenu.BUTTON_SELL)).bounds(leftPos + 50, topPos + 28, 50, 20).build());
         for (int q = 0; q < buyButtons.length; q++) {
@@ -89,15 +113,29 @@ public class BasicExchangeScreen extends AbstractContainerScreen<BasicExchangeMe
     private void updateWidgets() {
         BasicExchangeMenu m = getMenu();
         boolean selling = m.tab() == BasicExchangeMenu.TAB_SELL;
+        boolean forward = m.tab() == BasicExchangeMenu.TAB_FORWARD;
         if (sellTab == null) return;
         sellTab.active = !selling;
-        buyTab.active = selling;
+        buyTab.active = m.tab() != BasicExchangeMenu.TAB_BUY;
+        forwardTab.visible = m.forwardsUnlocked();
+        forwardTab.active = !forward;
+        for (int i = 0; i < qtyButtons.length; i++) qtyButtons[i].visible = forward;
+        for (int i = 0; i < termButtons.length; i++) {
+            termButtons[i].visible = forward;
+            termButtons[i].active = m.forwardTermIndex() != i;
+        }
+        signButton.visible = forward;
+        signButton.active = m.forwardStatus() == BasicExchangeMenu.FWD_OK && m.forwardDepositCents() <= m.cashCents();
+        for (int i = 0; i < deliverButtons.length; i++) {
+            long due = i < m.openForwards() ? m.openForwardDay(i) : Long.MAX_VALUE;
+            deliverButtons[i].visible = forward && m.today() >= due && m.today() <= due + 1;
+        }
         sellButton.visible = selling;
         sellButton.active = m.status() == BasicExchangeMenu.STATUS_OK;
         boolean hasSelection = m.selected() >= 0 && m.selected() < m.itemCount();
         for (int q = 0; q < buyButtons.length; q++) {
             long total = m.buyTotalCents(q);
-            buyButtons[q].visible = !selling && hasSelection;
+            buyButtons[q].visible = m.tab() == BasicExchangeMenu.TAB_BUY && hasSelection;
             buyButtons[q].active = total > 0 && total <= m.cashCents();
         }
         scroll = Math.max(0, Math.min(scroll, maxScroll()));
@@ -189,7 +227,9 @@ public class BasicExchangeScreen extends AbstractContainerScreen<BasicExchangeMe
         super.extractBackground(g, mouseX, mouseY, partialTick);
         g.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, 256, 256);
         int x = leftPos, y = topPos;
-        if (getMenu().tab() == BasicExchangeMenu.TAB_SELL) {
+        if (getMenu().tab() == BasicExchangeMenu.TAB_FORWARD) {
+            slotFrame(g, x + BasicExchangeMenu.INPUT_X, y + BasicExchangeMenu.INPUT_Y);
+        } else if (getMenu().tab() == BasicExchangeMenu.TAB_SELL) {
             slotFrame(g, x + BasicExchangeMenu.INPUT_X, y + BasicExchangeMenu.INPUT_Y);
             for (int i = 0; i < BasicExchangeMenu.OUTPUT_COUNT; i++) {
                 slotFrame(g, x + BasicExchangeMenu.OUTPUT_X + (i % 2) * 18, y + BasicExchangeMenu.OUTPUT_Y + (i / 2) * 18);
@@ -245,6 +285,7 @@ public class BasicExchangeScreen extends AbstractContainerScreen<BasicExchangeMe
         String cash = "Cash " + Money.format(m.cashCents());
         g.text(font, cash, imageWidth - 8 - font.width(cash), inventoryLabelY, GREY, false);
         if (m.tab() == BasicExchangeMenu.TAB_SELL) drawSellTab(g, m);
+        else if (m.tab() == BasicExchangeMenu.TAB_FORWARD) drawForwardTab(g, m);
         else drawBuyTab(g, m);
     }
 
@@ -279,6 +320,51 @@ public class BasicExchangeScreen extends AbstractContainerScreen<BasicExchangeMe
             priceRow(g, "Normal", m.sellNormalMills(), 86, 8, 108, GREY);
             priceRow(g, "Market", m.sellMarketMills(), 98, 8, 108, GREY);
             priceRow(g, "Pays", m.sellPaysMills(), 110, 8, 108, GREEN);
+        }
+    }
+
+    private void drawForwardTab(GuiGraphicsExtractor g, BasicExchangeMenu m) {
+        g.text(font, "Deliver " + m.forwardQuantity() + " in", 48, 21, GREY, false);
+        String price;
+        int color;
+        switch (m.forwardStatus()) {
+            case BasicExchangeMenu.FWD_OK -> {
+                price = "Pays " + Money.format(m.forwardPriceCents()) + " on day " + (m.today() + m.forwardTerm());
+                color = GREEN;
+            }
+            case BasicExchangeMenu.FWD_NOT_TRADED -> {
+                price = "No forwards on this";
+                color = RED;
+            }
+            case BasicExchangeMenu.FWD_REFUSED -> {
+                price = "The Dealer won't agree a price";
+                color = RED;
+            }
+            default -> {
+                price = "Place goods to pick what you'll deliver";
+                color = LIGHT_GREY;
+            }
+        }
+        g.text(font, trim(price, 164), 8, 64, color, false);
+        if (m.forwardStatus() == BasicExchangeMenu.FWD_OK) {
+            g.text(font, "Deposit " + Money.format(m.forwardDepositCents()) + " + 1 Security Paper", 8, 74, LIGHT_GREY, false);
+        }
+        if (m.openForwards() == 0) {
+            g.text(font, "No open forwards", 8, 90, LIGHT_GREY, false);
+            return;
+        }
+        for (int i = 0; i < m.openForwards(); i++) {
+            int y = 90 + i * 13;
+            long due = m.openForwardDay(i), in = due - m.today();
+            ItemStack stack = new ItemStack(m.openForwardItem(i));
+            String line = m.openForwardQuantity(i) + " " + stack.getHoverName().getString() + " " + Money.format(m.openForwardPrice(i));
+            g.text(font, trim(line, 118), 8, y, GREY, false);
+            if (in > 0) {
+                String when = "in " + in + "d";
+                g.text(font, when, 172 - font.width(when), y, LIGHT_GREY, false);
+            } else if (in < -1) {
+                g.text(font, "late", 150, y, RED, false);
+            }
         }
     }
 

@@ -103,6 +103,8 @@ public final class PlayerProgress {
             case ProgressionEvent.BondRedeemed e -> e.day();
             case ProgressionEvent.BondSold e -> e.day();
             case ProgressionEvent.RecordsViewed e -> e.day();
+            case ProgressionEvent.ForwardDelivered e -> e.day();
+            case ProgressionEvent.ForwardDefaulted e -> e.day();
         };
         if (day != trackedDay) {
             trackedDay = day;
@@ -179,6 +181,9 @@ public final class PlayerProgress {
         }
         if (event instanceof ProgressionEvent.BondSold b) {
             return goal instanceof QuestGoal.RateWatcher && b.rateCutSince() && b.costCents() >= 0 && b.proceedsCents() > b.costCents();
+        }
+        if (event instanceof ProgressionEvent.ForwardDelivered f) {
+            return goal instanceof QuestGoal.ForwardBeatSpot && f.priceCents() > f.spotCents();
         }
         if (event instanceof ProgressionEvent.RecordsViewed r) {
             return goal instanceof QuestGoal.BalanceSheet g && r.netWorthCents() >= g.cents();

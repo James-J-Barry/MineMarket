@@ -75,4 +75,13 @@ public sealed interface ProgressionEvent {
 
     /** Net worth as shown on a Records Terminal (linked blocks only). */
     record RecordsViewed(long netWorthCents, long day) implements ProgressionEvent {}
+
+    /**
+     * A forward delivered at the Basic Exchange: {@code priceCents} is what the Dealer paid as agreed, {@code spotCents}
+     * what the same goods would have fetched that moment at the player's bid.
+     */
+    record ForwardDelivered(String item, long quantity, long priceCents, long spotCents, long day) implements ProgressionEvent {}
+
+    /** A forward not delivered in time: its deposit is forfeit. */
+    record ForwardDefaulted(String item, long depositCents, long day) implements ProgressionEvent {}
 }

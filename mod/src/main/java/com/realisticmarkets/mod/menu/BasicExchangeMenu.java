@@ -1,9 +1,11 @@
 package com.realisticmarkets.mod.menu;
 
+import com.realisticmarkets.contracts.ForwardBook;
 import com.realisticmarkets.dealer.Dealer;
 import com.realisticmarkets.exchange.RejectedException;
 import com.realisticmarkets.mod.dealer.DealerService;
 import com.realisticmarkets.mod.dealer.Wallet;
+import com.realisticmarkets.mod.forwards.ForwardService;
 import com.realisticmarkets.mod.progression.ProgressionService;
 import com.realisticmarkets.mod.registry.ModBlocks;
 import com.realisticmarkets.mod.registry.ModItems;
@@ -63,12 +65,23 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
     // ---- tabs and buttons
     public static final int TAB_SELL = 0;
     public static final int TAB_BUY = 1;
+    public static final int TAB_FORWARD = 2;
     public static final int BUTTON_SELL = 0;
     public static final int BUTTON_TAB_SELL = 1;
     public static final int BUTTON_TAB_BUY = 2;
     public static final int BUTTON_BUY_FIRST = 3; // 3, 4, 5 -> BUY_QUANTITIES
     public static final int BUTTON_SELECT_BASE = 100;
     public static final int[] BUY_QUANTITIES = {1, 16, 64};
+    public static final int BUTTON_TAB_FORWARD = 6;
+    public static final int BUTTON_FWD_QTY_BASE = 7;   // 7..10 -> FWD_QTY_STEPS
+    public static final int BUTTON_FWD_TERM_BASE = 11; // 11..13 -> ForwardBook.TERMS
+    public static final int BUTTON_FWD_SIGN = 14;
+    public static final int BUTTON_FWD_DELIVER_BASE = 20; // one per open forward shown
+    public static final int[] FWD_QTY_STEPS = {-64, -16, 16, 64};
+    public static final int MAX_FORWARDS_SHOWN = 3;
+
+    // ---- forward status
+    public static final int FWD_EMPTY = 0, FWD_OK = 1, FWD_NOT_TRADED = 2, FWD_REFUSED = 3;
 
     // ---- sell status
     public static final int STATUS_EMPTY = 0;
@@ -94,7 +107,13 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
     private static final int D_ITEMS = 20;       // per item: raw item id, normal, market, sells (4 x 2), group (1)
     private static final int ITEM_STRIDE = 9;
     public static final int MAX_ITEMS = 64;
-    private static final int DATA_SIZE = D_ITEMS + MAX_ITEMS * ITEM_STRIDE;
+    private static final int D_FWD = D_ITEMS + MAX_ITEMS * ITEM_STRIDE;
+    // perk, quantity, term index, status, price (2), deposit (2), today (2), open count, then per open forward:
+    // raw item id (2), quantity, price (2), delivery day (2)
+    private static final int D_FWD_PERK = D_FWD, D_FWD_QTY = D_FWD + 1, D_FWD_TERM = D_FWD + 2, D_FWD_STATUS = D_FWD + 3;
+    private static final int D_FWD_PRICE = D_FWD + 4, D_FWD_DEPOSIT = D_FWD + 6, D_FWD_TODAY = D_FWD + 8, D_FWD_COUNT = D_FWD + 10;
+    private static final int D_FWD_OPEN = D_FWD + 11, FWD_STRIDE = 7;
+    private static final int DATA_SIZE = D_FWD_OPEN + MAX_FORWARDS_SHOWN * FWD_STRIDE;
 
     private static final long MAX_SYNCED = (1L << 30) - 1;
     private static final int REFRESH_TICKS = 10;
@@ -132,7 +151,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         addSlot(new Slot(input, 0, INPUT_X, INPUT_Y) {
             @Override
             public boolean isActive() {
-                return tab() == TAB_SELL;
+                return tab() == TAB_SELL || tab() == TAB_FORWARD;
             }
 
             @Override
@@ -157,7 +176,11 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         addStandardInventorySlots(playerInventory, 8, INVENTORY_Y);
         addDataSlots(data);
 
-        if (dealer != null) refresh();
+        if (dealer != null) {
+            data.set(D_FWD_QTY, 64);
+            data.set(D_FWD_TERM, 1);
+            refresh();
+        }
     }
 
     /** The catalog minus components this player hasn't unlocked a blueprint for. */
@@ -197,6 +220,21 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
     public long buyMarketMills(int i) { return pair(D_ITEMS + i * ITEM_STRIDE + 4); }
     public long buySellsMills(int i) { return pair(D_ITEMS + i * ITEM_STRIDE + 6); }
     public int buyGroup(int i) { return data.get(D_ITEMS + i * ITEM_STRIDE + 8); }
+
+    // ---- Forward tab
+    public boolean forwardsUnlocked() { return data.get(D_FWD_PERK) != 0; }
+    public int forwardQuantity() { return data.get(D_FWD_QTY); }
+    public int forwardTerm() { return ForwardBook.TERMS[Math.min(data.get(D_FWD_TERM), ForwardBook.TERMS.length - 1)]; }
+    public int forwardTermIndex() { return data.get(D_FWD_TERM); }
+    public int forwardStatus() { return data.get(D_FWD_STATUS); }
+    public long forwardPriceCents() { return pair(D_FWD_PRICE); }
+    public long forwardDepositCents() { return pair(D_FWD_DEPOSIT); }
+    public long today() { return pair(D_FWD_TODAY); }
+    public int openForwards() { return data.get(D_FWD_COUNT); }
+    public Item openForwardItem(int i) { return BuiltInRegistries.ITEM.byId((int) pair(D_FWD_OPEN + i * FWD_STRIDE)); }
+    public int openForwardQuantity(int i) { return data.get(D_FWD_OPEN + i * FWD_STRIDE + 2); }
+    public long openForwardPrice(int i) { return pair(D_FWD_OPEN + i * FWD_STRIDE + 3); }
+    public long openForwardDay(int i) { return pair(D_FWD_OPEN + i * FWD_STRIDE + 5); }
 
     /** Catalog groups in display order; anything else is shown under "Other". */
     public static final String[] GROUPS = {"farm", "mining", "mobs", "wood_and_stone", ProgressionService.COMPONENTS_GROUP};
@@ -251,6 +289,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         boolean licensed = licensed();
         rebuildBuyList();
         refreshSell(d, day, licensed);
+        refreshForward(d, day, licensed);
         setPair(D_CASH, Wallet.count(player.getInventory()) + drawerCents());
 
         data.set(D_COUNT, buyList.size());
@@ -306,6 +345,54 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         setPair(D_SELL_PAYS, pays);
     }
 
+    private ForwardService forwards() {
+        return testForwards != null ? testForwards : ForwardService.getOrNull();
+    }
+
+    /** Tests hand in their own ForwardService (there's no running server). */
+    public ForwardService testForwards;
+
+    private void refreshForward(Dealer d, double day, boolean licensed) {
+        long today = (long) Math.floor(day);
+        setPair(D_FWD_TODAY, today);
+        boolean perk = progression != null && progression.progress(player).hasPerk(ForwardService.PERK);
+        data.set(D_FWD_PERK, perk ? 1 : 0);
+        ForwardService fs = forwards();
+        if (!perk || fs == null) {
+            data.set(D_FWD_COUNT, 0);
+            return;
+        }
+        ItemStack stack = input.getItem(0);
+        int status;
+        long price = 0;
+        if (stack.isEmpty() || ModItems.denominationOf(stack) != null) {
+            status = FWD_EMPTY;
+        } else if (ForwardBook.check(d, DealerService.itemId(stack), forwardQuantity(), forwardTerm()).isPresent()) {
+            status = FWD_NOT_TRADED;
+        } else {
+            try {
+                price = fs.book().quote(d, DealerService.itemId(stack), forwardQuantity(), forwardTerm(), today, licensed).cents();
+                status = FWD_OK;
+            } catch (RejectedException e) {
+                status = FWD_REFUSED;
+            }
+        }
+        data.set(D_FWD_STATUS, status);
+        setPair(D_FWD_PRICE, price);
+        setPair(D_FWD_DEPOSIT, price == 0 ? 0 : ForwardBook.deposit(price));
+        List<ForwardBook.Forward> open = fs.open(player);
+        int n = Math.min(open.size(), MAX_FORWARDS_SHOWN);
+        data.set(D_FWD_COUNT, n);
+        for (int i = 0; i < n; i++) {
+            ForwardBook.Forward f = open.get(i);
+            int base = D_FWD_OPEN + i * FWD_STRIDE;
+            setPair(base, BuiltInRegistries.ITEM.getId(itemFor(f.item())));
+            data.set(base + 2, (int) f.quantity());
+            setPair(base + 3, f.priceCents());
+            setPair(base + 5, f.deliveryDay());
+        }
+    }
+
     // ================================================================== server: actions
 
     @Override
@@ -315,6 +402,20 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         if (id == BUTTON_TAB_SELL || id == BUTTON_TAB_BUY) {
             data.set(D_TAB, id == BUTTON_TAB_SELL ? TAB_SELL : TAB_BUY);
             handled = true;
+        } else if (id == BUTTON_TAB_FORWARD) {
+            handled = forwardsUnlocked();
+            if (handled) data.set(D_TAB, TAB_FORWARD);
+        } else if (id >= BUTTON_FWD_QTY_BASE && id < BUTTON_FWD_QTY_BASE + FWD_QTY_STEPS.length) {
+            int q = forwardQuantity() + FWD_QTY_STEPS[id - BUTTON_FWD_QTY_BASE];
+            data.set(D_FWD_QTY, Math.max(ForwardBook.MIN_QTY, Math.min(ForwardBook.MAX_QTY, q)));
+            handled = true;
+        } else if (id >= BUTTON_FWD_TERM_BASE && id < BUTTON_FWD_TERM_BASE + ForwardBook.TERMS.length) {
+            data.set(D_FWD_TERM, id - BUTTON_FWD_TERM_BASE);
+            handled = true;
+        } else if (id == BUTTON_FWD_SIGN) {
+            handled = tab() == TAB_FORWARD && signForward(p);
+        } else if (id >= BUTTON_FWD_DELIVER_BASE && id < BUTTON_FWD_DELIVER_BASE + MAX_FORWARDS_SHOWN) {
+            handled = tab() == TAB_FORWARD && deliverForward(p, id - BUTTON_FWD_DELIVER_BASE);
         } else if (id == BUTTON_SELL) {
             handled = tab() == TAB_SELL && sell(p);
         } else if (id >= BUTTON_BUY_FIRST && id < BUTTON_BUY_FIRST + BUY_QUANTITIES.length) {
@@ -327,6 +428,43 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         }
         if (handled) refresh();
         return handled;
+    }
+
+    private void tell(Player p, String msg) {
+        if (p instanceof net.minecraft.server.level.ServerPlayer sp) sp.sendOverlayMessage(net.minecraft.network.chat.Component.literal(msg));
+    }
+
+    private boolean signForward(Player p) {
+        ForwardService fs = forwards();
+        ItemStack stack = input.getItem(0);
+        if (fs == null || !forwardsUnlocked() || stack.isEmpty()) return false;
+        var why = fs.sign(p, DealerService.itemId(stack), forwardQuantity(), forwardTerm(), day(), licensed());
+        if (why.isPresent()) {
+            tell(p, why.get());
+            return false;
+        }
+        tell(p, "Forward signed: deliver on day " + (today() + forwardTerm()) + " or the day after");
+        return true;
+    }
+
+    private boolean deliverForward(Player p, int index) {
+        ForwardService fs = forwards();
+        if (fs == null) return false;
+        List<ForwardBook.Forward> open = fs.open(p);
+        if (index >= open.size()) return false;
+        // Goods in the slot count as carried.
+        ItemStack slot = input.getItem(0);
+        if (!slot.isEmpty()) {
+            p.getInventory().placeItemBackInInventory(slot);
+            input.setItem(0, ItemStack.EMPTY);
+        }
+        var why = fs.deliver(p, open.get(index).id(), day(), licensed(), progression);
+        if (why.isPresent()) {
+            tell(p, why.get());
+            return false;
+        }
+        if (progression != null) progression.emitNetWorth(p, dealer, day(), 0);
+        return true;
     }
 
     private boolean sell(Player p) {
@@ -444,7 +582,7 @@ public class BasicExchangeMenu extends AbstractContainerMenu {
         ItemStack original = stack.copy();
         if (index < INV_START) {
             if (!moveItemStackTo(stack, INV_START, INV_END, true)) return ItemStack.EMPTY;
-        } else if (tab() != TAB_SELL || !moveItemStackTo(stack, INPUT, INPUT + 1, false)) {
+        } else if ((tab() != TAB_SELL && tab() != TAB_FORWARD) || !moveItemStackTo(stack, INPUT, INPUT + 1, false)) {
             return ItemStack.EMPTY;
         }
         if (stack.isEmpty()) slot.set(ItemStack.EMPTY);

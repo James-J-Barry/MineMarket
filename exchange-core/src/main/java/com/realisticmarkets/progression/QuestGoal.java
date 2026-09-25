@@ -26,6 +26,7 @@ package com.realisticmarkets.progression;
  * rate_watcher                (a bond sold for more than you paid, after the rate was cut)
  * chart_read               (a book's chart read at the Ticker Tape)
  * balance_sheet:<cents>    (a Records Terminal shows at least this net worth)
+ * forward_beat_spot        (a forward delivered for more than the goods would fetch at the Dealer then)
  * </pre>
  */
 public sealed interface QuestGoal {
@@ -52,6 +53,7 @@ public sealed interface QuestGoal {
     record HeldToMaturity() implements QuestGoal {}
     record RateWatcher() implements QuestGoal {}
     record BalanceSheet(long cents) implements QuestGoal {}
+    record ForwardBeatSpot() implements QuestGoal {}
 
     static QuestGoal parse(String s) {
         String[] p = s.strip().split(":");
@@ -76,6 +78,7 @@ public sealed interface QuestGoal {
             case "held_to_maturity" -> new HeldToMaturity();
             case "rate_watcher" -> new RateWatcher();
             case "balance_sheet" -> new BalanceSheet(Long.parseLong(p[1]));
+            case "forward_beat_spot" -> new ForwardBeatSpot();
             case "limit_filled" -> new LimitFilled();
             case "beat_dealer" -> new BeatDealer();
             case "two_books" -> new TwoBooks(p[1] + ":" + p[2], p[3] + ":" + p[4], Integer.parseInt(p[5]));

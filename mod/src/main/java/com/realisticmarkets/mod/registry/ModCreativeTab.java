@@ -59,6 +59,7 @@ public final class ModCreativeTab {
                             output.accept(ModItems.RECORD_LINK);
                             output.accept(ModItems.DISPLAY_SCREEN);
                             output.accept(ModItems.CIRCUIT_BOARD);
+                            output.accept(ModItems.FORWARD_CONTRACT);
                         })
                         .build());
     }

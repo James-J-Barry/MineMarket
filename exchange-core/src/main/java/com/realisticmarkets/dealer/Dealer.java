@@ -113,6 +113,45 @@ public final class Dealer {
         return price(itemId, items, day, licensed, Side.BUY_FROM_DEALER, true);
     }
 
+    /**
+     * What the Dealer agrees today to pay on {@code deliveryDay} for {@code items} delivered then: its sale proceeds on
+     * that day if nothing surprising happens. Fair value is today's, grown by inflation to the delivery day; the
+     * inventory is today's, decayed to the delivery day, plus {@code pendingBaseUnits} already promised by other open
+     * forwards on the same pool (so splitting a big forward into small ones doesn't dodge price impact). Changes nothing.
+     */
+    public Quote quoteForward(String itemId, long items, double day, double deliveryDay, double pendingBaseUnits, boolean licensed) {
+        if (items <= 0) throw new RejectedException("quantity must be positive");
+        if (deliveryDay < day) throw new RejectedException("delivery can't be in the past");
+        MarketSpec spec = catalog.spec(itemId);
+        MarketSpec base = catalog.pool(itemId);
+        Pool p = advance(base, day);
+        double units = (double) items * spec.baseUnits();
+        double k = params.k(), depth = base.depth(), s = spread(base, licensed);
+        double fv = fair(base, p, day) * priceLevel(deliveryDay) / priceLevel(day);
+        double inventory = p.inventory * Math.exp(-(deliveryDay - day) / params.recoveryDays()) + pendingBaseUnits;
+        double level = Math.exp(-k * inventory / depth);
+        double rawCents = fv * (1 - s / 2) * (depth / k) * level * (1 - Math.exp(-k * units / depth)) * 100.0;
+        long cents = Money.roundDownToDime(rawCents);
+        if (cents == 0) throw new RejectedException("The Dealer won't agree a price for that");
+        double before = fv * level * spec.baseUnits() * (1 - s / 2);
+        double after = fv * Math.exp(-k * (inventory + units) / depth) * spec.baseUnits() * (1 - s / 2);
+        return new Quote(spec.itemId(), items, Side.SELL_TO_DEALER, cents, rawCents, before, after);
+    }
+
+    /**
+     * Goods delivered on a forward: they join the Dealer's inventory and move its price exactly like a sale, but the
+     * payment was agreed earlier, so nothing is quoted (and a collapsed price doesn't refuse them).
+     */
+    public void absorb(String itemId, long items, double day) {
+        if (items <= 0) return;
+        MarketSpec spec = catalog.spec(itemId);
+        MarketSpec base = catalog.pool(itemId);
+        Pool p = advance(base, day);
+        double units = (double) items * spec.baseUnits();
+        p.inventory += units;
+        p.logDev -= params.supplyImpact() * units / base.depth();
+    }
+
     /** Marginal price the Dealer pays for one more item right now, in dollars. */
     public double bid(String itemId, double day, boolean licensed) {
         MarketSpec spec = catalog.spec(itemId);

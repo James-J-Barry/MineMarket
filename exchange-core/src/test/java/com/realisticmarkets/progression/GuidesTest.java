@@ -19,7 +19,7 @@ class GuidesTest {
                         "cash_on_hand", "reading_a_quote", "transaction_costs", "two_markets",
                         "interest_and_compounding", "term_and_liquidity", "leverage_and_collateral",
                         "order_books", "limit_and_market_orders", "liquidity_and_market_makers", "news_and_markets", "reading_a_chart", "owning_a_share", "valuing_a_company",
-                        "risk_and_return", "custody", "bonds_and_yield", "interest_rate_risk", "credit_risk", "net_worth"),
+                        "risk_and_return", "custody", "bonds_and_yield", "interest_rate_risk", "credit_risk", "net_worth", "hedging"),
                 guides.all().stream().map(Guides.Guide::id).toList());
         for (Guides.Guide g : guides.all()) {
             int words = g.wordCount();
@@ -353,6 +353,22 @@ class GuidesTest {
         assertTrue(cr.contains(String.format(java.util.Locale.ROOT, "Utility pays %.2f%% a day more", companies.company("OWL").creditSpread() * 100)));
         assertTrue(cr.contains(String.format(java.util.Locale.ROOT, "Redstone Dynamics pays %.2f%% more", companies.company("RSD").creditSpread() * 100)));
         assertTrue(cr.contains("pays back only $" + com.realisticmarkets.bonds.CreditModel.recoveryCents() / 100 + " of its $100"));
+    }
+
+    @Test
+    void hedgingNumbersMatchTheDealer() {
+        var calm = new com.realisticmarkets.dealer.Dealer(com.realisticmarkets.dealer.DealerCatalog.loadDefault(),
+                com.realisticmarkets.dealer.DealerParams.noDrift(), 1L);
+        var real = new com.realisticmarkets.dealer.Dealer(com.realisticmarkets.dealer.DealerCatalog.loadDefault(),
+                com.realisticmarkets.dealer.DealerParams.defaults(), 1L);
+        long now = calm.quoteSell("minecraft:wheat", 256, 0, false).cents();
+        long forward = real.quoteForward("minecraft:wheat", 256, 0, 7, 0, false).cents();
+        String h = text("hedging");
+        assertTrue(h.contains("it fetches " + com.realisticmarkets.money.Money.format(now)), "sale today " + now);
+        assertTrue(h.contains("the Dealer agrees " + com.realisticmarkets.money.Money.format(forward)), "forward " + forward);
+        assertTrue(h.contains("deposit (" + com.realisticmarkets.money.Money.format(com.realisticmarkets.contracts.ForwardBook.deposit(forward)) + " here)"));
+        assertTrue(h.contains("about $" + Math.round(now * 0.8 / 100.0)), "a 20% fall");
+        assertTrue(h.contains("delivery in 7 days"));
     }
 
     @Test

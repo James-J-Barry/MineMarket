@@ -54,5 +54,6 @@
   "container.realisticmarkets.records_terminal": "Records Terminal",
   "item.realisticmarkets.record_link": "Record Link",
   "item.realisticmarkets.display_screen": "Display Screen",
-  "item.realisticmarkets.circuit_board": "Circuit Board"
+  "item.realisticmarkets.circuit_board": "Circuit Board",
+  "item.realisticmarkets.forward_contract": "Forward Contract"
 }

@@ -342,3 +342,16 @@ The Holdings tab shows a gain or loss next to each paper, but only where the pur
 The Income tab adds up where your money came from each week: selling goods, interest, dividends, coupons, and gains on what you sold. Watch which line grows.
 
 Real world: every company publishes a balance sheet (what it owns and owes) and an income statement (what it earned). Investors read both, and so do banks before they lend.
+
+@hedging Hedging
+You can now sign Forward Contracts at the Basic Exchange. A forward is a promise: you will deliver goods on a set day, and the Dealer will pay a price you agree today.
+
+Say your farm brings in 256 wheat a week. Sold today into an empty market it fetches $72.80. Sign a forward for delivery in 7 days instead and the Dealer agrees $73.30: what it expects to pay then, including a week of inflation. Now a drought or a glut can't touch that price. If wheat falls 20% you still get $73.30 while everyone else gets about $58.
+
+That's hedging: you trade away the chance of a better price to be rid of the chance of a worse one. If wheat rises instead, you still get $73.30, and that's fine, because you weren't betting.
+
+The Dealer isn't fooled by small print. Every forward it has agreed on the same goods counts as already delivered, so ten small forwards pay the same as one big one.
+
+A forward needs a 20% deposit ($14.70 here), returned when you deliver. Deliver on the day or the day after. Miss it and the deal is off and the deposit is gone. You can't back out early: it's a private deal.
+
+Real world: farmers have sold their crops forward for centuries, long before futures markets existed, and airlines buy fuel forward to fix their costs.

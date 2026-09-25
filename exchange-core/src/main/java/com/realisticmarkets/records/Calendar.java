@@ -15,7 +15,9 @@ public final class Calendar {
         CD_MATURITY("CD matures"),
         EARNINGS("Earnings"),
         RATE_DECISION("Rate decision"),
-        MARGIN_CHECK("Margin check");
+        MARGIN_CHECK("Margin check"),
+        FORWARD_DELIVERY("Forward due"),
+        FUTURES_EXPIRY("Futures expire");
 
         private final String label;
 

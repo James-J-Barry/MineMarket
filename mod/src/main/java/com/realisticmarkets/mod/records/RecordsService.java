@@ -62,7 +62,12 @@ public final class RecordsService {
 
     /** The services marks come from; any but {@code dealer} and {@code prog} may be null. */
     public record Sources(DealerService dealer, ProgressionService prog, BankService bank, StockService stocks, BondService bonds,
-                          CapitalService capital) {}
+                          CapitalService capital, com.realisticmarkets.mod.forwards.ForwardService forwards) {
+        public Sources(DealerService dealer, ProgressionService prog, BankService bank, StockService stocks, BondService bonds,
+                       CapitalService capital) {
+            this(dealer, prog, bank, stocks, bonds, capital, null);
+        }
+    }
 
     private final Ledger ledger;
     private final Path file; // null in tests
@@ -88,7 +93,7 @@ public final class RecordsService {
             }
         }
         instance = new RecordsService(ledger, file, new Sources(DealerService.get(), ProgressionService.get(), BankService.get(),
-                StockService.get(), BondService.get(), CapitalService.get()));
+                StockService.get(), BondService.get(), CapitalService.get(), com.realisticmarkets.mod.forwards.ForwardService.get()));
     }
 
     public static void stop() {
@@ -165,6 +170,7 @@ public final class RecordsService {
                 v.shipment(crate, where);
             }
         }
+        v.forwards();
         v.calendar.add(Calendar.nextEvery(today, com.realisticmarkets.rates.CentralBank.REVIEW_DAYS), Calendar.Kind.RATE_DECISION, "", 0);
         for (String ticker : v.tickers) {
             v.calendar.add(Calendar.nextEvery(today, Company.QUARTER_DAYS), Calendar.Kind.EARNINGS, ticker, 0);
@@ -312,6 +318,20 @@ public final class RecordsService {
                 return;
             }
             add(Kind.GOODS, s.getHoverName().getString(), where, s.getCount(), cents / s.getCount(), -1, s);
+        }
+
+        /** Open forwards are contracts on the account: their deposits count, and their deliveries go on the calendar. */
+        void forwards() {
+            var fs = sources.forwards();
+            if (fs == null) return;
+            for (var f : fs.book().open(account)) {
+                ItemStack goods = new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(
+                        net.minecraft.resources.Identifier.parse(f.item())));
+                add(Kind.CASH, "Forward deposit", "Dealer", 1, f.depositCents(), f.depositCents(), new ItemStack(ModItems.FORWARD_CONTRACT));
+                String label = f.quantity() + " " + goods.getHoverName().getString();
+                icons.putIfAbsent("C|" + label, goods);
+                calendar.add(f.deliveryDay(), Calendar.Kind.FORWARD_DELIVERY, label, f.priceCents());
+            }
         }
 
         void shipment(TradeRouteCrateBlockEntity crate, String where) {

@@ -314,6 +314,7 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             case QuestGoal.RateWatcher() -> "Sell a bond for more than you paid after the central bank cuts its rate.";
             case QuestGoal.BalanceSheet g -> "See a net worth of " + com.realisticmarkets.money.Money.format(g.cents())
                     + " on a Records Terminal.";
+            case QuestGoal.ForwardBeatSpot() -> "Deliver a forward when the Dealer would pay less for the same goods.";
         };
     }
 }
