@@ -97,7 +97,7 @@ public class AlmanacMenu extends AbstractContainerMenu {
     private void refresh() {
         PlayerProgress p = progression.progress(player);
         UnlockTree tree = progression.tree();
-        long cash = Wallet.count(player.getInventory());
+        long cash = progression.spendable(player); // bills, then the bank for the rest
         long synced = Math.min(cash, (1L << 30) - 1);
         data.set(D_CASH, (int) (synced & 0x7FFF));
         data.set(D_CASH + 1, (int) ((synced >> 15) & 0x7FFF));

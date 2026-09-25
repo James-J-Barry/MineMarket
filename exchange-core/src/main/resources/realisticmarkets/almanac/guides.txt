@@ -313,7 +313,7 @@ Say you bought an 8-quarter bond at the going rate, and a week later the central
 
 So bond prices move opposite to interest rates, and the further away a bond's money is, the more it moves. Traders call that distance duration.
 
-None of this matters if you hold to maturity: you still get every coupon and your $100 back. It matters if you need to sell early, and it's an opportunity if you read the rate news first. The Newsstand reports each decision, and the rest of the market takes a while to react.
+None of this matters if you hold to maturity: you still get every coupon and your $100 back. It matters if you need to sell early. The Newsstand reports each decision before the market reacts, so a reader can sell before a raise hits their bonds; the desk won't issue new ones until the market has caught up.
 
 Short bonds are a safe place for money you'll need soon. Long bonds pay a bit more, and swing more.
 
@@ -385,9 +385,9 @@ Real world: in 2008 and again in 2020, margin calls forced traders to sell whate
 @options Options
 An option is a right, not a promise. A call is the right to buy at a set price, the strike, on the expiry day. A put is the right to sell. You pay for the right up front: the premium.
 
-Say a lot of wheat is worth $128 today. A wheat call with a $130 strike, expiring in a week, costs $6.70 at the Options Desk. If wheat ends the week 20% up, the lot is worth $153.60 and your call pays $23.60, three times what it cost. If wheat ends at $130 or below, the call pays nothing. You lose the $6.70 and not a dime more.
+Say a lot of wheat is worth $128 today. A wheat call with a $130 strike, expiring in a week, costs $5.70 at the Options Desk. If wheat ends the week 20% up, the lot is worth $153.60 and your call pays $23.60, four times what it cost. If wheat ends at $130 or below, the call pays nothing. You lose the $5.70 and not a dime more.
 
-A put works the other way. A $120 put costs $4.10. If wheat falls 20% to $102.40, it pays $17.60. For a farmer that's insurance: whatever happens to wheat, the harvest plus the put can't be worth much less than $120.
+A put works the other way. A $120 put costs $3.20. If wheat falls 20% to $102.40, it pays $17.60. For a farmer that's insurance: whatever happens to wheat, the harvest plus the put can't be worth much less than $120.
 
 That lopsided shape is the whole point. A future gains and loses the same on each side. An option caps what you can lose at its price, and keeps most of the upside.
 
@@ -398,9 +398,9 @@ Real world: options on rice were traded in Japan in the 1700s, and today more op
 @the_greeks The Greeks
 Your put paid out. Before the next one, learn how an option's price moves. Traders use Greek letters for it, and the Options Desk shows each one for the paper you pick.
 
-Delta: how much the option moves when the price does. Our $130 wheat call has a delta of 0.48, so it moves like 120 wheat: if a lot rises $1, the call rises about 48 cents. Puts have negative delta, because they gain when prices fall.
+Delta: how much the option moves when the price does. Our $130 wheat call has a delta of 0.47, so it moves like 120 wheat: if a lot rises $1, the call rises about 47 cents. Puts have negative delta, because they gain when prices fall.
 
-Theta: what the option loses each day if nothing happens. The call loses about $0.52 a day, and faster near expiry. Time is on the seller's side.
+Theta: what the option loses each day if nothing happens. The call loses about $0.46 a day, and faster near expiry. Time is on the seller's side.
 
 Vega: how much the price depends on how much the market moves. The desk prices options on how far each good has been swinging lately, so after a wild week options cost more. One point more of daily volatility adds $1.32 to our call.
 
@@ -411,9 +411,9 @@ Real world: in 1973 Fischer Black and Myron Scholes published the formula that p
 @covered_and_naked Covered and Naked
 You wrote an option. You're the insurer now: the desk pays you the premium, and you owe whatever the option is worth at expiry.
 
-Write our $130 wheat call against 256 wheat of your own and the desk pays $6.10, the full premium. If wheat ends above $130 your wheat is called away: the desk takes it and pays you $130, however high wheat went. You keep the premium either way. That's a covered call: you trade away the upside above the strike for cash today.
+Write our $130 wheat call against 256 wheat of your own and the desk pays $5.20, the full premium. If wheat ends above $130 your wheat is called away: the desk takes it and pays you $130, however high wheat went. You keep the premium either way. That's a covered call: you trade away the upside above the strike for cash today.
 
-Write the same call with no wheat behind it and it's naked. If wheat soars you owe the difference, with no limit. So the desk wants collateral worth what a 20% jump would cost, plus a quarter: $29.50 here. And it pays less for promises it may struggle to collect: backed by cash you get $5.90, by 192 oak logs only $4.90, because logs sell badly in a hurry.
+Write the same call with no wheat behind it and it's naked. If wheat soars you owe the difference, with no limit. So the desk wants collateral worth what a 20% jump would cost, plus a quarter: $29.50 here. And it pays less for promises it may struggle to collect: backed by cash you get $5.00, by 192 oak logs only $4.20, because logs sell badly in a hurry.
 
 Each dawn the desk checks your collateral still covers the risk. If not, you get a margin call, and a day later it buys the option back out of your escrow at the price of the moment.
 

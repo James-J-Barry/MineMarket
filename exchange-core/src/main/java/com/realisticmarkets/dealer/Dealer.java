@@ -58,6 +58,24 @@ public final class Dealer {
 
         /** Fading (transient) change in log fair value at (fractional) {@code day}. */
         double fading(String baseItem, double day);
+
+        /**
+         * The fading change expected at {@code atDay} from every event known at {@code day} (started by then), whether
+         * the market has heard it yet or not: what a forward-looking market prices in at dawn.
+         */
+        default double fadingExpected(String baseItem, double day, double atDay) {
+            return fading(baseItem, atDay);
+        }
+
+        /** Permanent changes from events already started by {@code day} that land after it, by {@code atDay}. */
+        default double permanentPending(String baseItem, double day, double atDay) {
+            return 0;
+        }
+
+        /** The average effect at {@code atDay} of events that haven't happened yet (after {@code day}'s dawn). */
+        default double expectedNew(String baseItem, double day, double atDay) {
+            return 0;
+        }
     }
 
     private static final class Pool {
@@ -115,7 +133,7 @@ public final class Dealer {
 
     /**
      * What the Dealer agrees today to pay on {@code deliveryDay} for {@code items} delivered then: its sale proceeds on
-     * that day if nothing surprising happens. Fair value is today's, grown by inflation to the delivery day; the
+     * that day if nothing surprising happens. Fair value is what's expected then ({@link #expectedFair}); the
      * inventory is today's, decayed to the delivery day, plus {@code pendingBaseUnits} already promised by other open
      * forwards on the same pool (so splitting a big forward into small ones doesn't dodge price impact). Changes nothing.
      */
@@ -127,7 +145,7 @@ public final class Dealer {
         Pool p = advance(base, day);
         double units = (double) items * spec.baseUnits();
         double k = params.k(), depth = base.depth(), s = spread(base, licensed);
-        double fv = fair(base, p, day) * priceLevel(deliveryDay) / priceLevel(day);
+        double fv = expectedFair(base.itemId(), day, deliveryDay); // what the market expects then, news and drift included
         double inventory = p.inventory * Math.exp(-(deliveryDay - day) / params.recoveryDays()) + pendingBaseUnits;
         double level = Math.exp(-k * inventory / depth);
         double rawCents = fv * (1 - s / 2) * (depth / k) * level * (1 - Math.exp(-k * units / depth)) * 100.0;
@@ -193,6 +211,44 @@ public final class Dealer {
         MarketSpec spec = catalog.spec(itemId);
         MarketSpec base = catalog.pool(itemId);
         return fair(base, advance(base, day), day) * spec.baseUnits();
+    }
+
+    /**
+     * The fair value the market expects on {@code atDay}, knowing everything that has happened by {@code day}: today's
+     * level, the known path of news already out (fading shocks and permanent effects still to land, heard or not), and
+     * inflation to that day. No drift or trend is forecast. Within a day it doesn't move (news is priced in at dawn),
+     * so a futures or options price built on it can't be predicted to rise or fall before the next dawn.
+     */
+    public double expectedFair(String itemId, double day, double atDay) {
+        MarketSpec spec = catalog.spec(itemId);
+        MarketSpec base = catalog.pool(itemId);
+        Pool p = advance(base, day);
+        double at = Math.max(day, atDay);
+        // The drift ahead: the trend carries on (fading) and the anchor pulls the level back toward normal.
+        double anchor = Math.pow(0.5, 1.0 / params.anchorHalfLifeDays());
+        double persist = Math.pow(0.5, 1.0 / params.trendHalfLifeDays());
+        double log = p.logDev, trend = p.trend;
+        for (long d = (long) Math.floor(day) + 1; d <= (long) Math.floor(at); d++) {
+            trend *= persist;
+            log = anchor * log + trend;
+        }
+        double shock = shocks == null ? 0
+                : shocks.fadingExpected(base.itemId(), day, at) + shocks.permanentPending(base.itemId(), day, at)
+                        + shocks.expectedNew(base.itemId(), day, at);
+        return base.fairValue() * Math.exp(log + shock) * priceLevel(at) * spec.baseUnits();
+    }
+
+    /**
+     * Seeded noise in a derivatives quote within a day (log units): zero at each dawn, a few smooth swings in between,
+     * sized to half a day's drift. It makes intraday futures and options trades a gamble instead of a sure thing.
+     */
+    public double intradayNoise(String itemId, double day) {
+        double frac = day - Math.floor(day);
+        if (frac <= 0) return 0;
+        SplittableRandom r = rng(catalog.pool(itemId).itemId() + "#intraday", (long) Math.floor(day));
+        double sum = 0;
+        for (int k = 1; k <= 4; k++) sum += r.nextGaussian() * Math.sin(k * Math.PI * frac) / k;
+        return 0.5 * params.driftSigma() * sum;
     }
 
     /** Dealer inventory of the item's base pool, in base units. */

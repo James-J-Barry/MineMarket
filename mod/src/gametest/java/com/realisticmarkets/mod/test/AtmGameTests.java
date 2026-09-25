@@ -54,6 +54,19 @@ public class AtmGameTests {
         check(prog.buyNode(p, "bill_clip").isEmpty(), "bills first, the rest from the bank");
         check(Wallet.count(p.getInventory()) == 0, "the bills went");
         check(bank.account(p.getUUID(), 0).balanceCents() == 1_000, "and only what was short came out of the account");
+
+        // The Almanac's screen sees the bank too: its Buy button works for a node the bills alone can't pay for.
+        long price = prog.tree().node("price_board").costCents();
+        bank.account(p.getUUID(), 0).deposit(price, 0, BankAccount.Kind.DEPOSIT);
+        var almanac = new com.realisticmarkets.mod.menu.AlmanacMenu(1, p.getInventory(), ContainerLevelAccess.NULL, prog,
+                DealerService.forTest(1L));
+        for (int i = 0; i < 20; i++) almanac.broadcastChanges();
+        int idx = com.realisticmarkets.mod.menu.AlmanacMenu.NODES.stream().map(n -> n.id()).toList().indexOf("price_board");
+        check(almanac.nodeState(idx) == com.realisticmarkets.mod.menu.AlmanacMenu.AVAILABLE, "shown as available: " + almanac.nodeState(idx));
+        check(almanac.cashCents() >= price, "the screen's spendable includes the bank");
+        almanac.clickMenuButton(p, com.realisticmarkets.mod.menu.AlmanacMenu.BUTTON_SELECT_BASE + idx);
+        check(almanac.clickMenuButton(p, com.realisticmarkets.mod.menu.AlmanacMenu.BUTTON_BUY), "and Buy works");
+        check(prog.progress(p).hasNode("price_board"), "bought");
         helper.succeed();
     }
 

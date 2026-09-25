@@ -33,9 +33,20 @@ public final class BondDesk {
         return y + CreditModel.spread(c.creditSpread(), companies.reports(issuer), companies.normalEarnings(issuer));
     }
 
+    /**
+     * Whether the desk issues new bonds at {@code day}. On the morning of a rate change it waits until the market has
+     * heard the decision: issuing at the old rate would hand whoever read the news a sure profit. (Selling bonds back
+     * stays open; getting out before a raise only avoids a loss.)
+     */
+    public boolean issuing(double day) {
+        var d = central.decisionOn((long) Math.floor(day));
+        return d.isEmpty() || d.get().move() == CentralBank.Move.HOLD || day >= d.get().day() + d.get().delay();
+    }
+
     /** A new bond issued today: its coupon is today's yield, so it's worth its face. */
-    public Bond issue(String issuer, int quarters, long day) {
-        return new Bond(issuer, day, day + (long) quarters * Bond.COUPON_DAYS, this.yield(issuer, quarters, day));
+    public Bond issue(String issuer, int quarters, double day) {
+        long today = (long) Math.floor(day);
+        return new Bond(issuer, today, today + (long) quarters * Bond.COUPON_DAYS, this.yield(issuer, quarters, day));
     }
 
     /**

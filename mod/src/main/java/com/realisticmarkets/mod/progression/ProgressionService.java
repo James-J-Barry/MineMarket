@@ -121,6 +121,12 @@ public final class ProgressionService {
         this.bank = funds;
     }
 
+    /** What the player can spend at the Almanac: the bills they carry plus their bank balance. */
+    public long spendable(Player player) {
+        long banked = bank == null ? 0 : Math.max(0, bank.balance(player));
+        return Wallet.count(player.getInventory()) + banked;
+    }
+
     /** Buys a node with the player's bills, then their bank balance for the rest. Returns empty on success, else why not. */
     public Optional<String> buyNode(Player player, String nodeId) {
         UnlockNode node = tree.node(nodeId);

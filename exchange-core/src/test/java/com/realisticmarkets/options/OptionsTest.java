@@ -89,8 +89,18 @@ class OptionsTest {
         double base = Math.sqrt(0.5 * Math.pow(d.realizedVol("GLD"), 2) + 0.5 * Math.pow(OptionDesk.LONG_RUN_GOODS_VOL, 2));
         assertEquals(base, d.impliedVol("GLD", 10_000, 10_000), 1e-12, "at the money: realized blended with the long run");
         assertTrue(base > d.realizedVol("GLD"), "a quiet month doesn't make options nearly free");
-        assertTrue(d.impliedVol("GLD", 12_000, 10_000) > base * 1.02, "away from the money: the smile");
-        assertTrue(d.impliedVol("GLD", 8_000, 10_000) > base * 1.02);
+        double up = d.impliedVol("GLD", 12_000, 10_000), down = d.impliedVol("GLD", 10_000 * 10_000 / 12_000.0, 10_000);
+        assertTrue((up + down) / 2 > base * 1.02, "away from the money: the smile");
+
+        // Mostly quiet weeks with the odd big jump up: surprises skew upward, so high strikes cost more than low ones.
+        OptionDesk jumpy = new OptionDesk(flat(10_000));
+        double z = 10_000;
+        for (int day = 1; day <= 28; day++) {
+            jumpy.observe("WHT", day, z);
+            z *= Math.exp(day == 18 ? 0.25 : -0.01); // one jump, seen in a third of the week-long windows
+        }
+        assertTrue(jumpy.skewness("WHT") > 0.5, "upward skew: " + jumpy.skewness("WHT"));
+        assertTrue(jumpy.impliedVol("WHT", 12_000, 10_000) > jumpy.impliedVol("WHT", 8_333, 10_000), "high strikes dearer");
     }
 
     @Test

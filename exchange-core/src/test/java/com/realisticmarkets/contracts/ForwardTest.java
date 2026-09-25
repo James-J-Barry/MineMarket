@@ -33,8 +33,8 @@ class ForwardTest {
     @Test
     void theForwardPriceGrowsWithInflation() {
         Dealer d = new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), 1234L);
-        double today = d.quoteForward(WHEAT, 64, 10, 10, 0, false).rawCents();
-        double week = d.quoteForward(WHEAT, 64, 10, 17, 0, false).rawCents();
+        double today = d.quoteForward(WHEAT, 64, 0, 0, 0, false).rawCents();
+        double week = d.quoteForward(WHEAT, 64, 0, 7, 0, false).rawCents(); // day 0: no drift or trend yet to project
         assertEquals(Math.exp(0.001 * 7), week / today, 1e-9, "0.1% a day of inflation to the delivery day");
     }
 

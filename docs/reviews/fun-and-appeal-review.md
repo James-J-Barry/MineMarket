@@ -389,3 +389,8 @@ Effort is rough solo-developer time with Claude Code, including GameTests and si
    models (e.g. Blockbench-style JSON) as better placeholders?
 8. **Death penalty** (open in the design): with papers worth tens of thousands at Tier 5+, losing them to a creeper
    may cause rage-quits. Keep, or add a config toggle defaulting to "keep papers, drop bills"?
+
+
+## Follow-up (2026-09-25)
+- The Almanac's Upgrades, Guides and Quests lists scroll (mouse wheel, arrows when there's more), and its Buy button
+  counts the bank balance ("Can spend"), so Tier 8 nodes can be bought from the screen. GameTest added.

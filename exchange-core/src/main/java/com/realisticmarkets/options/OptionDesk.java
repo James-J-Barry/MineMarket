@@ -24,9 +24,9 @@ import java.util.OptionalLong;
  */
 public final class OptionDesk {
     public static final String HEADER = "# Realistic Markets options desk v1";
-    public static final double HALF_SPREAD = 0.04, SKEW_PER_CONTRACT = 0.005, SMILE = 2.0;
-    /** Long-run daily volatility (goods measured over 32 worlds x 40 weeks of week-long moves; shares an estimate). */
-    public static final double LONG_RUN_GOODS_VOL = 0.055, LONG_RUN_SHARE_VOL = 0.04, MIN_VOL = 0.005, MAX_VOL = 0.25;
+    public static final double HALF_SPREAD = 0.04, SKEW_PER_CONTRACT = 0.005, SMILE = 2.0, SKEW = 2.0;
+    /** Long-run daily volatility (goods: week-long surprises over 32 worlds x 40 weeks, about 12.7%; shares an estimate). */
+    public static final double LONG_RUN_GOODS_VOL = 0.048, LONG_RUN_SHARE_VOL = 0.04, MIN_VOL = 0.005, MAX_VOL = 0.25;
     public static final int VOL_DAYS = 28, MIN_CLOSES = 5, WEEKLY_CLOSES = 14, HORIZON = 7, SHARES_PER_CONTRACT = 10;
     public static final double[] MONEYNESS = {0.8, 0.9, 1.0, 1.1, 1.2};
 
@@ -109,10 +109,19 @@ public final class OptionDesk {
 
     /** Records a dawn's price for the volatility estimate. */
     public void observe(String underlying, long day, double priceCents) {
+        observe(underlying, day, priceCents, 0);
+    }
+
+    /**
+     * Records a dawn's price and what the market expected it to be {@link #HORIZON} days later ({@code forecastCents},
+     * 0 if unknown). Volatility is then measured on surprises: how far each price landed from the forecast made a week
+     * before, so moves everyone saw coming (news fading, the drift back toward normal) don't count as risk.
+     */
+    public void observe(String underlying, long day, double priceCents, double forecastCents) {
         if (priceCents <= 0) return;
         Deque<double[]> d = closes.computeIfAbsent(underlying, k -> new ArrayDeque<>());
         if (!d.isEmpty() && d.peekLast()[0] >= day) return;
-        d.addLast(new double[] {day, priceCents});
+        d.addLast(new double[] {day, priceCents, forecastCents});
         while (d.size() > VOL_DAYS + 1) d.removeFirst();
     }
 
@@ -131,12 +140,34 @@ public final class OptionDesk {
         int n = 0;
         for (int i = k; i < c.size(); i++) {
             double[] from = c.get(i - k), to = c.get(i);
-            double r = Math.log(to[1] / from[1]);
+            // A week's surprise: against the forecast made then when there is one, else against that day's price.
+            double expected = k == HORIZON && from.length > 2 && from[2] > 0 && to[0] - from[0] == HORIZON ? from[2] : from[1];
+            double r = Math.log(to[1] / expected);
             sum += r * r / (to[0] - from[0]);
             n++;
         }
         double var = n == 0 ? 0 : sum / n;
         return Math.max(MIN_VOL, Math.min(MAX_VOL, Math.sqrt(var)));
+    }
+
+    /**
+     * How lopsided the recent week-long surprises were (their skewness, clamped to -2..2; 0 with too few): positive
+     * when big jumps up were more common than big falls (wheat after droughts), negative the other way (diamonds).
+     */
+    public double skewness(String underlying) {
+        Deque<double[]> d = closes.get(underlying);
+        if (d == null || d.size() < WEEKLY_CLOSES) return 0;
+        List<double[]> c = new ArrayList<>(d);
+        List<Double> r = new ArrayList<>();
+        for (int i = HORIZON; i < c.size(); i++) {
+            double[] from = c.get(i - HORIZON), to = c.get(i);
+            double expected = from.length > 2 && from[2] > 0 && to[0] - from[0] == HORIZON ? from[2] : from[1];
+            r.add(Math.log(to[1] / expected));
+        }
+        double mean = r.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+        double m2 = r.stream().mapToDouble(x -> (x - mean) * (x - mean)).average().orElse(0);
+        double m3 = r.stream().mapToDouble(x -> Math.pow(x - mean, 3)).average().orElse(0);
+        return m2 <= 0 ? 0 : Math.max(-2, Math.min(2, m3 / Math.pow(m2, 1.5)));
     }
 
     public static double longRunVol(String underlying) {
@@ -152,10 +183,13 @@ public final class OptionDesk {
         return Math.sqrt(0.5 * r * r + 0.5 * l * l);
     }
 
-    /** The volatility the desk prices a strike at: the base, times the smile (away-from-the-money strikes cost more). */
+    /**
+     * The volatility the desk prices a strike at: the base, times the smile (away-from-the-money strikes cost more),
+     * tilted by the skew (when surprises have been mostly upward, high strikes cost more and low ones less).
+     */
     public double impliedVol(String underlying, double strikeCents, double forwardCents) {
         double m = Math.log(strikeCents / forwardCents);
-        return baseVol(underlying) * (1 + SMILE * m * m);
+        return baseVol(underlying) * Math.max(0.3, 1 + SMILE * m * m + SKEW * skewness(underlying) * m);
     }
 
     // ------------------------------------------------------------------ prices
@@ -220,7 +254,9 @@ public final class OptionDesk {
     public void write(Writer w) throws IOException {
         w.write(HEADER + "\n");
         for (Map.Entry<String, Deque<double[]>> e : closes.entrySet()) {
-            for (double[] c : e.getValue()) w.write("close\t" + e.getKey() + "\t" + (long) c[0] + "\t" + c[1] + "\n");
+            for (double[] c : e.getValue()) {
+                w.write("close\t" + e.getKey() + "\t" + (long) c[0] + "\t" + c[1] + "\t" + (c.length > 2 ? c[2] : 0) + "\n");
+            }
         }
         for (Map.Entry<String, Long> e : settlements.entrySet()) w.write("settle\t" + e.getKey() + "\t" + e.getValue() + "\n");
         w.flush();
@@ -235,7 +271,7 @@ public final class OptionDesk {
             if (t.isEmpty() || t.startsWith("#")) continue;
             String[] c = t.split("\t");
             switch (c[0]) {
-                case "close" -> d.observe(c[1], Long.parseLong(c[2]), Double.parseDouble(c[3]));
+                case "close" -> d.observe(c[1], Long.parseLong(c[2]), Double.parseDouble(c[3]), c.length > 4 ? Double.parseDouble(c[4]) : 0);
                 case "settle" -> d.settlements.put(c[1], Long.parseLong(c[2]));
                 default -> { }
             }

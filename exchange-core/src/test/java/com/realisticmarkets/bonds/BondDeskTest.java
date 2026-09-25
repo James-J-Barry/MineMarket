@@ -86,4 +86,21 @@ class BondDeskTest {
         assertEquals(2 * b.couponCents(), desk.couponsOwed(b, 0, 14));
         assertEquals(Map.of(), Map.of());
     }
+
+    @Test
+    void noNewBondsOnARateChangeMorningUntilTheMarketHears() {
+        CentralBank bank = new CentralBank(5);
+        BondDesk desk = new BondDesk(bank, null);
+        long q = 1;
+        while (bank.decisionOn(q * 7).orElseThrow().move() == CentralBank.Move.HOLD) q++;
+        var d = bank.decisionOn(q * 7).orElseThrow();
+        assertTrue(desk.issuing(d.day() - 0.5), "the day before: open");
+        assertTrue(!desk.issuing(d.day() + d.delay() / 2), "the morning of a change, before the market hears: closed");
+        assertTrue(desk.issuing(d.day() + d.delay() + 0.01), "once it has: open again, at the new rate");
+        Bond fresh = desk.issue(Bond.TREASURY, 8, d.day() + d.delay() + 0.01);
+        assertEquals(d.rate() + CentralBank.TERM_PREMIUM * 8, fresh.couponRate(), 1e-12, "issued at the announced rate");
+        long h = q + 1;
+        while (bank.decisionOn(h * 7).orElseThrow().move() != CentralBank.Move.HOLD) h++;
+        assertTrue(desk.issuing(h * 7 + 0.05), "a hold changes nothing: open all day");
+    }
 }

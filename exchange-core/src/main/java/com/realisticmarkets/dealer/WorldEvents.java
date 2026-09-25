@@ -162,6 +162,39 @@ public final class WorldEvents implements Dealer.Shocks {
         return sum;
     }
 
+    @Override
+    public double fadingExpected(String baseItem, double day, double atDay) {
+        double sum = 0;
+        for (Event e : recent(day, LOOKBACK_DAYS)) {
+            if (resolved.get(e.type().index()).contains(baseItem)) sum += e.scale() * transientEffect(e.type(), atDay - e.day(), e.delay());
+        }
+        return sum;
+    }
+
+    @Override
+    public double permanentPending(String baseItem, double day, double atDay) {
+        long today = (long) Math.floor(day);
+        if (Math.floor(atDay) <= today) return 0;
+        double sum = 0; // today's events land at tomorrow's dawn
+        for (Event e : startingOn(today)) {
+            if (resolved.get(e.type().index()).contains(baseItem)) sum += e.type().permanent() * e.scale();
+        }
+        return sum;
+    }
+
+    @Override
+    public double expectedNew(String baseItem, double day, double atDay) {
+        double meanDelay = (MIN_DELAY_DAYS + MAX_DELAY_DAYS) / 2, sum = 0; // scale averages 1
+        long last = (long) Math.floor(atDay);
+        for (long d = (long) Math.floor(day) + 1; d <= last; d++) {
+            for (Type t : types) {
+                if (!resolved.get(t.index()).contains(baseItem)) continue;
+                sum += t.chancePerDay() * (transientEffect(t, atDay - d, meanDelay) + (d + 1 <= last ? t.permanent() : 0));
+            }
+        }
+        return sum;
+    }
+
     /** Transient log effect of a full-size event {@code age} days after dawn of its day, heard after {@code delay}. */
     public static double transientEffect(Type t, double age, double delay) {
         double heard = age - delay;

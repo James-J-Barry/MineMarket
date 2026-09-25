@@ -26,7 +26,7 @@ import net.minecraft.world.entity.player.Inventory;
 
 /** Book-style Almanac: Upgrades, Guides and Quests tabs. */
 public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
-    private static final int LIST_X = 8, LIST_Y = 24, ROW = 13, LIST_W = 112;
+    private static final int LIST_X = 8, LIST_Y = 24, ROW = 13, LIST_W = 104;
     private static final int DETAIL_X = 126, DETAIL_RIGHT = 212;
     private static final int PAGE_TOP = 24, PAGE_BOTTOM_PAD = 26;
 
@@ -34,6 +34,7 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
     private Button buy, back, tearOut;
     private int reading = -1; // guide index being read (client-side view state)
     private int readScroll;
+    private int listScroll; // first row shown in the tab's list
     private int lastTab = -1;
 
     public AlmanacScreen(AlmanacMenu menu, Inventory inventory, Component title) {
@@ -76,6 +77,7 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
         if (m.tab() != lastTab) {
             lastTab = m.tab();
             reading = -1;
+            listScroll = 0;
         }
         for (int t = 0; t < 3; t++) tabs[t].active = m.tab() != t;
         boolean isReading = m.tab() == AlmanacMenu.TAB_GUIDES && reading >= 0;
@@ -114,7 +116,37 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             readScroll = Math.max(0, Math.min(max, readScroll - 3 * (int) Math.signum(scrollY)));
             return true;
         }
+        int count = listCount();
+        int max = Math.max(0, count - visibleRows());
+        if (max > 0) {
+            listScroll = Math.max(0, Math.min(max, listScroll - 2 * (int) Math.signum(scrollY)));
+            return true;
+        }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    private int listCount() {
+        return switch (getMenu().tab()) {
+            case AlmanacMenu.TAB_GUIDES -> AlmanacMenu.GUIDES.size();
+            case AlmanacMenu.TAB_QUESTS -> AlmanacMenu.QUESTS.size();
+            default -> AlmanacMenu.NODES.size();
+        };
+    }
+
+    /** Rows that fit above the tab's footer (the cash line, the guide hint, the quest goal). */
+    private int visibleRows() {
+        int footer = switch (getMenu().tab()) {
+            case AlmanacMenu.TAB_GUIDES -> 32;
+            case AlmanacMenu.TAB_QUESTS -> 36;
+            default -> 24;
+        };
+        return Math.max(1, (imageHeight - LIST_Y - footer) / ROW);
+    }
+
+    /** "more above / below" marks at the list's right edge when it doesn't all fit. */
+    private void scrollMarks(GuiGraphicsExtractor g, int count, int right) {
+        if (listScroll > 0) g.text(font, "\u25b2", right, LIST_Y, LIGHT_GREY, false);
+        if (listScroll + visibleRows() < count) g.text(font, "\u25bc", right, LIST_Y + (visibleRows() - 1) * ROW, LIGHT_GREY, false);
     }
 
     private int visibleLines() {
@@ -133,10 +165,14 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
         return out;
     }
 
+    /** The list index under the mouse (scroll included), or -1. */
     private int rowAt(double mx, double my, int count) {
         double x = mx - leftPos - LIST_X, y = my - topPos - LIST_Y;
-        if (x < 0 || x >= LIST_W || y < 0) return -1;
+        int width = getMenu().tab() == AlmanacMenu.TAB_UPGRADES ? LIST_W : imageWidth - 16;
+        if (x < 0 || x >= width || y < 0) return -1;
         int i = (int) (y / ROW);
+        if (i >= visibleRows()) return -1;
+        i += listScroll;
         return i < count ? i : -1;
     }
 
@@ -151,9 +187,9 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
         if (getMenu().tab() == AlmanacMenu.TAB_UPGRADES) {
             g.fill(x + DETAIL_X - 4, y + 23, x + DETAIL_X - 3, y + imageHeight - 8, 0xFFB9A98A); // gutter
             int sel = getMenu().selected(), hover = rowAt(mouseX, mouseY, AlmanacMenu.NODES.size());
-            for (int i = 0; i < AlmanacMenu.NODES.size(); i++) {
+            for (int i = listScroll; i < Math.min(AlmanacMenu.NODES.size(), listScroll + visibleRows()); i++) {
                 if (i != sel && i != hover) continue;
-                int ry = y + LIST_Y + i * ROW;
+                int ry = y + LIST_Y + (i - listScroll) * ROW;
                 g.fill(x + LIST_X - 1, ry - 2, x + LIST_X + LIST_W, ry + ROW - 2, i == sel ? 0xFFD9C9A3 : 0xFFE8DCC0);
             }
         }
@@ -171,9 +207,9 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
     }
 
     private void drawUpgrades(GuiGraphicsExtractor g, AlmanacMenu m) {
-        for (int i = 0; i < AlmanacMenu.NODES.size(); i++) {
+        for (int i = listScroll; i < Math.min(AlmanacMenu.NODES.size(), listScroll + visibleRows()); i++) {
             UnlockNode n = AlmanacMenu.NODES.get(i);
-            int ry = LIST_Y + i * ROW;
+            int ry = LIST_Y + (i - listScroll) * ROW;
             int state = m.nodeState(i);
             boolean owned = state == AlmanacMenu.OWNED;
             String cost = owned ? "Owned" : Money.format(m.costCents(i));
@@ -181,7 +217,8 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             g.text(font, Panels.trim(font, n.title(), LIST_W - font.width(cost) - 4), LIST_X, ry, color, false);
             g.text(font, cost, LIST_X + LIST_W - 2 - font.width(cost), ry, owned ? GREEN : GREY, false);
         }
-        String cash = "Cash " + Money.format(m.cashCents());
+        scrollMarks(g, AlmanacMenu.NODES.size(), LIST_X + LIST_W + 2);
+        String cash = "Can spend " + Money.format(m.cashCents());
         g.text(font, cash, LIST_X, imageHeight - 18, GREY, false);
 
         int sel = m.selected();
@@ -199,7 +236,7 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
         String status = switch (m.nodeState(sel)) {
             case AlmanacMenu.OWNED -> "Unlocked for good";
             case AlmanacMenu.AVAILABLE -> "Available";
-            case AlmanacMenu.NO_CASH -> "Not enough cash";
+            case AlmanacMenu.NO_CASH -> "Not enough cash (bills and bank)";
             case AlmanacMenu.NEEDS_QUEST -> "Needs quest: " + questTitle(n.requiredQuest());
             default -> "Locked";
         };
@@ -212,11 +249,12 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             return;
         }
         int hover = rowAt(mouseX, mouseY, AlmanacMenu.GUIDES.size());
-        for (int i = 0; i < AlmanacMenu.GUIDES.size(); i++) {
+        for (int i = listScroll; i < Math.min(AlmanacMenu.GUIDES.size(), listScroll + visibleRows()); i++) {
             boolean open = m.guideUnlocked(i);
             String name = open ? AlmanacMenu.GUIDES.get(i).title() : "??? (finish a quest)";
-            g.text(font, name, LIST_X, LIST_Y + i * ROW, !open ? LIGHT_GREY : i == hover ? BLUE : GREY, false);
+            g.text(font, name, LIST_X, LIST_Y + (i - listScroll) * ROW, !open ? LIGHT_GREY : i == hover ? BLUE : GREY, false);
         }
+        scrollMarks(g, AlmanacMenu.GUIDES.size(), imageWidth - 16);
         wrap(g, "Click a guide to read it. You can tear out a copy to keep or share.", LIST_X, imageHeight - 28, LIGHT_GREY);
     }
 
@@ -236,16 +274,17 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
 
     private void drawQuests(GuiGraphicsExtractor g, AlmanacMenu m, int mouseX, int mouseY) {
         int hover = rowAt(mouseX, mouseY, AlmanacMenu.QUESTS.size());
-        int w = imageWidth - 16;
-        for (int i = 0; i < AlmanacMenu.QUESTS.size(); i++) {
+        int w = imageWidth - 26; // room for the scroll marks
+        for (int i = listScroll; i < Math.min(AlmanacMenu.QUESTS.size(), listScroll + visibleRows()); i++) {
             Quest q = AlmanacMenu.QUESTS.get(i);
             boolean done = m.questDone(i);
-            int ry = LIST_Y + i * ROW;
+            int ry = LIST_Y + (i - listScroll) * ROW;
             String reward = reward(q);
             g.text(font, (done ? "✔ " : "  ") + q.title(), LIST_X, ry, done ? GREEN : i == hover ? BLUE : GREY, false);
             g.text(font, reward, LIST_X + w - font.width(reward), ry, LIGHT_GREY, false);
         }
-        String hint = hover >= 0 ? describeGoal(AlmanacMenu.QUESTS.get(hover).goal()) : "Hover a quest to see its goal.";
+        scrollMarks(g, AlmanacMenu.QUESTS.size(), imageWidth - 16);
+        String hint = hover >= 0 ? describeGoal(AlmanacMenu.QUESTS.get(hover).goal()) : "Hover a quest to see its goal (scroll for more).";
         wrap(g, hint, LIST_X, imageHeight - 30, hover >= 0 ? GREY : LIGHT_GREY);
     }
 

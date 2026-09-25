@@ -65,13 +65,13 @@ public final class OptionsService {
 
             @Override
             public double forwardCents(String u, long expiry, double day) {
-                double spot = spotCents(u, day);
                 double t = Math.max(0, expiry - day);
-                if (OptionDesk.isGood(u)) {
+                if (OptionDesk.isGood(u)) { // like the futures: the fair value expected at expiry, news priced in at dawn
                     var d = dealer.dealer();
-                    return spot * d.priceLevel(day + t) / d.priceLevel(day);
+                    ClearingHouse.Product p = ClearingHouse.product(u);
+                    return d.expectedFair(p.item(), day, Math.max(expiry, day)) * Math.exp(d.intradayNoise(p.item(), day)) * p.lot() * 100.0;
                 }
-                return spot * Math.pow(1 + rate(day), t);
+                return spotCents(u, day) * Math.pow(1 + rate(day), t);
             }
 
             @Override
@@ -202,7 +202,7 @@ public final class OptionsService {
         lastDawn = day;
         for (String u : underlyings()) {
             double spot = spotCents(u, day);
-            desk.observe(u, day, spot);
+            desk.observe(u, day, spot, OptionDesk.isGood(u) ? desk.market().forwardCents(u, day + OptionDesk.HORIZON, day) : 0);
             for (long d = from; d <= day; d++) {
                 if (d > 0 && d % ClearingHouse.EXPIRY_DAYS == 0) desk.settle(u, d, Math.round(spot));
             }

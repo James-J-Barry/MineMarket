@@ -14,7 +14,7 @@ import java.util.Optional;
 
 /**
  * The Clearing House: cash-settled futures on six goods in standard lots, two quarterly expiries listed at a time.
- * A future's price is the Dealer's fair value now, grown by inflation to expiry. The house quotes {@link #HALF_SPREAD}
+ * A future's price is the fair value expected at expiry from what's known at dawn (news priced in at once), plus inflation. The house quotes {@link #HALF_SPREAD}
  * either side, plus {@link #SKEW_PER_LOT} for every lot the account has already traded in that contract today (it
  * reacts to volume), and caps positions at {@link #POSITION_LIMIT} lots.
  *
@@ -112,10 +112,14 @@ public final class ClearingHouse {
 
     // ------------------------------------------------------------------ prices
 
-    /** The futures price per lot (cents) of {@code code} for {@code expiry}, at {@code day}. */
+    /**
+     * The futures price per lot (cents) of {@code code} for {@code expiry}, at {@code day}: the fair value the market
+     * expects at expiry given all the news out by today's dawn (news is priced in at once, so the Newsstand gives no
+     * free ride here), with a little intraday noise. At expiry it is the Dealer's fair value.
+     */
     public double price(String code, long expiry, double day) {
         Product p = product(code);
-        double unit = dealer.fairValue(p.item(), day) * dealer.priceLevel(Math.max(expiry, day)) / dealer.priceLevel(day);
+        double unit = dealer.expectedFair(p.item(), day, Math.max(expiry, day)) * Math.exp(dealer.intradayNoise(p.item(), day));
         return unit * p.lot() * 100.0;
     }
 

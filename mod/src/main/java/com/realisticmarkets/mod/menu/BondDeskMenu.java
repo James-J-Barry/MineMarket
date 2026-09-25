@@ -161,7 +161,7 @@ public class BondDeskMenu extends AbstractContainerMenu {
                 case BUTTON_COUNT_MINUS_1 -> setCount(count() - 1);
                 case BUTTON_COUNT_PLUS_1 -> setCount(count() + 1);
                 case BUTTON_COUNT_PLUS_10 -> setCount(count() + 10);
-                case BUTTON_BUY -> why = bonds.buy(p, ISSUERS.get(issuer()), maturity(), count(), today);
+                case BUTTON_BUY -> why = bonds.buy(p, ISSUERS.get(issuer()), maturity(), count(), day());
                 case BUTTON_COLLECT -> {
                     if (bonds.present(p, progression, today) == 0) why = Optional.of("Nothing due on the bonds you carry");
                 }

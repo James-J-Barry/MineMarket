@@ -82,8 +82,9 @@ public final class BondService {
     // ------------------------------------------------------------------ buying
 
     /** Buys {@code count} new bonds of {@code issuer} maturing in {@code quarters}. Returns empty on success, else why not. */
-    public Optional<String> buy(Player player, String issuer, int quarters, int count, long day) {
+    public Optional<String> buy(Player player, String issuer, int quarters, int count, double day) {
         if (count <= 0) return Optional.of("Choose how many");
+        if (!desk.issuing(day)) return Optional.of("The central bank just moved rates: new bonds reopen once the market has priced it in");
         Bond b = desk.issue(issuer, quarters, day);
         long cost = Money.roundUpToDime(desk.issuePrice(b) * count);
         if (Wallet.count(player.getInventory()) < cost) return Optional.of("Not enough cash: " + count + " bonds cost " + Money.format(cost));

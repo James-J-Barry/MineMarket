@@ -505,3 +505,17 @@ settles once, and margin close-outs are marked at the dawn price. I could not ve
    intuitive, but it lets players skip nights to accelerate interest. Or keep `gameTime` and show a market clock?
 7. **Per-day vs per-year framing:** do you want guides to translate returns into yearly equivalents so real-world
    intuition transfers?
+
+
+## Follow-up (2026-09-25): fixes after this review
+- Futures and options no longer drift predictably within a day: they price the fair value the market expects at expiry
+  from everything known at dawn (known news paths, events still to come on average, the trend and the anchor), plus a
+  small seeded intraday noise that is zero at each dawn (`Dealer.expectedFair`, `Dealer.intradayNoise`). A unit test
+  replays news-driven same-day trades: no edge and no sure thing. Dealer forwards use the same expected value.
+- The Bond Desk doesn't issue new bonds on the morning of a rate change until the market has heard it, and issues at the
+  rate the market has heard (`BondDesk.issuing`). Selling on the news stays open (it only avoids a loss).
+- The Options Desk measures volatility on week-long surprises (price against the forecast made a week earlier), with a
+  long-run level of 4.8% a day, and tilts the smile by the measured skew. `sim options`: calls +2%, puts -16% on money
+  spent; a 90%-put-insured harvest keeps at least 86% of its expected value (55% uninsured). `sim hedge`: surprise
+  spread $7.08 unhedged, $3.01 with futures, $0 with a forward.
+- Not changed yet (for James): the 21-day CD rate, pacing, the new quests and guides.

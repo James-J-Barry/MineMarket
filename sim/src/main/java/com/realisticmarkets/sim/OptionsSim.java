@@ -36,7 +36,8 @@ public final class OptionsSim {
                 return d.fairValue(p.item(), day) * p.lot() * 100.0;
             }
             public double forwardCents(String u, long expiry, double day) {
-                return spotCents(u, day) * d.priceLevel(Math.max(expiry, day)) / d.priceLevel(day);
+                var p = ClearingHouse.product(u);
+                return d.expectedFair(p.item(), day, Math.max(expiry, day)) * p.lot() * 100.0;
             }
             public double rate(double day) { return 0.003; }
         });
@@ -90,7 +91,8 @@ public final class OptionsSim {
                 double day = start + 0.2;
                 while (observed < start) {
                     observed++;
-                    desk.observe("WHT", observed, desk.market().spotCents("WHT", observed)); // each dawn, in order
+                    desk.observe("WHT", observed, desk.market().spotCents("WHT", observed),
+                            desk.market().forwardCents("WHT", observed + OptionDesk.HORIZON, observed)); // each dawn, in order
                 }
                 double f = desk.market().forwardCents("WHT", expiry, day);
                 long atm = Math.round(f / 100) * 100;
@@ -103,7 +105,8 @@ public final class OptionsSim {
                 double lotNow = desk.market().spotCents("WHT", day);
                 while (observed < expiry) {
                     observed++;
-                    desk.observe("WHT", observed, desk.market().spotCents("WHT", observed));
+                    desk.observe("WHT", observed, desk.market().spotCents("WHT", observed),
+                            desk.market().forwardCents("WHT", observed + OptionDesk.HORIZON, observed));
                 }
                 long settle = Math.round(desk.market().spotCents("WHT", expiry));
                 long callPays = call.intrinsic(settle), putPays = put.intrinsic(settle);

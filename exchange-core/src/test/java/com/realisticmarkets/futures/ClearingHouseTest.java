@@ -27,8 +27,12 @@ class ClearingHouseTest {
         assertArrayEquals(new long[] {21, 28}, ClearingHouse.expiries(14), "an expiry day lists the next two");
         Dealer d = dealer();
         ClearingHouse h = new ClearingHouse(d);
-        double fair = d.fairValue(WHEAT, 10.5);
-        assertEquals(fair * Math.exp(0.001 * 3.5) * 256 * 100, h.price("WHT", 14, 10.5), 1e-6, "256 wheat, 3.5 days of inflation");
+        assertEquals(d.expectedFair(WHEAT, 10.5, 14) * 256 * 100 * Math.exp(d.intradayNoise(WHEAT, 10.5)), h.price("WHT", 14, 10.5), 1e-6,
+                "256 wheat at the value expected on day 14 (and the day's noise)");
+        Dealer fresh = dealer();
+        assertEquals(fresh.fairValue(WHEAT, 0) * Math.exp(0.001 * 14), fresh.expectedFair(WHEAT, 0, 14), 1e-9,
+                "with no drift or news yet, just inflation to expiry");
+        assertEquals(0, d.intradayNoise(WHEAT, 11.0), 0, "no noise at dawn: marks are clean");
         for (String item : new String[] {"minecraft:wheat", "minecraft:oak_log", "minecraft:iron_ingot", "minecraft:gold_ingot",
                 "minecraft:redstone", "minecraft:diamond"}) {
             assertTrue(d.catalog().trades(item), item + " is a Dealer good");
@@ -130,6 +134,46 @@ class ClearingHouseTest {
         double fair = d.fairValue(WHEAT, 14) * 256 * 100;
         assertEquals(fair, h.price("WHT", 14, 14), 1e-6, "on expiry day the future is the Dealer's fair value");
         assertTrue(settled.get(0).expiredCents() != 0);
+    }
+
+    @Test
+    void readingTheNewsGivesNoSureIntradayProfit() {
+        // A world with news: buy at dawn the future of any good the Newsstand says will rise, sell before the next dawn.
+        long wins = 0, trades = 0;
+        double pnl = 0;
+        for (long seed = 1; seed <= 6; seed++) {
+            var events = com.realisticmarkets.dealer.WorldEvents.loadDefault(DealerCatalog.loadDefault(), seed);
+            Dealer w = new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), seed);
+            w.setShocks(events);
+            ClearingHouse h = new ClearingHouse(w);
+            for (long day = 8; day < 120; day++) {
+                for (var e : events.startingOn(day)) {
+                    if (e.type().shock() <= 0) continue;
+                    for (ClearingHouse.Product p : PRODUCTS_IN(e, events)) {
+                        long expiry = ClearingHouse.expiries(day)[0];
+                        double buy = h.price(p.code(), expiry, day + 0.02) * (1 + ClearingHouse.HALF_SPREAD);
+                        double sell = h.price(p.code(), expiry, day + 0.95) * (1 - ClearingHouse.HALF_SPREAD);
+                        double noNoise = w.expectedFair(p.item(), day + 0.95, expiry) / w.expectedFair(p.item(), day + 0.02, expiry);
+                        assertEquals(1.0, noNoise, 1e-9, "the expected value doesn't move within the day: the news is in at dawn");
+                        pnl += sell / buy - 1;
+                        if (sell > buy) wins++;
+                        trades++;
+                    }
+                }
+            }
+        }
+        assertTrue(trades > 30, "enough news: " + trades);
+        assertTrue(pnl / trades < 0.002, "no edge from the news on the futures: average " + pnl / trades);
+        assertTrue(wins < trades * 0.7, "and no sure thing: " + wins + " of " + trades + " won");
+    }
+
+    static java.util.List<ClearingHouse.Product> PRODUCTS_IN(com.realisticmarkets.dealer.WorldEvents.Event e,
+                                                             com.realisticmarkets.dealer.WorldEvents events) {
+        java.util.List<ClearingHouse.Product> out = new java.util.ArrayList<>();
+        for (ClearingHouse.Product p : ClearingHouse.PRODUCTS) {
+            if (events.fadingExpected(p.item(), e.day(), e.day() + 3) != 0) out.add(p);
+        }
+        return out;
     }
 
     @Test
