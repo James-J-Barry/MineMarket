@@ -290,3 +290,42 @@ A Safe Deposit Box is for the rest. It holds 54 slots of papers and money, explo
 Shares in the box still earn their dividends. Bring the certificates to a Stock Exchange whenever it suits you and everything that built up is paid.
 
 Real world: investors once kept paper stock certificates in bank safe deposit boxes. Today almost all shares are held electronically by brokers and custodians, so nobody loses a fortune with a piece of paper.
+
+@bonds_and_yield Bonds and Yield
+You opened a Bond Desk. A bond is a loan you make: you hand over $100 today, the borrower pays you a coupon every quarter, and at maturity you get your $100 back.
+
+At 0.3% a day a bond's coupon is $2.11 a quarter. Hold a 4-quarter bond to the end and it pays four coupons and the $100: $108.44 for your $100. That extra is its yield, the return you lock in when you buy.
+
+The Treasury borrows for the central bank and always pays. Companies borrow too, and pay more, because they might not.
+
+Longer bonds pay a little more to make up for tying your money up. The Buy tab shows it as the yield curve: at the start a 2-quarter Treasury yields 0.308% a day and an 8-quarter one 0.332%.
+
+Coupons wait on the paper until you bring it to the Bond Desk, like dividends. Bonds are bearer papers: whoever holds one gets paid, so store them safely.
+
+You don't have to hold to the end. The desk buys bonds back any time, at today's price, which isn't always what you paid.
+
+Real world: governments and companies borrow most of their money this way, and the bond market is bigger than the stock market.
+
+@interest_rate_risk Interest Rate Risk
+Your bond pays a fixed coupon. Rates don't stay fixed.
+
+Say you bought an 8-quarter bond at the going rate, and a week later the central bank raises its rate by 0.05% a day. New bonds now pay more than yours, so nobody will pay full price for it: its price falls about 2.6%. A 2-quarter bond loses only 0.7%, because its money comes back sooner. When the central bank cuts, the same bonds rise by about as much.
+
+So bond prices move opposite to interest rates, and the further away a bond's money is, the more it moves. Traders call that distance duration.
+
+None of this matters if you hold to maturity: you still get every coupon and your $100 back. It matters if you need to sell early, and it's an opportunity if you read the rate news first. The Newsstand reports each decision, and the rest of the market takes a while to react.
+
+Short bonds are a safe place for money you'll need soon. Long bonds pay a bit more, and swing more.
+
+Real world: in 2022 central banks raised rates fast, and long-dated government bonds, supposedly the safest investment there is, lost a fifth or more of their value in a year.
+
+@credit_risk Credit Risk
+You collected your first coupon. On a company's bond, the next one isn't guaranteed.
+
+Each company pays more than the Treasury to borrow: its credit spread. Steady Overworld Utility pays 0.01% a day more; Redstone Dynamics pays 0.07% more. That extra is your pay for the chance of not being paid.
+
+The spread moves. When a company's earnings fall, lenders get nervous and want more, so its old bonds lose value long before anything goes wrong. After two losing quarters in a row a company defaults: its coupons stop, and each bond pays back only $40 of its $100. The company carries on, but its new bonds must pay far more.
+
+So check the Company tab at the Stock Exchange before you lend. A high yield is often a warning, not a gift. Spreading your bonds across several issuers keeps one default from hurting much, and the Treasury never defaults.
+
+Real world: agencies grade company bonds, and junk bonds pay high yields because some of them fail. In a bankruptcy, bondholders are paid before shareholders, which is why they often get something back.

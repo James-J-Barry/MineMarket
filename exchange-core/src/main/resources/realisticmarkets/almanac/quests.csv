@@ -26,6 +26,6 @@ shareholder,dividend_collected,1500,guide:risk_and_return,Shareholder
 buy_the_business,shares_held:100,2500,,Buy the Business
 beat_the_market,beat_market,3000,,Beat the Market
 diversified,companies_held:3,2000,,Diversified
-coupon_clipper,coupon_collected,1500,,Coupon Clipper
+coupon_clipper,coupon_collected,1500,guide:credit_risk,Coupon Clipper
 held_to_maturity,held_to_maturity,3000,,Held to Maturity
 rate_watcher,rate_watcher,4000,,Rate Watcher

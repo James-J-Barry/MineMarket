@@ -63,6 +63,7 @@ public class BondGameTests {
         check(afterCoupon - before >= 10 * coupon / 10 * 10, "paid in bills");
         check(d.bonds().present(p, d.prog(), 7) == 0, "nothing more this quarter");
         check(d.prog().progress(p).hasCompleted("coupon_clipper"), "Coupon Clipper");
+        check(d.prog().progress(p).hasGuide("credit_risk"), "and its guide, Credit Risk");
         long paid = d.bonds().present(p, d.prog(), 14);
         check(paid == (10 * coupon + 10 * Bond.FACE_CENTS) / 10 * 10, "at maturity: the last coupon and $100 each, got " + paid);
         check(bonds(p) == 0, "the papers are handed in");

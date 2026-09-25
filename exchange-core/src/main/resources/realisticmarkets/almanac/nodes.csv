@@ -17,4 +17,4 @@ stock_exchange,4,1000000,,,blueprint:realisticmarkets:stock_exchange;component:r
 electronic_newsfeed,4,200000,stock_exchange,,blueprint:realisticmarkets:electronic_newsfeed,Electronic Newsfeed
 portfolio_binder,4,500000,stock_exchange,,blueprint:realisticmarkets:portfolio_binder;guide:custody,Portfolio Binder
 safe_deposit_box,4,400000,,,blueprint:realisticmarkets:safe_deposit_box;guide:custody,Safe Deposit Box
-bond_desk,5,2500000,,,blueprint:realisticmarkets:bond_desk,Bond Desk
+bond_desk,5,2500000,,,blueprint:realisticmarkets:bond_desk;guide:bonds_and_yield;guide:interest_rate_risk,Bond Desk

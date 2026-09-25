@@ -19,7 +19,7 @@ class GuidesTest {
                         "cash_on_hand", "reading_a_quote", "transaction_costs", "two_markets",
                         "interest_and_compounding", "term_and_liquidity", "leverage_and_collateral",
                         "order_books", "limit_and_market_orders", "liquidity_and_market_makers", "news_and_markets", "reading_a_chart", "owning_a_share", "valuing_a_company",
-                        "risk_and_return", "custody"),
+                        "risk_and_return", "custody", "bonds_and_yield", "interest_rate_risk", "credit_risk"),
                 guides.all().stream().map(Guides.Guide::id).toList());
         for (Guides.Guide g : guides.all()) {
             int words = g.wordCount();
@@ -327,6 +327,32 @@ class GuidesTest {
             hi = Math.max(hi, c.requiredReturn());
         }
         assertTrue(t.contains(String.format(java.util.Locale.ROOT, "between %.2f%% and %.2f%% a day", lo * 100, hi * 100)));
+    }
+
+    @Test
+    void bondGuidesMatchTheBondMath() {
+        double y = com.realisticmarkets.rates.CentralBank.START;
+        var b4 = new com.realisticmarkets.bonds.Bond(com.realisticmarkets.bonds.Bond.TREASURY, 0, 28, y);
+        String by = text("bonds_and_yield");
+        assertTrue(by.contains("coupon is " + usd(b4.couponCents()) + " a quarter"), by);
+        assertTrue(by.contains(usd(4 * b4.couponCents() + com.realisticmarkets.bonds.Bond.FACE_CENTS) + " for your $100"));
+        var cb = new com.realisticmarkets.rates.CentralBank(1);
+        assertTrue(by.contains(String.format(java.util.Locale.ROOT, "2-quarter Treasury yields %.3f%% a day and an 8-quarter one %.3f%%",
+                cb.yield(0, 2) * 100, cb.yield(0, 8) * 100)));
+        String irr = text("interest_rate_risk");
+        double up = y + com.realisticmarkets.rates.CentralBank.STEP;
+        var b2 = new com.realisticmarkets.bonds.Bond(com.realisticmarkets.bonds.Bond.TREASURY, 0, 14, y);
+        var b8 = new com.realisticmarkets.bonds.Bond(com.realisticmarkets.bonds.Bond.TREASURY, 0, 56, y);
+        double d2 = 1 - com.realisticmarkets.bonds.BondMath.price(b2, 0, up) / com.realisticmarkets.bonds.BondMath.price(b2, 0, y);
+        double d8 = 1 - com.realisticmarkets.bonds.BondMath.price(b8, 0, up) / com.realisticmarkets.bonds.BondMath.price(b8, 0, y);
+        assertTrue(irr.contains(String.format(java.util.Locale.ROOT, "falls about %.1f%%", d8 * 100)), "8q drop " + d8);
+        assertTrue(irr.contains(String.format(java.util.Locale.ROOT, "loses only %.1f%%", d2 * 100)), "2q drop " + d2);
+        assertTrue(irr.contains("by 0.05% a day"));
+        String cr = text("credit_risk");
+        var companies = com.realisticmarkets.equities.CompanyCatalog.loadDefault();
+        assertTrue(cr.contains(String.format(java.util.Locale.ROOT, "Utility pays %.2f%% a day more", companies.company("OWL").creditSpread() * 100)));
+        assertTrue(cr.contains(String.format(java.util.Locale.ROOT, "Redstone Dynamics pays %.2f%% more", companies.company("RSD").creditSpread() * 100)));
+        assertTrue(cr.contains("pays back only $" + com.realisticmarkets.bonds.CreditModel.recoveryCents() / 100 + " of its $100"));
     }
 
     @Test
