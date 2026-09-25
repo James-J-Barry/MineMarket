@@ -189,9 +189,13 @@ milestone the fun review suggested putting before multiplayer.
   second to sell every stack of that item you carry. Looking at an Exchange with goods in hand shows "64 Wheat: the
   Dealer pays $25.40 (sneak-click to sell)" on the action bar.
 - **5. Wall displays** (`block/MarketBoardBlock`, `block/LedgerDisplayBlock`, `client/WallDisplayRenderer`):
-  - **Market Board** (blueprint with the Ticker Tape node): right-click to cycle the Trading Floor's books, the six
-    shares (each with its move since this morning, ▲ green / ▼ red) and the news (the central rate, and the owner's
-    Newsstand stories once they own it). Pages turn every few seconds when there are more lines than fit.
+  - **Price Boards** in three kinds, three items each (four ran off the texture): the original Price Board (the
+    Dealer's bid and ask), the **Floor Price Board** (blueprint with the Trading Floor: last trade with its move since
+    the day's open, and the book's best bid / ask) and the **Stock Price Board** (blueprint with the Stock Exchange:
+    the same for shares, chosen by clicking any certificate of the company, which isn't used up). Boards saved with a
+    fourth item drop it at the board.
+  - **News Board** (blueprint with the Newsstand): the central rate and the last two days' stories, green up, red
+    down. (An earlier Market Board that cycled pages was split into these, per James.)
   - **Ledger Display** (blueprint with Digital Record Keeping): link it to a Records Terminal with the Record Link
     (terminal first, then the display): net worth, debts, income today and over 7 days, and what's due next.
   GameTests: quick-sell (single and all), the Market Board's three pages, the Ledger Display's link and numbers.

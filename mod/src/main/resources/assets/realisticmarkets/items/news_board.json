@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "realisticmarkets:block/market_board"
+    "model": "realisticmarkets:block/news_board"
   }
 }

@@ -70,7 +70,9 @@ public final class ModCreativeTab {
                             output.accept(ModItems.BANK_CARD);
                             output.accept(ModItems.COMPUTER_CHIP);
                             output.accept(ModBlocks.BROKERAGE_TERMINAL);
-                            output.accept(ModBlocks.MARKET_BOARD);
+                            output.accept(ModBlocks.NEWS_BOARD);
+                            output.accept(ModBlocks.FLOOR_PRICE_BOARD);
+                            output.accept(ModBlocks.STOCK_PRICE_BOARD);
                             output.accept(ModBlocks.LEDGER_DISPLAY);
                         })
                         .build());

@@ -34,7 +34,7 @@ public final class RealisticMarketsClient implements ClientModInitializer {
         PassbookItem.openBook = stack -> Minecraft.getInstance().setScreen(
                 new BookViewScreen(BookViewScreen.BookAccess.fromItem(stack)));
         BlockEntityRenderers.register(ModBlockEntities.PRICE_BOARD, PriceBoardRenderer::new);
-        BlockEntityRenderers.register(ModBlockEntities.MARKET_BOARD, WallDisplayRenderer::new);
+        BlockEntityRenderers.register(ModBlockEntities.NEWS_BOARD, WallDisplayRenderer::new);
         BlockEntityRenderers.register(ModBlockEntities.LEDGER_DISPLAY, WallDisplayRenderer::new);
     }
 }

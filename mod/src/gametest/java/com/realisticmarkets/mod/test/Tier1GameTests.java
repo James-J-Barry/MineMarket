@@ -116,11 +116,10 @@ public class Tier1GameTests {
         helper.setBlock(pos, ModBlocks.PRICE_BOARD.defaultBlockState().setValue(PriceBoardBlock.FACING, Direction.SOUTH));
         PriceBoardBlockEntity board = helper.getBlockEntity(pos, PriceBoardBlockEntity.class);
         DealerService svc = DealerService.forTest(1234L);
-        var catalog = svc.dealer().catalog();
 
-        check(board.tryAdd(new ItemStack(Items.DIRT), catalog) != null, "dirt has no market");
-        check(board.tryAdd(bill(Denomination.ONE, 1), catalog) != null, "money has no price");
-        check(board.tryAdd(new ItemStack(Items.WHEAT, 64), catalog) == null, "wheat accepted");
+        check(board.tryAdd(new ItemStack(Items.DIRT)) != null, "dirt has no market");
+        check(board.tryAdd(bill(Denomination.ONE, 1)) != null, "money has no price");
+        check(board.tryAdd(new ItemStack(Items.WHEAT, 64)) == null, "wheat accepted");
         check(board.item(0).getCount() == 1, "the board holds one of the item, not the stack");
         board.refresh(svc.dealer(), 0);
         check(board.bidMills(0) == 450 && board.askMills(0) == 550,
@@ -132,12 +131,12 @@ public class Tier1GameTests {
         check(board.bidMills(0) == 350, "the bid follows the Dealer: $0.35 after 64 wheat, got " + board.bidMills(0));
         check(board.midMills(0) < board.fairMills(0), "market below normal after the sale");
 
-        check(board.tryAdd(new ItemStack(Items.IRON_INGOT), catalog) == null, "2nd");
-        check(board.tryAdd(new ItemStack(Items.COAL), catalog) == null, "3rd");
-        check(board.tryAdd(new ItemStack(Items.BONE), catalog) == null, "4th");
-        check(board.tryAdd(new ItemStack(Items.STRING), catalog) != null, "a fifth item doesn't fit");
-        check(board.removeLast().is(Items.BONE), "take back the last one");
-        check(board.count() == 3, "three left");
+        check(board.tryAdd(new ItemStack(Items.IRON_INGOT)) == null, "2nd");
+        check(board.tryAdd(new ItemStack(Items.WHEAT)) != null, "wheat is already on it");
+        check(board.tryAdd(new ItemStack(Items.COAL)) == null, "3rd");
+        check(board.tryAdd(new ItemStack(Items.BONE)) != null, "a fourth item doesn't fit");
+        check(board.removeLast().is(Items.COAL), "take back the last one");
+        check(board.count() == 2, "two left");
         helper.succeed();
     }
 

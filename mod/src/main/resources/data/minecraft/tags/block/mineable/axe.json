@@ -15,7 +15,9 @@
     "realisticmarkets:options_desk",
     "realisticmarkets:volatility_board",
     "realisticmarkets:brokerage_terminal",
-    "realisticmarkets:market_board",
-    "realisticmarkets:ledger_display"
+    "realisticmarkets:ledger_display",
+    "realisticmarkets:news_board",
+    "realisticmarkets:floor_price_board",
+    "realisticmarkets:stock_price_board"
   ]
 }

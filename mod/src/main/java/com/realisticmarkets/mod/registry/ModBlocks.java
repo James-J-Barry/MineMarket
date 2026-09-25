@@ -49,7 +49,7 @@ public final class ModBlocks {
     public static Block VOLATILITY_BOARD;
     public static Block ATM;
     public static Block BROKERAGE_TERMINAL;
-    public static Block MARKET_BOARD, LEDGER_DISPLAY;
+    public static Block NEWS_BOARD, LEDGER_DISPLAY, FLOOR_PRICE_BOARD, STOCK_PRICE_BOARD;
 
     public static void init() {
         ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("basic_exchange"));
@@ -158,10 +158,24 @@ public final class ModBlocks {
                         .strength(2.5f)
                         .sound(SoundType.WOOD)));
         ModItems.register("brokerage_terminal", props -> new BlockItem(BROKERAGE_TERMINAL, props), new Item.Properties().useBlockDescriptionPrefix());
-        MARKET_BOARD = registerWall("market_board", com.realisticmarkets.mod.block.MarketBoardBlock::new);
+        NEWS_BOARD = registerWall("news_board", com.realisticmarkets.mod.block.NewsBoardBlock::new);
+        FLOOR_PRICE_BOARD = registerPriceBoard("floor_price_board", PriceBoardBlock.Kind.FLOOR);
+        STOCK_PRICE_BOARD = registerPriceBoard("stock_price_board", PriceBoardBlock.Kind.STOCK);
         LEDGER_DISPLAY = registerWall("ledger_display", com.realisticmarkets.mod.block.LedgerDisplayBlock::new);
         NEWSFEED = registerMenuBlock("electronic_newsfeed", (id, inv, access) -> new com.realisticmarkets.mod.menu.NewsfeedMenu(id, inv,
                 access, com.realisticmarkets.mod.stocks.StockService.get(), ProgressionService.get(), DealerService.get()));
+    }
+
+    private static Block registerPriceBoard(String name, PriceBoardBlock.Kind kind) {
+        ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id(name));
+        Block block = Registry.register(BuiltInRegistries.BLOCK, key, new PriceBoardBlock(BlockBehaviour.Properties.of()
+                .setId(key)
+                .mapColor(MapColor.WOOD)
+                .strength(1.0f)
+                .sound(SoundType.WOOD)
+                .noOcclusion(), kind));
+        ModItems.register(name, props -> new BlockItem(block, props), new Item.Properties().useBlockDescriptionPrefix().stacksTo(16));
+        return block;
     }
 
     private static Block registerWall(String name, java.util.function.Function<BlockBehaviour.Properties, Block> factory) {

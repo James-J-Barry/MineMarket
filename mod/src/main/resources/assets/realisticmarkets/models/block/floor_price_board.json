@@ -1,38 +1,38 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
-    "particle": "realisticmarkets:block/market_board_frame",
-    "face": "realisticmarkets:block/market_board_face",
-    "frame": "realisticmarkets:block/market_board_frame"
+    "particle": "realisticmarkets:block/floor_price_board_frame",
+    "face": "realisticmarkets:block/floor_price_board_face",
+    "frame": "realisticmarkets:block/floor_price_board_frame"
   },
   "elements": [
     {
       "from": [
         0,
-        0,
+        2,
         14
       ],
       "to": [
         16,
-        16,
+        14,
         16
       ],
       "faces": {
         "north": {
           "uv": [
             0,
-            0,
+            2,
             16,
-            16
+            14
           ],
           "texture": "#face"
         },
         "south": {
           "uv": [
             0,
-            0,
+            2,
             16,
-            16
+            14
           ],
           "texture": "#frame",
           "cullface": "south"
@@ -40,18 +40,18 @@
         "east": {
           "uv": [
             0,
-            0,
             2,
-            16
+            2,
+            14
           ],
           "texture": "#frame"
         },
         "west": {
           "uv": [
             14,
-            0,
+            2,
             16,
-            16
+            14
           ],
           "texture": "#frame"
         },

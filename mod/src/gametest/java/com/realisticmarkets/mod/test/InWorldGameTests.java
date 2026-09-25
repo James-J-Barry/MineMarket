@@ -45,20 +45,36 @@ public class InWorldGameTests {
     }
 
     @GameTest
-    public void theMarketBoardShowsPricesSharesAndNews(GameTestHelper helper) {
+    public void theNewsBoardShowsTheRateAndTheNews(GameTestHelper helper) {
         ServerPlayer p = helper.makeMockServerPlayerInLevel();
         BlockPos pos = new BlockPos(1, 2, 1);
-        helper.setBlock(new BlockPos(1, 1, 2), net.minecraft.world.level.block.Blocks.STONE);
-        helper.setBlock(pos, ModBlocks.MARKET_BOARD);
-        var board = helper.getBlockEntity(pos, com.realisticmarkets.mod.block.MarketBoardBlockEntity.class);
+        helper.setBlock(pos, ModBlocks.NEWS_BOARD);
+        var board = helper.getBlockEntity(pos, com.realisticmarkets.mod.block.NewsBoardBlockEntity.class);
         board.setOwner(p);
-        board.nextPage(); // shares
-        check(board.title().startsWith("Shares") && board.lines().size() == 6, "six companies: " + board.lines());
-        check(board.lines().get(0).contains("\t$"), "each with a price: " + board.lines().get(0));
-        board.nextPage(); // news
-        check(board.title().startsWith("News") && !board.lines().isEmpty(), "the rate and the news: " + board.lines());
-        board.nextPage(); // back to the Floor
-        check(board.title().startsWith("Trading Floor") && board.lines().size() >= 10, "the Floor's books: " + board.lines().size());
+        board.refreshNow();
+        check(board.title().startsWith("The Overworld Gazette"), board.title());
+        check(board.lines().get(0).startsWith("Central bank rate"), "the rate first: " + board.lines());
+        helper.succeed();
+    }
+
+    @GameTest
+    public void floorAndStockPriceBoardsQuoteTheirBooks(GameTestHelper helper) {
+        BlockPos f = new BlockPos(1, 2, 1), st = new BlockPos(3, 2, 1);
+        helper.setBlock(f, ModBlocks.FLOOR_PRICE_BOARD);
+        helper.setBlock(st, ModBlocks.STOCK_PRICE_BOARD);
+        var floor = helper.getBlockEntity(f, com.realisticmarkets.mod.block.PriceBoardBlockEntity.class);
+        var stock = helper.getBlockEntity(st, com.realisticmarkets.mod.block.PriceBoardBlockEntity.class);
+        check(floor.kind() == com.realisticmarkets.mod.block.PriceBoardBlock.Kind.FLOOR, "a Floor board");
+        check(floor.tryAdd(new ItemStack(Items.DIRT)) != null, "no book for dirt");
+        check(floor.tryAdd(new ItemStack(Items.WHEAT, 5)) == null, "wheat has a book");
+        floor.refreshNow();
+        check(floor.midMills(0) > 0, "the last trade (or fair value before any): " + floor.midMills(0));
+        check(stock.tryAdd(new ItemStack(Items.WHEAT)) != null, "shares only");
+        ItemStack cert = com.realisticmarkets.mod.stocks.ShareCertificates.create("OWL", 10, -1, 1);
+        check(stock.tryAdd(cert) == null && cert.getCount() == 1, "any OWL certificate picks OWL, and isn't used up");
+        stock.refreshNow();
+        check(stock.midMills(0) > 0 && stock.fairMills(0) > 0, "OWL's last price and today's open");
+        check(stock.removeLast().is(com.realisticmarkets.mod.registry.ModItems.SHARE_CERTIFICATE), "take it off again");
         helper.succeed();
     }
 

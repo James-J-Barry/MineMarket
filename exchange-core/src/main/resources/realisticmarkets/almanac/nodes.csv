@@ -10,10 +10,10 @@ trade_route_crate,1,25000,,,blueprint:realisticmarkets:trade_route_crate;guide:t
 bank_vault,2,50000,,,blueprint:realisticmarkets:bank_vault;guide:interest_and_compounding,Bank Vault
 certificate_of_deposit,2,120000,bank_vault,,perk:certificate_of_deposit;component:realisticmarkets:security_paper;guide:term_and_liquidity,Certificate of Deposit
 loan_note,2,200000,bank_vault,,perk:loans;component:realisticmarkets:security_paper;guide:leverage_and_collateral,Loan Note
-trading_floor,3,300000,,,blueprint:realisticmarkets:trading_floor;blueprint:realisticmarkets:order_slip;guide:order_books;guide:limit_and_market_orders,Trading Floor
-newsstand,3,100000,,,blueprint:realisticmarkets:newsstand;guide:news_and_markets,Newsstand
-ticker_tape,3,150000,trading_floor,,blueprint:realisticmarkets:ticker_tape;blueprint:realisticmarkets:market_board;guide:reading_a_chart,Ticker Tape
-stock_exchange,4,1000000,,,blueprint:realisticmarkets:stock_exchange;component:realisticmarkets:engraved_plate;guide:owning_a_share;guide:valuing_a_company,Stock Exchange
+trading_floor,3,300000,,,blueprint:realisticmarkets:trading_floor;blueprint:realisticmarkets:floor_price_board;blueprint:realisticmarkets:order_slip;guide:order_books;guide:limit_and_market_orders,Trading Floor
+newsstand,3,100000,,,blueprint:realisticmarkets:newsstand;blueprint:realisticmarkets:news_board;guide:news_and_markets,Newsstand
+ticker_tape,3,150000,trading_floor,,blueprint:realisticmarkets:ticker_tape;guide:reading_a_chart,Ticker Tape
+stock_exchange,4,1000000,,,blueprint:realisticmarkets:stock_exchange;blueprint:realisticmarkets:stock_price_board;component:realisticmarkets:engraved_plate;guide:owning_a_share;guide:valuing_a_company,Stock Exchange
 electronic_newsfeed,4,200000,stock_exchange,,blueprint:realisticmarkets:electronic_newsfeed,Electronic Newsfeed
 portfolio_binder,4,500000,stock_exchange,,blueprint:realisticmarkets:portfolio_binder;guide:custody,Portfolio Binder
 safe_deposit_box,4,400000,,,blueprint:realisticmarkets:safe_deposit_box;guide:custody,Safe Deposit Box

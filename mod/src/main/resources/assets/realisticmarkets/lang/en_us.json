@@ -71,6 +71,8 @@
   "item.realisticmarkets.computer_chip": "Computer Chip",
   "block.realisticmarkets.brokerage_terminal": "Brokerage Terminal",
   "container.realisticmarkets.brokerage_terminal": "Brokerage Terminal",
-  "block.realisticmarkets.market_board": "Market Board",
+  "block.realisticmarkets.news_board": "News Board",
+  "block.realisticmarkets.floor_price_board": "Floor Price Board",
+  "block.realisticmarkets.stock_price_board": "Stock Price Board",
   "block.realisticmarkets.ledger_display": "Ledger Display"
 }

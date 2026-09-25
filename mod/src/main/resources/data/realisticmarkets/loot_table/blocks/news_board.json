@@ -7,7 +7,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "realisticmarkets:market_board"
+          "name": "realisticmarkets:news_board"
         }
       ],
       "conditions": [

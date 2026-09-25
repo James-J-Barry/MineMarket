@@ -34,9 +34,9 @@ public class LedgerDisplayBlockEntity extends DisplayBlockEntity {
     @Override
     protected void refresh(MinecraftServer server) {
         Lines l = new Lines();
-        RecordsService records = MarketBoardBlockEntity.get(RecordsService::get);
-        DealerService dealer = MarketBoardBlockEntity.get(DealerService::get);
-        ProgressionService prog = MarketBoardBlockEntity.get(ProgressionService::get);
+        RecordsService records = NewsBoardBlockEntity.get(RecordsService::get);
+        DealerService dealer = NewsBoardBlockEntity.get(DealerService::get);
+        ProgressionService prog = NewsBoardBlockEntity.get(ProgressionService::get);
         if (records == null || dealer == null) return;
         var player = owner() == null ? null : server.getPlayerList().getPlayer(owner());
         if (player != null && prog != null && !prog.progress(player).hasNode(RecordsService.NODE)) {

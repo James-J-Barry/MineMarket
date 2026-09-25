@@ -29,10 +29,18 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * A thin board hung on a wall. Right-click with a Dealer-traded item to add it (up to four); right-click
+ * A thin board hung on a wall, in three kinds: the Dealer's, the Trading Floor's and the Stock Exchange's prices.
+ * Right-click with an item (or, for shares, a certificate) to add it (up to three); right-click
  * empty-handed to take the last one back. The face shows each item's public bid and ask.
  */
 public class PriceBoardBlock extends Block implements EntityBlock {
+    /** Which market a board quotes: the Dealer (Basic Exchange), the Trading Floor, or the Stock Exchange. */
+    public enum Kind { DEALER, FLOOR, STOCK }
+
+    private final Kind kind;
+
+    public Kind kind() { return kind; }
+
     public static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
     private static final VoxelShape NORTH = Block.box(0, 2, 14, 16, 14, 16);
     private static final VoxelShape SOUTH = Block.box(0, 2, 0, 16, 14, 2);
@@ -40,7 +48,12 @@ public class PriceBoardBlock extends Block implements EntityBlock {
     private static final VoxelShape WEST = Block.box(14, 2, 0, 16, 14, 16);
 
     public PriceBoardBlock(Properties properties) {
+        this(properties, Kind.DEALER);
+    }
+
+    public PriceBoardBlock(Properties properties, Kind kind) {
         super(properties);
+        this.kind = kind;
         registerDefaultState(defaultBlockState().setValue(FACING, Direction.NORTH));
     }
 
@@ -81,14 +94,15 @@ public class PriceBoardBlock extends Block implements EntityBlock {
                                           InteractionHand hand, BlockHitResult hit) {
         if (!(level.getBlockEntity(pos) instanceof PriceBoardBlockEntity board)) return InteractionResult.PASS;
         if (level.isClientSide()) return InteractionResult.SUCCESS;
-        DealerService svc = DealerService.get();
-        String why = board.tryAdd(stack, svc.dealer().catalog());
+        String why = board.tryAdd(stack);
         if (why != null) {
             if (player instanceof ServerPlayer sp) sp.sendOverlayMessage(Component.literal(why));
             return InteractionResult.FAIL;
         }
-        if (!player.isCreative()) stack.shrink(1);
-        board.refresh(svc.dealer(), svc.day(level.getGameTime()));
+        // The Dealer's board keeps the item it shows (you get it back); the others only note which book or company.
+        if (kind == Kind.DEALER && !player.isCreative()) stack.shrink(1);
+        board.refreshNow();
+        com.realisticmarkets.mod.fx.Feedback.at(level, pos, com.realisticmarkets.mod.fx.Feedback.Cue.CLICK);
         return InteractionResult.SUCCESS;
     }
 
@@ -97,7 +111,7 @@ public class PriceBoardBlock extends Block implements EntityBlock {
         if (!(level.getBlockEntity(pos) instanceof PriceBoardBlockEntity board)) return InteractionResult.PASS;
         if (level.isClientSide()) return InteractionResult.SUCCESS;
         ItemStack taken = board.removeLast();
-        if (!taken.isEmpty()) player.getInventory().placeItemBackInInventory(taken);
+        if (!taken.isEmpty() && kind == Kind.DEALER) player.getInventory().placeItemBackInInventory(taken);
         return InteractionResult.SUCCESS;
     }
 
