@@ -196,7 +196,9 @@ public final class OptionsService {
 
     /** Records closes for volatility and, on quarter days (including any missed), settlement prices. */
     public void dawn(long day) {
-        long from = lastDawn == Long.MIN_VALUE ? day : lastDawn + 1;
+        // After a restart, look back four weeks: an expiry passed while the world was closed still needs a price
+        // (settle() keeps any price already recorded; a late one uses today's).
+        long from = lastDawn == Long.MIN_VALUE ? day - 4L * ClearingHouse.EXPIRY_DAYS : lastDawn + 1;
         lastDawn = day;
         for (String u : underlyings()) {
             double spot = spotCents(u, day);
