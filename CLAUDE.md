@@ -160,7 +160,9 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   inflation (buy and hold works), three guides, three quests. 185 unit tests, 52 GameTests. → `docs/milestones/M6.md`
 - [x] **M6b: Electronic Newsfeed, Portfolio Binder, Safe Deposit Box.** Company news with a day's head start, live
   portfolio value, safekeeping; Custody guide, Diversified quest. 187 unit tests, 56 GameTests. → `docs/milestones/M6.md`
-- [ ] **M7a: Rates and bonds.** → `docs/milestones/M7.md`
+- [x] **M7a: Rates and bonds.** Central bank rate path, Bond Desk (Treasuries and company bonds, coupons, maturity,
+  defaults), bank rates follow the central bank, rate news on the Newsstand, three guides, three quests. 201 unit tests,
+  63 GameTests. → `docs/milestones/M7.md`
 - [ ] **M7b: Digital Record Keeping.** → `docs/milestones/M7.md`
 - [ ] M8–M10: futures, options, modern finance (ATM, Brokerage)
 - [ ] M11: multiplayer
