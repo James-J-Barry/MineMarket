@@ -63,10 +63,17 @@ public final class RecordsService {
     /** The services marks come from; any but {@code dealer} and {@code prog} may be null. */
     public record Sources(DealerService dealer, ProgressionService prog, BankService bank, StockService stocks, BondService bonds,
                           CapitalService capital, com.realisticmarkets.mod.forwards.ForwardService forwards,
-                          com.realisticmarkets.mod.futures.FuturesService futures, com.realisticmarkets.mod.options.OptionsService options) {
+                          com.realisticmarkets.mod.futures.FuturesService futures, com.realisticmarkets.mod.options.OptionsService options,
+                          com.realisticmarkets.mod.brokerage.BrokerageService brokerage) {
         public Sources(DealerService dealer, ProgressionService prog, BankService bank, StockService stocks, BondService bonds,
                        CapitalService capital) {
-            this(dealer, prog, bank, stocks, bonds, capital, null, null, null);
+            this(dealer, prog, bank, stocks, bonds, capital, null, null, null, null);
+        }
+
+        public Sources(DealerService dealer, ProgressionService prog, BankService bank, StockService stocks, BondService bonds,
+                       CapitalService capital, com.realisticmarkets.mod.forwards.ForwardService forwards,
+                       com.realisticmarkets.mod.futures.FuturesService futures, com.realisticmarkets.mod.options.OptionsService options) {
+            this(dealer, prog, bank, stocks, bonds, capital, forwards, futures, options, null);
         }
     }
 
@@ -95,7 +102,8 @@ public final class RecordsService {
         }
         instance = new RecordsService(ledger, file, new Sources(DealerService.get(), ProgressionService.get(), BankService.get(),
                 StockService.get(), BondService.get(), CapitalService.get(), com.realisticmarkets.mod.forwards.ForwardService.get(),
-                com.realisticmarkets.mod.futures.FuturesService.get(), com.realisticmarkets.mod.options.OptionsService.get()));
+                com.realisticmarkets.mod.futures.FuturesService.get(), com.realisticmarkets.mod.options.OptionsService.get(),
+                com.realisticmarkets.mod.brokerage.BrokerageService.get()));
     }
 
     public static void stop() {
@@ -159,11 +167,14 @@ public final class RecordsService {
         Valuer v = new Valuer(owner == null ? "" : owner.toString(), day);
         List<OwnedBlockEntity> blocks = terminal.linkedBlocks();
         int boxes = 0, crates = 0;
-        boolean vault = false, clearing = false;
+        boolean vault = false, clearing = false, broker = false;
         for (OwnedBlockEntity be : blocks) {
             if (be instanceof BankVaultBlockEntity && !vault && owner != null) {
                 vault = true;
                 v.vault(owner);
+            } else if (be instanceof com.realisticmarkets.mod.block.BrokerageTerminalBlockEntity && !broker) {
+                broker = true;
+                v.brokerage();
             } else if (be instanceof com.realisticmarkets.mod.block.ClearingHouseBlockEntity && !clearing) {
                 clearing = true;
                 v.futures();
@@ -347,6 +358,38 @@ public final class RecordsService {
             }
             add(Kind.GOODS, s.getHoverName().getString(), where, s.getCount(), cents / s.getCount(), -1, s);
             goodsUnits.merge(id, (long) s.getCount(), Long::sum);
+        }
+
+        /** A linked Brokerage Terminal: book entries at their marks, and the cash account. */
+        void brokerage() {
+            var bs = sources.brokerage();
+            if (bs == null) return;
+            for (var e : bs.books().entries(account)) {
+                ItemStack icon = com.realisticmarkets.mod.brokerage.BrokerageService.icon(e);
+                long unit = bs.unitValue(account, e, day);
+                switch (e.kind()) {
+                    case SHARE -> {
+                        double avg = sources.stocks() == null ? -1 : sources.stocks().costBasis().averageCents(account, e.key());
+                        add(Kind.SHARES, e.key(), "Brokerage", e.quantity(), unit, avg < 0 ? -1 : Math.round(avg * e.quantity()), icon);
+                        tickers.add(e.key());
+                    }
+                    case BOND -> {
+                        var b = com.realisticmarkets.custody.BookEntries.bond(e.key());
+                        double avg = sources.bonds() == null ? -1 : sources.bonds().averageCost(account, b.series());
+                        add(Kind.BONDS, BondPapers.issuerName(b.issuer()) + " bond, day " + b.maturityDay(), "Brokerage", e.quantity(), unit,
+                                avg < 0 ? -1 : Math.round(avg * e.quantity()), icon);
+                    }
+                    case OPTION -> {
+                        var s = com.realisticmarkets.options.OptionDesk.Series.parse(e.key());
+                        double avg = sources.options() == null ? -1 : sources.options().averageCost(account, s);
+                        add(Kind.OPTIONS, com.realisticmarkets.mod.options.OptionPapers.title(s), "Brokerage", e.quantity(), unit,
+                                avg < 0 ? -1 : Math.round(avg * e.quantity()), icon);
+                        optionsHeld.merge(s, e.quantity(), Long::sum);
+                    }
+                }
+            }
+            long cash = bs.books().cash(account);
+            if (cash > 0) add(Kind.CASH, "Brokerage cash", "Brokerage", 1, cash, cash, new ItemStack(ModItems.CURRENCY.get(Denomination.HUNDRED)));
         }
 
         /** A linked Clearing House: the futures account at its equity (a debt if negative), expiries and dawn marks. */

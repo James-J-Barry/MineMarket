@@ -31,7 +31,7 @@ public class RecordsTerminalMenu extends AbstractContainerMenu {
     public static final int TAB_OVERVIEW = 0, TAB_HOLDINGS = 1, TAB_INCOME = 2, TAB_CALENDAR = 3, TAB_RISK = 6, MAX_COVERS = 5;
     public static final int COVER_LOAN = 1, COVER_FUTURES = 2, COVER_WRITTEN = 3;
     public static final int BUTTON_PREV = 4, BUTTON_NEXT = 5;
-    public static final int LOC_VAULT = 1, LOC_BOX = 2, LOC_CRATE = 3, LOC_DEALER = 4, LOC_CLEARING = 5;
+    public static final int LOC_VAULT = 1, LOC_BOX = 2, LOC_CRATE = 3, LOC_DEALER = 4, LOC_CLEARING = 5, LOC_BROKERAGE = 6;
     public static final long NO_DATA = Long.MIN_VALUE;
 
     private static final int L = 4; // shorts per long
@@ -136,6 +136,7 @@ public class RecordsTerminalMenu extends AbstractContainerMenu {
             case LOC_CRATE -> "Crate " + n;
             case LOC_DEALER -> "Dealer";
             case LOC_CLEARING -> "Clearing";
+            case LOC_BROKERAGE -> "Brokerage";
             default -> "?";
         };
     }
@@ -144,6 +145,7 @@ public class RecordsTerminalMenu extends AbstractContainerMenu {
         if (where.equals("Vault")) return LOC_VAULT * 100;
         if (where.equals("Dealer")) return LOC_DEALER * 100;
         if (where.equals("Clearing")) return LOC_CLEARING * 100;
+        if (where.equals("Brokerage")) return LOC_BROKERAGE * 100;
         String[] p = where.split(" ");
         int n = p.length > 1 ? Integer.parseInt(p[1]) : 0;
         return (where.startsWith("Box") ? LOC_BOX : where.startsWith("Crate") ? LOC_CRATE : 0) * 100 + Math.min(n, 99);

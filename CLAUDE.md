@@ -6,8 +6,8 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 
 - **Design doc (source of truth for gameplay):** `docs/design.md`, exported from the "Realistic Markets —
   Game Design Document" Claude Doc. If a request conflicts with it, ask before building.
-- **Current milestone:** M9, options. Spec `docs/milestones/M9.md` (decisions answered; M9a first, then M9b).
-  Awaiting James's in-game checks: M7b (`docs/milestones/M7.md`), M8a and M8b (`docs/milestones/M8.md`). M6 (equities) is done: `docs/milestones/M6.md`. M5 (Trading Floor, M5a/M5b/M5c) is done:
+- **Current milestone:** M10, modern finance. Spec `docs/milestones/M10.md` (decisions answered). All tiers are built;
+  awaiting James's in-game checks: M7b, M8a, M8b, M9a, M9b, M10a, M10b (the milestone specs list what to check). M6 (equities) is done: `docs/milestones/M6.md`. M5 (Trading Floor, M5a/M5b/M5c) is done:
   `docs/milestones/M5.md`, `docs/milestones/M5c.md`. M4 (banking and collateral) is done. Spec `docs/milestones/M4.md`
   (decisions answered). Done: M2 (`docs/milestones/M2.md`),
   M3 (`docs/milestones/M3.md`).
@@ -56,7 +56,9 @@ mod/             Fabric layer. Thin: translate Minecraft events <-> core calls.
   floor/                  FloorService (Trading Floor: NPC books, auctions, tickets, receipts), TradeReceiptItem
   forwards/               ForwardService (Forward Contracts with the Dealer, Fwd tab on the Basic Exchange)
   futures/                FuturesService (Clearing House: margin accounts, dawn mark, margin calls)
-  options/                OptionsService (Options Desk: prices, dawn closes and settlements), OptionPapers
+  options/                OptionsService (Options Desk: prices, dawn closes and settlements, written options), OptionPapers
+  brokerage/              BrokerageService (book entries, automatic income, Markets tab)
+  bank/Atm, BankCardItem  the account away from the vault
   records/                RecordsService (income ledger, net worth of linked blocks, calendar), RecordLinkItem
   gametest/               DealerGameTests, FloorGameTests, ...
 scripts/         dev.sh, mcapi.py (jar inspector), rcon.py
@@ -175,7 +177,8 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
 - [ ] **M8b: Clearing House and futures.** → `docs/milestones/M8.md`
 - [ ] **M9a: Options Desk.** → `docs/milestones/M9.md`
 - [ ] **M9b: Writing options, Volatility Board, Risk Report Module.** → `docs/milestones/M9.md`
-- [ ] M10: modern finance (ATM, Brokerage)
+- [ ] **M10a: ATM, Bank Card, Pocket ATM.** → `docs/milestones/M10.md`
+- [ ] **M10b: Brokerage Terminal.** → `docs/milestones/M10.md`
 - [ ] M11: multiplayer
 
 ## Known gaps / ideas parked

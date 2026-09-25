@@ -28,12 +28,21 @@ public class ForwardGameTests {
         }
     }
 
-    /** Buys one node with exactly its cost in hand (a wallet of $500k wouldn't fit in an inventory). */
+    /**
+     * Buys one node with exactly its cost: in bills up to $100,000, the rest from a test bank account (as a player
+     * would: a wallet of $500k doesn't fit in an inventory).
+     */
     static java.util.Optional<String> buy(ServerPlayer p, ProgressionService prog, String node) {
+        long cost = prog.tree().node(node).costCents();
+        long bills = Math.min(cost, 10_000_000);
+        var bank = com.realisticmarkets.mod.bank.BankService.forTest(null);
+        if (cost > bills) bank.account(p.getUUID(), 0).deposit(cost - bills, 0, com.realisticmarkets.contracts.BankAccount.Kind.DEPOSIT);
+        prog.useBank(bank.funds(() -> 0));
         Wallet.takeAll(p);
-        Wallet.give(p, prog.tree().node(node).costCents());
+        Wallet.give(p, bills);
         var why = prog.buyNode(p, node);
         Wallet.takeAll(p);
+        prog.useBank(null);
         return why;
     }
 

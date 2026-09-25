@@ -41,6 +41,22 @@ public class AtmGameTests {
         helper.succeed();
     }
 
+    @GameTest
+    public void theAlmanacDrawsOnTheBankWhenBillsRunShort(GameTestHelper helper) {
+        ServerPlayer p = helper.makeMockServerPlayerInLevel();
+        ProgressionService prog = ProgressionService.forTest();
+        BankService bank = BankService.forTest(null);
+        prog.useBank(bank.funds(() -> 0));
+        long cost = prog.tree().node("bill_clip").costCents();
+        Wallet.give(p, 1_000);
+        check(prog.buyNode(p, "bill_clip").isPresent(), "$10 of bills and no bank: not enough");
+        bank.account(p.getUUID(), 0).deposit(cost, 0, BankAccount.Kind.DEPOSIT);
+        check(prog.buyNode(p, "bill_clip").isEmpty(), "bills first, the rest from the bank");
+        check(Wallet.count(p.getInventory()) == 0, "the bills went");
+        check(bank.account(p.getUUID(), 0).balanceCents() == 1_000, "and only what was short came out of the account");
+        helper.succeed();
+    }
+
     static void check(boolean condition, String message) {
         if (!condition) throw new IllegalStateException(message);
     }

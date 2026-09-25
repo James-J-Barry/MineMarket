@@ -52,7 +52,7 @@ public class RecordsTerminalBlockEntity extends OwnedBlockEntity {
     /** A block the terminal can read: a Bank Vault, Safe Deposit Box, Trade Route Crate or Clearing House. */
     public static boolean linkable(BlockEntity be) {
         return be instanceof BankVaultBlockEntity || be instanceof SafeDepositBoxBlockEntity || be instanceof TradeRouteCrateBlockEntity
-                || be instanceof ClearingHouseBlockEntity;
+                || be instanceof ClearingHouseBlockEntity || be instanceof BrokerageTerminalBlockEntity;
     }
 
     public boolean inRange(BlockPos pos) {

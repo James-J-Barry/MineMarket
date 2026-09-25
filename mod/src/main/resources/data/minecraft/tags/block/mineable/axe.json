@@ -13,6 +13,7 @@
     "realisticmarkets:bond_desk",
     "realisticmarkets:records_terminal",
     "realisticmarkets:options_desk",
-    "realisticmarkets:volatility_board"
+    "realisticmarkets:volatility_board",
+    "realisticmarkets:brokerage_terminal"
   ]
 }

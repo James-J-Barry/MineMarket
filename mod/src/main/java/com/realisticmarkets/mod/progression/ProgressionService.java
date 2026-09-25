@@ -108,15 +108,37 @@ public final class ProgressionService {
 
     // ------------------------------------------------------------------ actions
 
-    /** Buys a node with the player's bills. Returns empty on success, else why not. */
+    /** A bank account the Almanac can draw on when bills run short (big unlocks don't fit in an inventory of bills). */
+    public interface BankFunds {
+        long balance(Player player);
+
+        void take(Player player, long cents);
+    }
+
+    private BankFunds bank;
+
+    public void useBank(BankFunds funds) {
+        this.bank = funds;
+    }
+
+    /** Buys a node with the player's bills, then their bank balance for the rest. Returns empty on success, else why not. */
     public Optional<String> buyNode(Player player, String nodeId) {
         UnlockNode node = tree.node(nodeId);
         PlayerProgress p = progress(player);
-        long cash = Wallet.count(player.getInventory());
+        long bills = Wallet.count(player.getInventory());
+        long banked = bank == null ? 0 : Math.max(0, bank.balance(player));
+        long cash = bills + banked;
         Optional<String> why = p.whyCannotBuy(node, tree, cash);
         if (why.isPresent()) return why;
         long cost = p.costOf(node);
-        if (!Wallet.pay(player, cost)) return Optional.of("Not enough cash");
+        if (cost <= bills) {
+            if (!Wallet.pay(player, cost)) return Optional.of("Not enough cash");
+        } else {
+            if (cost > cash) return Optional.of("Not enough cash");
+            Wallet.takeAll(player);
+            bank.take(player, cost - bills);
+            message(player, Money.format(cost - bills) + " paid from your bank account");
+        }
         p.buy(node, tree, cash);
         save(player.getUUID());
         message(player, "Unlocked " + node.title() + " (-" + Money.format(cost) + ")");

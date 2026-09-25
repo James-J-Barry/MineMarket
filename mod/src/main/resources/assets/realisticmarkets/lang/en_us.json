@@ -68,5 +68,7 @@
   "block.realisticmarkets.atm": "ATM",
   "container.realisticmarkets.atm": "Your Account",
   "item.realisticmarkets.bank_card": "Bank Card",
-  "item.realisticmarkets.computer_chip": "Computer Chip"
+  "item.realisticmarkets.computer_chip": "Computer Chip",
+  "block.realisticmarkets.brokerage_terminal": "Brokerage Terminal",
+  "container.realisticmarkets.brokerage_terminal": "Brokerage Terminal"
 }

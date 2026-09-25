@@ -48,6 +48,7 @@ public final class ModBlocks {
     public static Block OPTIONS_DESK;
     public static Block VOLATILITY_BOARD;
     public static Block ATM;
+    public static Block BROKERAGE_TERMINAL;
 
     public static void init() {
         ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("basic_exchange"));
@@ -148,6 +149,14 @@ public final class ModBlocks {
                         .requiresCorrectToolForDrops()
                         .sound(SoundType.METAL)));
         ModItems.register("atm", props -> new BlockItem(ATM, props), new Item.Properties().useBlockDescriptionPrefix());
+        ResourceKey<Block> brokerKey = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("brokerage_terminal"));
+        BROKERAGE_TERMINAL = Registry.register(BuiltInRegistries.BLOCK, brokerKey,
+                new com.realisticmarkets.mod.block.BrokerageTerminalBlock(BlockBehaviour.Properties.of()
+                        .setId(brokerKey)
+                        .mapColor(MapColor.WOOD)
+                        .strength(2.5f)
+                        .sound(SoundType.WOOD)));
+        ModItems.register("brokerage_terminal", props -> new BlockItem(BROKERAGE_TERMINAL, props), new Item.Properties().useBlockDescriptionPrefix());
         NEWSFEED = registerMenuBlock("electronic_newsfeed", (id, inv, access) -> new com.realisticmarkets.mod.menu.NewsfeedMenu(id, inv,
                 access, com.realisticmarkets.mod.stocks.StockService.get(), ProgressionService.get(), DealerService.get()));
     }

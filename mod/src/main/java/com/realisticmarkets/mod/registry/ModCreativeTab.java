@@ -69,6 +69,7 @@ public final class ModCreativeTab {
                             output.accept(ModBlocks.ATM);
                             output.accept(ModItems.BANK_CARD);
                             output.accept(ModItems.COMPUTER_CHIP);
+                            output.accept(ModBlocks.BROKERAGE_TERMINAL);
                         })
                         .build());
     }

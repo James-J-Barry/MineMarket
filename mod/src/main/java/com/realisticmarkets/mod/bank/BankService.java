@@ -74,6 +74,7 @@ public final class BankService {
     public static void start(MinecraftServer server) {
         instance = new BankService(server.getWorldPath(LevelResource.ROOT).resolve(RealisticMarkets.MOD_ID),
                 new CentralBank(server.overworld().getSeed() ^ 0x52617465L)); // "Rate"
+        ProgressionService.get().useBank(instance.funds(() -> day(server)));
     }
 
     public static void stop() {
@@ -176,6 +177,23 @@ public final class BankService {
         account(player.getUUID(), day).deposit(cents, day, BankAccount.Kind.DEPOSIT);
         save(player.getUUID());
         return cents;
+    }
+
+    /** The Almanac's view of this bank: balances it may draw on for big unlocks. */
+    public ProgressionService.BankFunds funds(java.util.function.LongSupplier day) {
+        return new ProgressionService.BankFunds() {
+            @Override
+            public long balance(Player player) {
+                return hasAccount(player.getUUID()) ? account(player.getUUID(), day.getAsLong()).balanceCents() : 0;
+            }
+
+            @Override
+            public void take(Player player, long cents) {
+                long d = day.getAsLong();
+                account(player.getUUID(), d).withdraw(cents, d, BankAccount.Kind.WITHDRAW);
+                save(player.getUUID());
+            }
+        };
     }
 
     /** Withdraws as bills (into Bill Clips first). {@code cents < 0} means everything. */
