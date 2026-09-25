@@ -38,6 +38,7 @@ import net.minecraft.world.item.Items;
  * /mkt dealer sell &lt;item&gt; &lt;qty&gt;      move the Dealer as if a player sold (no items involved)
  * /mkt dealer buy &lt;item&gt; &lt;qty&gt;       buy from the Dealer, paying with bills (until the M1b screen)
  * /mkt dealer timeshift &lt;days&gt;       jump the Dealer's clock forward to test price recovery
+ * /mkt dealer rates                  the central rate now and the next six reviews
  * /mkt dealer cash &lt;dollars&gt;         give yourself bills
  * </pre>
  * Items may be written as {@code wheat} or {@code "minecraft:wheat"}.
@@ -69,6 +70,7 @@ public final class DealerCommands {
                                 return String.format(Locale.ROOT, "Dealer clock moved forward %.2f days (now day %.2f)",
                                         days, day(ctx));
                             }))))
+                    .then(literal("rates").executes(ctx -> run(ctx, () -> rates(ctx))))
                     .then(literal("cash").then(argument("dollars", LongArgumentType.longArg(1, 1_000_000))
                             .executes(ctx -> run(ctx, () -> {
                                 long cents = LongArgumentType.getLong(ctx, "dollars") * 100;
@@ -81,6 +83,20 @@ public final class DealerCommands {
     }
 
     // ------------------------------------------------------------------ actions
+
+    /** Today's central rate and the next few reviews, so a play-test can timeshift straight to a raise or cut. */
+    private static String rates(CommandContext<CommandSourceStack> ctx) {
+        var central = com.realisticmarkets.mod.bank.BankService.get().centralBank();
+        double now = day(ctx);
+        StringBuilder sb = new StringBuilder(String.format(Locale.ROOT, "Day %.2f: central rate %.2f%%/day (market prices %.2f%%)",
+                now, central.rate(now) * 100, central.marketRate(now) * 100));
+        long next = (long) Math.floor(now / 7) * 7 + 7;
+        for (long d = next; d < next + 6 * 7; d += 7) {
+            var dec = central.decisionOn(d).orElseThrow();
+            sb.append(String.format(Locale.ROOT, "\n  day %d: %s to %.2f%% (in %.2f days)", d, dec.move(), dec.rate() * 100, d - now));
+        }
+        return sb.toString();
+    }
 
     private static String quoteJson(CommandContext<CommandSourceStack> ctx) {
         Dealer dl = svc().dealer();

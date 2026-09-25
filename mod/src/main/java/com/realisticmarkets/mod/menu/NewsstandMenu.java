@@ -62,12 +62,12 @@ public class NewsstandMenu extends AbstractContainerMenu {
     public int storyType(int i) { return data.get(D_STORIES + i * 2); }
     /** 0 = today, 1 = yesterday, ... */
     public int storyAge(int i) { return data.get(D_STORIES + i * 2 + 1); }
-    /** The latest central-bank raise or cut in the last few days: RAISE, CUT, or null. */
+    /** The latest central-bank decision in the last few days (a hold is news too), or null if none. */
     public CentralBank.Move rateMove() {
         int m = data.get(D_RATE_MOVE);
-        return m == 1 ? CentralBank.Move.RAISE : m == 2 ? CentralBank.Move.CUT : null;
+        return m == 0 ? null : CentralBank.Move.values()[m - 1];
     }
-    /** Its new rate a day, in thousandths of a percent (350 = 0.35%). */
+    /** Today's central rate a day, in thousandths of a percent (350 = 0.35%); 0 when not shown. */
     public int rateMilliPct() { return data.get(D_RATE); }
     public int rateAge() { return data.get(D_RATE_AGE); }
 
@@ -86,12 +86,13 @@ public class NewsstandMenu extends AbstractContainerMenu {
             data.set(D_STORIES + i * 2 + 1, (int) (today - stories.get(i).day()));
         }
         data.set(D_RATE_MOVE, 0);
+        data.set(D_RATE, 0);
         if (owner && central != null) {
+            data.set(D_RATE, (int) Math.round(central.rate(today) * 100_000));
             for (long d = today; d > today - DAYS_SHOWN; d--) {
                 var dec = central.decisionOn(d);
-                if (dec.isEmpty() || dec.get().move() == CentralBank.Move.HOLD) continue;
-                data.set(D_RATE_MOVE, dec.get().move() == CentralBank.Move.RAISE ? 1 : 2);
-                data.set(D_RATE, (int) Math.round(dec.get().rate() * 100_000));
+                if (dec.isEmpty()) continue;
+                data.set(D_RATE_MOVE, dec.get().move().ordinal() + 1);
                 data.set(D_RATE_AGE, (int) (today - d));
                 break;
             }

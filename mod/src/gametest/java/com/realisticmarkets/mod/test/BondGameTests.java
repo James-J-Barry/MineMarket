@@ -64,6 +64,11 @@ public class BondGameTests {
         check(d.bonds().present(p, d.prog(), 7) == 0, "nothing more this quarter");
         check(d.prog().progress(p).hasCompleted("coupon_clipper"), "Coupon Clipper");
         check(d.prog().progress(p).hasGuide("credit_risk"), "and its guide, Credit Risk");
+        DealerService clock = DealerService.forTest(1234L);
+        clock.shiftDays(14.2 - clock.day(helper.getLevel().getGameTime()));
+        var menu = new BondDeskMenu(1, p.getInventory(), ContainerLevelAccess.NULL, d.bonds(), d.prog(), clock);
+        check(menu.holdingCount() == 1 && menu.holdingMatured(0) && menu.holdingBid(0) == Bond.FACE_CENTS,
+                "Holdings says they matured and pay $100 on Collect");
         long paid = d.bonds().present(p, d.prog(), 14);
         check(paid == (10 * coupon + 10 * Bond.FACE_CENTS) / 10 * 10, "at maturity: the last coupon and $100 each, got " + paid);
         check(bonds(p) == 0, "the papers are handed in");

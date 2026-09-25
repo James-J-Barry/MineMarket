@@ -64,19 +64,33 @@ public class NewsstandScreen extends AbstractContainerScreen<NewsstandMenu> {
             return;
         }
         int y = 38, shown = m.storyCount();
+        String rate = String.format(java.util.Locale.ROOT, "%.2f%% a day", m.rateMilliPct() / 1000.0);
         if (m.rateMove() != null) {
-            boolean raise = m.rateMove() == CentralBank.Move.RAISE;
+            CentralBank.Move move = m.rateMove();
             String age = when(m.rateAge());
-            String head = String.format(java.util.Locale.ROOT, "Central bank %s its rate to %.2f%% a day", raise ? "raises" : "cuts",
-                    m.rateMilliPct() / 1000.0);
+            String head = "Central bank " + switch (move) {
+                case RAISE -> "raises its rate to ";
+                case CUT -> "cuts its rate to ";
+                case HOLD -> "holds its rate at ";
+            } + rate;
             g.text(font, Panels.trim(font, head, w - font.width(age) - 6), 11, y, m.rateAge() == 0 ? HEADLINE_TODAY : INK, false);
             g.text(font, age, imageWidth - 11 - font.width(age), y, LIGHT_GREY, false);
-            String expect = raise ? "Savings pay more; bond prices lower" : "Savings pay less; bond prices higher";
-            g.text(font, Panels.trim(font, expect, w), 11, y + 10, raise ? GREEN : RED, false);
+            String expect = switch (move) {
+                case RAISE -> "Savings pay more; bond prices lower";
+                case CUT -> "Savings pay less; bond prices higher";
+                case HOLD -> "No change for savings or bonds";
+            };
+            g.text(font, Panels.trim(font, expect, w), 11, y + 10,
+                    move == CentralBank.Move.RAISE ? GREEN : move == CentralBank.Move.CUT ? RED : LIGHT_GREY, false);
             y += 22;
             shown = Math.min(shown, NewsstandMenu.MAX_STORIES - 1);
-        } else if (m.storyCount() == 0) {
-            g.text(font, "A quiet few days: no market news.", 11, 42, LIGHT_GREY, false);
+        } else if (m.rateMilliPct() > 0) {
+            g.text(font, "Central bank rate: " + rate, 11, y, LIGHT_GREY, false);
+            y += 12;
+            shown = Math.min(shown, NewsstandMenu.MAX_STORIES - 1);
+        }
+        if (shown == 0 && m.rateMove() == null) {
+            g.text(font, "A quiet few days: no market news.", 11, y + 4, LIGHT_GREY, false);
             return;
         }
         List<WorldEvents.Type> types = EVENTS.types();

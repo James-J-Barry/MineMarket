@@ -91,7 +91,9 @@ public class BondDeskMenu extends AbstractContainerMenu {
     public long holdingMaturityDay(int i) { return pair(D_HOLD + i * HOLD_STRIDE + 1); }
     public long holdingBonds(int i) { return pair(D_HOLD + i * HOLD_STRIDE + 3); }
     public long holdingBid(int i) { return pair(D_HOLD + i * HOLD_STRIDE + 5); }
-    public boolean holdingDefaulted(int i) { return data.get(D_HOLD + i * HOLD_STRIDE + 7) != 0; }
+    public boolean holdingDefaulted(int i) { return data.get(D_HOLD + i * HOLD_STRIDE + 7) == 1; }
+    /** Past its maturity day: Collect pays the face (shown in {@link #holdingBid}) and hands the papers in. */
+    public boolean holdingMatured(int i) { return data.get(D_HOLD + i * HOLD_STRIDE + 7) == 2; }
 
     private long pair(int i) {
         return (long) data.get(i) | ((long) data.get(i + 1) << 15);
@@ -126,8 +128,9 @@ public class BondDeskMenu extends AbstractContainerMenu {
             data.set(base, ISSUERS.indexOf(h.bond().issuer()));
             setPair(base + 1, h.bond().maturityDay());
             setPair(base + 3, h.count());
-            setPair(base + 5, h.bidCents());
-            data.set(base + 7, h.defaulted() ? 1 : 0);
+            boolean matured = !h.defaulted() && h.bond().matured(now);
+            setPair(base + 5, matured ? bonds.desk().redemption(h.bond(), now) : h.bidCents());
+            data.set(base + 7, h.defaulted() ? 1 : matured ? 2 : 0);
         }
     }
 

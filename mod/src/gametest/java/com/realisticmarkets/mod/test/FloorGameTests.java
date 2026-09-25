@@ -365,6 +365,17 @@ public class FloorGameTests {
         var board = new com.realisticmarkets.mod.menu.NewsstandMenu(1, p.getInventory(), ContainerLevelAccess.NULL, prog, dealer, central);
         check(board.rateMove() == d.move() && board.rateAge() == 0, "today's rate decision: " + d.move());
         check(board.rateMilliPct() == Math.round(d.rate() * 100_000), "at its new rate");
+        // Six days later the decision has left the news, but the rate still shows (a play-test that stepped
+        // 7 days at a time never landed within 3 days of a review and so never saw one).
+        dealer.shiftDays(6);
+        board = new com.realisticmarkets.mod.menu.NewsstandMenu(1, p.getInventory(), ContainerLevelAccess.NULL, prog, dealer, central);
+        check(board.rateMove() == null && board.rateMilliPct() == Math.round(d.rate() * 100_000), "the standing rate still shows");
+        // A hold is news too.
+        long h = q + 1;
+        while (central.decisionOn(h * 7).orElseThrow().move() != com.realisticmarkets.rates.CentralBank.Move.HOLD) h++;
+        dealer.shiftDays(h * 7 + 0.1 - dealer.day(helper.getLevel().getGameTime()));
+        board = new com.realisticmarkets.mod.menu.NewsstandMenu(1, p.getInventory(), ContainerLevelAccess.NULL, prog, dealer, central);
+        check(board.rateMove() == com.realisticmarkets.rates.CentralBank.Move.HOLD && board.rateAge() == 0, "a hold is reported");
         helper.succeed();
     }
 

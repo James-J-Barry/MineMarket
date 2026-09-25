@@ -140,8 +140,10 @@ public class BondDeskScreen extends AbstractContainerScreen<BondDeskMenu> {
             String name = BondPapers.issuerName(BondDeskMenu.ISSUERS.get(m.holdingIssuer(i)));
             String line = m.holdingBonds(i) + " x " + name + " (day " + m.holdingMaturityDay(i) + ")";
             g.text(font, Panels.trim(font, line, 118), 8, y, GREY, false);
-            String price = m.holdingDefaulted(i) ? "DEFAULTED " + Money.format(m.holdingBid(i)) : Money.format(m.holdingBid(i)) + " each";
-            g.text(font, price, 190 - 4 - font.width(price), y, m.holdingDefaulted(i) ? RED : GREY, false);
+            String price = m.holdingDefaulted(i) ? "DEFAULTED " + Money.format(m.holdingBid(i))
+                    : m.holdingMatured(i) ? "MATURED " + Money.format(m.holdingBid(i))
+                    : Money.format(m.holdingBid(i)) + " each";
+            g.text(font, price, 190 - 4 - font.width(price), y, m.holdingDefaulted(i) ? RED : m.holdingMatured(i) ? BLUE : GREY, false);
         }
     }
 }
