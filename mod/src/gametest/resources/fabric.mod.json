@@ -17,6 +17,7 @@
       "com.realisticmarkets.mod.test.WritingGameTests",
       "com.realisticmarkets.mod.test.AtmGameTests",
       "com.realisticmarkets.mod.test.BrokerageGameTests",
+      "com.realisticmarkets.mod.test.InWorldGameTests",
       "com.realisticmarkets.mod.test.DealerGameTests",
       "com.realisticmarkets.mod.test.ProgressionGameTests",
       "com.realisticmarkets.mod.test.InvariantGameTests",

@@ -50,6 +50,8 @@ public final class RealisticMarkets implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(com.realisticmarkets.mod.options.OptionsService::tick);
         ServerTickEvents.END_SERVER_TICK.register(com.realisticmarkets.mod.brokerage.BrokerageService::tick);
         net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register(com.realisticmarkets.mod.records.RecordLinkItem::onUseBlock);
+        net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register(com.realisticmarkets.mod.dealer.QuickSell::onUseBlock);
+        ServerTickEvents.END_SERVER_TICK.register(com.realisticmarkets.mod.dealer.QuickSell::tick);
         ServerLifecycleEvents.SERVER_STARTED.register(DealerService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(ProgressionService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(CapitalService::start);
