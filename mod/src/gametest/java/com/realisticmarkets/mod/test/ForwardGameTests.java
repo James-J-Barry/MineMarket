@@ -73,7 +73,7 @@ public class ForwardGameTests {
 
         // The Records Terminal counts the deposit and puts the delivery on its calendar, linked blocks or not.
         var records = com.realisticmarkets.mod.records.RecordsService.forTest(new com.realisticmarkets.mod.records.RecordsService.Sources(
-                s.dealer(), s.prog(), null, null, null, null, s.forwards()));
+                s.dealer(), s.prog(), null, null, null, null, s.forwards(), null));
         net.minecraft.core.BlockPos tPos = new net.minecraft.core.BlockPos(1, 1, 1);
         helper.setBlock(tPos, com.realisticmarkets.mod.registry.ModBlocks.RECORDS_TERMINAL);
         var terminal = helper.getBlockEntity(tPos, com.realisticmarkets.mod.block.RecordsTerminalBlockEntity.class);

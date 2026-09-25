@@ -41,7 +41,7 @@ public final class ModItems {
     public static Item DISPLAY_SCREEN, CIRCUIT_BOARD, RECORD_LINK;
 
     /** Tier 6: the Forward Contract statement (the contract itself is on the account). */
-    public static Item FORWARD_CONTRACT;
+    public static Item FORWARD_CONTRACT, MARGIN_CALL_NOTICE;
 
     /** Bank papers: the Passbook (balance and history) and Certificates of Deposit (bearer papers). */
     public static Item PASSBOOK, CERTIFICATE_OF_DEPOSIT, LOAN_NOTE;
@@ -67,6 +67,7 @@ public final class ModItems {
         DISPLAY_SCREEN = register("display_screen", Item::new, new Item.Properties());
         CIRCUIT_BOARD = register("circuit_board", Item::new, new Item.Properties());
         FORWARD_CONTRACT = register("forward_contract", Item::new, new Item.Properties().stacksTo(1));
+        MARGIN_CALL_NOTICE = register("margin_call_notice", Item::new, new Item.Properties().stacksTo(1));
         RECORD_LINK = register("record_link", com.realisticmarkets.mod.records.RecordLinkItem::new, new Item.Properties().stacksTo(1));
         PORTFOLIO_BINDER = register("portfolio_binder", com.realisticmarkets.mod.item.PortfolioBinderItem::new,
                 new Item.Properties().stacksTo(1).component(DataComponents.CONTAINER, ItemContainerContents.EMPTY));

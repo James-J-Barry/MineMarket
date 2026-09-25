@@ -118,6 +118,11 @@ public final class DealerService {
         return new DealerService(new Dealer(DealerCatalog.loadDefault(), DealerParams.noDrift(), seed), null, null);
     }
 
+    /** Isolated instance with the real parameters (drift, supply impact, inflation), for GameTests where prices must move. */
+    public static DealerService forTestLive(long seed) {
+        return new DealerService(new Dealer(DealerCatalog.loadDefault(), DealerParams.defaults(), seed), null, null);
+    }
+
     public static DealerService get() {
         if (instance == null) throw new IllegalStateException("Dealer not started (no server running?)");
         return instance;

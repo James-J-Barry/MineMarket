@@ -315,6 +315,9 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             case QuestGoal.BalanceSheet g -> "See a net worth of " + com.realisticmarkets.money.Money.format(g.cents())
                     + " on a Records Terminal.";
             case QuestGoal.ForwardBeatSpot() -> "Deliver a forward when the Dealer would pay less for the same goods.";
+            case QuestGoal.VariationReceived() -> "Hold futures through a dawn mark that pays you.";
+            case QuestGoal.MarginCallMet() -> "Get a margin call from the Clearing House and meet it before the next dawn.";
+            case QuestGoal.FuturesProfit() -> "Close a futures position at the Clearing House at a profit.";
         };
     }
 }

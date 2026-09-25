@@ -171,7 +171,8 @@ public class RecordsTerminalScreen extends AbstractContainerScreen<RecordsTermin
         return switch (m.rowKind(i)) {
             case CASH -> icon.is(com.realisticmarkets.mod.registry.ModItems.FORWARD_CONTRACT) ? "Forward deposit" : "Cash";
             case VAULT -> "Vault balance";
-            case DEBTS -> "Loan";
+            case DEBTS -> icon.is(com.realisticmarkets.mod.registry.ModItems.MARGIN_CALL_NOTICE) ? "Clearing House debt" : "Loan";
+            case FUTURES -> "Futures account";
             case SHARES -> ShareCertificates.read(icon).map(p -> p.ticker() + " " + ShareCertificates.COMPANIES.company(p.ticker()).name())
                     .orElse("Shares");
             case BONDS -> BondPapers.read(icon).map(p -> BondPapers.issuerName(p.bond().issuer()) + " bond, day " + p.bond().maturityDay())
@@ -255,7 +256,7 @@ public class RecordsTerminalScreen extends AbstractContainerScreen<RecordsTermin
             Calendar.Kind k = m.calendarKind(i);
             String what = switch (k) {
                 case RATE_DECISION -> "Central bank rate decision";
-                case MARGIN_CHECK -> "Loan margin check at dawn";
+                case MARGIN_CHECK -> "Margin check at dawn";
                 case EARNINGS -> ShareCertificates.read(icon).map(p -> p.ticker() + " reports earnings").orElse("Earnings");
                 case COUPON -> "Coupon" + BondPapers.read(icon).map(p -> ", " + BondPapers.issuerName(p.bond().issuer())).orElse("");
                 case BOND_MATURITY -> "Matures" + BondPapers.read(icon).map(p -> ", " + BondPapers.issuerName(p.bond().issuer())).orElse("");

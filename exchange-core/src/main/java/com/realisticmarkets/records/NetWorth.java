@@ -20,6 +20,7 @@ public final class NetWorth {
         SHARES("Shares", false),
         BONDS("Bonds", false),
         GOODS("Goods", false),
+        FUTURES("Futures account", false),
         DEBTS("Debts", true);
 
         private final String label;

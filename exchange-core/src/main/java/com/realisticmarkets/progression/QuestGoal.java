@@ -27,6 +27,9 @@ package com.realisticmarkets.progression;
  * chart_read               (a book's chart read at the Ticker Tape)
  * balance_sheet:<cents>    (a Records Terminal shows at least this net worth)
  * forward_beat_spot        (a forward delivered for more than the goods would fetch at the Dealer then)
+ * variation_received       (the Clearing House's dawn mark paid you)
+ * margin_call_met          (a margin call met before the next dawn)
+ * futures_profit           (futures closed at a profit)
  * </pre>
  */
 public sealed interface QuestGoal {
@@ -54,6 +57,9 @@ public sealed interface QuestGoal {
     record RateWatcher() implements QuestGoal {}
     record BalanceSheet(long cents) implements QuestGoal {}
     record ForwardBeatSpot() implements QuestGoal {}
+    record VariationReceived() implements QuestGoal {}
+    record MarginCallMet() implements QuestGoal {}
+    record FuturesProfit() implements QuestGoal {}
 
     static QuestGoal parse(String s) {
         String[] p = s.strip().split(":");
@@ -79,6 +85,9 @@ public sealed interface QuestGoal {
             case "rate_watcher" -> new RateWatcher();
             case "balance_sheet" -> new BalanceSheet(Long.parseLong(p[1]));
             case "forward_beat_spot" -> new ForwardBeatSpot();
+            case "variation_received" -> new VariationReceived();
+            case "margin_call_met" -> new MarginCallMet();
+            case "futures_profit" -> new FuturesProfit();
             case "limit_filled" -> new LimitFilled();
             case "beat_dealer" -> new BeatDealer();
             case "two_books" -> new TwoBooks(p[1] + ":" + p[2], p[3] + ":" + p[4], Integer.parseInt(p[5]));

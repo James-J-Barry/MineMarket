@@ -19,7 +19,7 @@ class GuidesTest {
                         "cash_on_hand", "reading_a_quote", "transaction_costs", "two_markets",
                         "interest_and_compounding", "term_and_liquidity", "leverage_and_collateral",
                         "order_books", "limit_and_market_orders", "liquidity_and_market_makers", "news_and_markets", "reading_a_chart", "owning_a_share", "valuing_a_company",
-                        "risk_and_return", "custody", "bonds_and_yield", "interest_rate_risk", "credit_risk", "net_worth", "hedging"),
+                        "risk_and_return", "custody", "bonds_and_yield", "interest_rate_risk", "credit_risk", "net_worth", "hedging", "futures_and_margin", "margin_calls"),
                 guides.all().stream().map(Guides.Guide::id).toList());
         for (Guides.Guide g : guides.all()) {
             int words = g.wordCount();
@@ -369,6 +369,26 @@ class GuidesTest {
         assertTrue(h.contains("deposit (" + com.realisticmarkets.money.Money.format(com.realisticmarkets.contracts.ForwardBook.deposit(forward)) + " here)"));
         assertTrue(h.contains("about $" + Math.round(now * 0.8 / 100.0)), "a 20% fall");
         assertTrue(h.contains("delivery in 7 days"));
+    }
+
+    @Test
+    void futuresNumbersMatchTheClearingHouse() {
+        var wht = com.realisticmarkets.futures.ClearingHouse.product("WHT");
+        String f = text("futures_and_margin");
+        long lot = Math.round(wht.lot() * 0.50 * 100);
+        long margin = Math.round(lot * com.realisticmarkets.futures.ClearingHouse.INITIAL_MARGIN);
+        assertTrue(f.contains("a wheat future is " + wht.lot() + " wheat"));
+        assertTrue(f.contains("a lot is worth " + com.realisticmarkets.money.Money.format(lot).replace(".00", "")));
+        assertTrue(f.contains(com.realisticmarkets.money.Money.format(margin) + " of margin controls "
+                + com.realisticmarkets.money.Money.format(lot).replace(".00", "")));
+        assertTrue(f.contains("your lot gains " + com.realisticmarkets.money.Money.format(Math.round(lot * 0.02))));
+        assertTrue(f.contains("a " + Math.round(0.02 / com.realisticmarkets.futures.ClearingHouse.INITIAL_MARGIN * 100) + "% return"));
+        assertTrue(f.contains("six goods"), "six products: " + com.realisticmarkets.futures.ClearingHouse.PRODUCTS.size());
+        assertEquals(6, com.realisticmarkets.futures.ClearingHouse.PRODUCTS.size());
+        String m = text("margin_calls");
+        assertTrue(m.contains(String.format(java.util.Locale.ROOT, "%.1f%% of your positions",
+                com.realisticmarkets.futures.ClearingHouse.MAINTENANCE_MARGIN * 100)));
+        assertTrue(m.contains("full " + Math.round(com.realisticmarkets.futures.ClearingHouse.INITIAL_MARGIN * 100) + "%"));
     }
 
     @Test

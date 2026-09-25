@@ -355,3 +355,29 @@ The Dealer isn't fooled by small print. Every forward it has agreed on the same 
 A forward needs a 20% deposit ($14.70 here), returned when you deliver. Deliver on the day or the day after. Miss it and the deal is off and the deposit is gone. You can't back out early: it's a private deal.
 
 Real world: farmers have sold their crops forward for centuries, long before futures markets existed, and airlines buy fuel forward to fix their costs.
+
+@futures_and_margin Futures and Margin
+A forward is a private deal you can't get out of. A future is the same promise made standard, so anyone can trade it any day. The Clearing House lists futures on six goods in fixed lots: a wheat future is 256 wheat, due on the next quarter day or the one after.
+
+You never hand over wheat. At expiry the future is settled in cash at the Dealer's fair value, and until then you can close it whenever you like.
+
+You don't pay for a future either. You put up margin: 10% of its value. At $0.50 wheat a lot is worth $128, so $12.80 of margin controls $128 of wheat. That's leverage. If wheat rises 2%, your lot gains $2.56, a 20% return on your margin. If it falls 2%, you lose the same.
+
+Every dawn the Clearing House marks every position to market: the day's gain or loss moves into or out of your margin account in cash. There's no waiting to find out whether you won. Nobody can walk away owing a fortune, because the losses are collected a day at a time.
+
+A farmer can sell wheat futures to lock in a price and still sell the harvest to the Dealer: if wheat falls, the futures gain what the harvest loses.
+
+Real world: the Chicago Board of Trade began trading standard grain contracts in the 1860s, and clearing houses have stood between buyers and sellers ever since.
+
+@margin_calls Margin Calls
+The Clearing House just marked your account. Some mornings it will take money instead.
+
+Your margin account must stay above the maintenance margin, 7.5% of your positions' value. Fall below it at a dawn mark and you get a margin call: a notice, and until the next dawn to bring the account back up to the full 10%. Deposit cash or close some lots.
+
+Do nothing and at the next dawn the Clearing House closes every position you hold at that morning's price. It doesn't wait for the market to come back. And if the losses were bigger than your margin, the rest is a debt: you can't open anything new until you pay it.
+
+This is the other side of leverage. With 10% margin, a 7.5% move against you can take three quarters of your margin in a single night, and a bad week can take all of it.
+
+So keep spare cash in the account, trade fewer lots than you could, and decide in advance how much you're willing to lose.
+
+Real world: in 2008 and again in 2020, margin calls forced traders to sell whatever they could at the worst moment, which pushed prices down further and triggered still more calls.

@@ -105,6 +105,9 @@ public final class PlayerProgress {
             case ProgressionEvent.RecordsViewed e -> e.day();
             case ProgressionEvent.ForwardDelivered e -> e.day();
             case ProgressionEvent.ForwardDefaulted e -> e.day();
+            case ProgressionEvent.FuturesMarked e -> e.day();
+            case ProgressionEvent.FuturesClosed e -> e.day();
+            case ProgressionEvent.MarginCallMet e -> e.day();
         };
         if (day != trackedDay) {
             trackedDay = day;
@@ -181,6 +184,15 @@ public final class PlayerProgress {
         }
         if (event instanceof ProgressionEvent.BondSold b) {
             return goal instanceof QuestGoal.RateWatcher && b.rateCutSince() && b.costCents() >= 0 && b.proceedsCents() > b.costCents();
+        }
+        if (event instanceof ProgressionEvent.FuturesMarked m) {
+            return goal instanceof QuestGoal.VariationReceived && m.cents() > 0;
+        }
+        if (event instanceof ProgressionEvent.FuturesClosed c) {
+            return goal instanceof QuestGoal.FuturesProfit && c.realizedCents() > 0;
+        }
+        if (event instanceof ProgressionEvent.MarginCallMet) {
+            return goal instanceof QuestGoal.MarginCallMet;
         }
         if (event instanceof ProgressionEvent.ForwardDelivered f) {
             return goal instanceof QuestGoal.ForwardBeatSpot && f.priceCents() > f.spotCents();

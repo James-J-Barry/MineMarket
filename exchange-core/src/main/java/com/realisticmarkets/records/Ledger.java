@@ -87,6 +87,8 @@ public final class Ledger {
             case ProgressionEvent.Shipment s -> record(account, Source.DEALER_SALES, s.day(), s.payoutCents());
             case ProgressionEvent.ForwardDelivered f -> record(account, Source.DEALER_SALES, f.day(), f.priceCents());
             case ProgressionEvent.ForwardDefaulted f -> record(account, Source.TRADING_GAINS, f.day(), -f.depositCents());
+            case ProgressionEvent.FuturesMarked m -> record(account, Source.TRADING_GAINS, m.day(), m.cents());
+            case ProgressionEvent.FuturesClosed c -> record(account, Source.TRADING_GAINS, c.day(), c.realizedCents());
             case ProgressionEvent.FloorOrderDone f when !f.buy() -> record(account, Source.FLOOR_SALES, f.day(), f.filledCents());
             case ProgressionEvent.Interest i -> record(account, Source.INTEREST, i.day(), i.creditedCents());
             case ProgressionEvent.CdRedeemed c when c.matured() ->

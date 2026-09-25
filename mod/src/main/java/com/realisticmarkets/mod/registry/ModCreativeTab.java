@@ -60,6 +60,8 @@ public final class ModCreativeTab {
                             output.accept(ModItems.DISPLAY_SCREEN);
                             output.accept(ModItems.CIRCUIT_BOARD);
                             output.accept(ModItems.FORWARD_CONTRACT);
+                            output.accept(ModBlocks.CLEARING_HOUSE);
+                            output.accept(ModItems.MARGIN_CALL_NOTICE);
                         })
                         .build());
     }

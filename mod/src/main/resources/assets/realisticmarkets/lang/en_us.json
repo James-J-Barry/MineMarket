@@ -55,5 +55,8 @@
   "item.realisticmarkets.record_link": "Record Link",
   "item.realisticmarkets.display_screen": "Display Screen",
   "item.realisticmarkets.circuit_board": "Circuit Board",
-  "item.realisticmarkets.forward_contract": "Forward Contract"
+  "item.realisticmarkets.forward_contract": "Forward Contract",
+  "item.realisticmarkets.margin_call_notice": "Margin Call Notice",
+  "block.realisticmarkets.clearing_house": "Clearing House",
+  "container.realisticmarkets.clearing_house": "Clearing House"
 }

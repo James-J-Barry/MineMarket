@@ -28,9 +28,10 @@ public class RecordsTerminalBlockEntity extends OwnedBlockEntity {
         return Collections.unmodifiableList(links);
     }
 
-    /** A block the terminal can read: a Bank Vault, Safe Deposit Box or Trade Route Crate. */
+    /** A block the terminal can read: a Bank Vault, Safe Deposit Box, Trade Route Crate or Clearing House. */
     public static boolean linkable(BlockEntity be) {
-        return be instanceof BankVaultBlockEntity || be instanceof SafeDepositBoxBlockEntity || be instanceof TradeRouteCrateBlockEntity;
+        return be instanceof BankVaultBlockEntity || be instanceof SafeDepositBoxBlockEntity || be instanceof TradeRouteCrateBlockEntity
+                || be instanceof ClearingHouseBlockEntity;
     }
 
     public boolean inRange(BlockPos pos) {

@@ -12,6 +12,7 @@
       "com.realisticmarkets.mod.test.BondGameTests",
       "com.realisticmarkets.mod.test.RecordsGameTests",
       "com.realisticmarkets.mod.test.ForwardGameTests",
+      "com.realisticmarkets.mod.test.FuturesGameTests",
       "com.realisticmarkets.mod.test.DealerGameTests",
       "com.realisticmarkets.mod.test.ProgressionGameTests",
       "com.realisticmarkets.mod.test.InvariantGameTests",

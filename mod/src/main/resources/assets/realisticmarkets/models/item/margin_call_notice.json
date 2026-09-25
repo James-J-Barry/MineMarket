@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "realisticmarkets:item/margin_call_notice"
+  }
+}

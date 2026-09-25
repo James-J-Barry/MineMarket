@@ -84,4 +84,13 @@ public sealed interface ProgressionEvent {
 
     /** A forward not delivered in time: its deposit is forfeit. */
     record ForwardDefaulted(String item, long depositCents, long day) implements ProgressionEvent {}
+
+    /** The Clearing House's dawn mark paid ({@code cents} > 0) or took variation margin, expiries included. */
+    record FuturesMarked(long cents, long day) implements ProgressionEvent {}
+
+    /** Futures closed by the player: {@code realizedCents} is the gain or loss on the lots closed. */
+    record FuturesClosed(String code, long lots, long realizedCents, long day) implements ProgressionEvent {}
+
+    /** A margin call met: the account is back to its initial margin before the next dawn. */
+    record MarginCallMet(long day) implements ProgressionEvent {}
 }

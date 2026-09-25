@@ -62,10 +62,11 @@ public final class RecordsService {
 
     /** The services marks come from; any but {@code dealer} and {@code prog} may be null. */
     public record Sources(DealerService dealer, ProgressionService prog, BankService bank, StockService stocks, BondService bonds,
-                          CapitalService capital, com.realisticmarkets.mod.forwards.ForwardService forwards) {
+                          CapitalService capital, com.realisticmarkets.mod.forwards.ForwardService forwards,
+                          com.realisticmarkets.mod.futures.FuturesService futures) {
         public Sources(DealerService dealer, ProgressionService prog, BankService bank, StockService stocks, BondService bonds,
                        CapitalService capital) {
-            this(dealer, prog, bank, stocks, bonds, capital, null);
+            this(dealer, prog, bank, stocks, bonds, capital, null, null);
         }
     }
 
@@ -93,7 +94,8 @@ public final class RecordsService {
             }
         }
         instance = new RecordsService(ledger, file, new Sources(DealerService.get(), ProgressionService.get(), BankService.get(),
-                StockService.get(), BondService.get(), CapitalService.get(), com.realisticmarkets.mod.forwards.ForwardService.get()));
+                StockService.get(), BondService.get(), CapitalService.get(), com.realisticmarkets.mod.forwards.ForwardService.get(),
+                com.realisticmarkets.mod.futures.FuturesService.get()));
     }
 
     public static void stop() {
@@ -156,11 +158,14 @@ public final class RecordsService {
         Valuer v = new Valuer(owner == null ? "" : owner.toString(), day);
         List<OwnedBlockEntity> blocks = terminal.linkedBlocks();
         int boxes = 0, crates = 0;
-        boolean vault = false;
+        boolean vault = false, clearing = false;
         for (OwnedBlockEntity be : blocks) {
             if (be instanceof BankVaultBlockEntity && !vault && owner != null) {
                 vault = true;
                 v.vault(owner);
+            } else if (be instanceof com.realisticmarkets.mod.block.ClearingHouseBlockEntity && !clearing) {
+                clearing = true;
+                v.futures();
             } else if (be instanceof SafeDepositBoxBlockEntity box) {
                 v.container(box.contents(), "Box " + ++boxes);
             } else if (be instanceof TradeRouteCrateBlockEntity crate) {
@@ -318,6 +323,27 @@ public final class RecordsService {
                 return;
             }
             add(Kind.GOODS, s.getHoverName().getString(), where, s.getCount(), cents / s.getCount(), -1, s);
+        }
+
+        /** A linked Clearing House: the futures account at its equity (a debt if negative), expiries and dawn marks. */
+        void futures() {
+            var fs = sources.futures();
+            if (fs == null) return;
+            var h = fs.house();
+            var acct = h.existing(account);
+            if (acct.isEmpty()) return;
+            long equity = h.equity(account, day);
+            if (equity >= 0) add(Kind.FUTURES, "Futures account", "Clearing", 1, equity, -1, ItemStack.EMPTY);
+            else add(Kind.DEBTS, "Clearing House debt", "Clearing", 1, -equity, -1, new ItemStack(ModItems.MARGIN_CALL_NOTICE));
+            for (var p : acct.get().positions()) {
+                var product = com.realisticmarkets.futures.ClearingHouse.product(p.code());
+                ItemStack goods = new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(
+                        net.minecraft.resources.Identifier.parse(product.item())));
+                String label = (p.lots() > 0 ? "+" : "") + p.lots() + " " + product.name();
+                icons.putIfAbsent("C|" + label, goods);
+                calendar.add(p.expiry(), Calendar.Kind.FUTURES_EXPIRY, label, 0);
+            }
+            if (!acct.get().positions().isEmpty()) calendar.add(today + 1, Calendar.Kind.MARGIN_CHECK, "", 0);
         }
 
         /** Open forwards are contracts on the account: their deposits count, and their deliveries go on the calendar. */
