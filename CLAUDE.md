@@ -6,7 +6,8 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 
 - **Design doc (source of truth for gameplay):** `docs/design.md`, exported from the "Realistic Markets —
   Game Design Document" Claude Doc. If a request conflicts with it, ask before building.
-- **Current milestone:** M7, bonds. Spec `docs/milestones/M7.md` (decisions answered; M7a first, then M7b). M6 (equities) is done: `docs/milestones/M6.md`. M5 (Trading Floor, M5a/M5b/M5c) is done:
+- **Current milestone:** M8, forwards and futures. Spec `docs/milestones/M8.md` (decisions answered; M8a first, then M8b).
+  M7 (bonds, Digital Record Keeping) awaits James's in-game check of M7b: `docs/milestones/M7.md`. M6 (equities) is done: `docs/milestones/M6.md`. M5 (Trading Floor, M5a/M5b/M5c) is done:
   `docs/milestones/M5.md`, `docs/milestones/M5c.md`. M4 (banking and collateral) is done. Spec `docs/milestones/M4.md`
   (decisions answered). Done: M2 (`docs/milestones/M2.md`),
   M3 (`docs/milestones/M3.md`).
@@ -165,7 +166,9 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
   defaults), bank rates follow the central bank, rate news on the Newsstand, three guides, three quests. 201 unit tests,
   63 GameTests. → `docs/milestones/M7.md`
 - [ ] **M7b: Digital Record Keeping.** → `docs/milestones/M7.md`
-- [ ] M8–M10: futures, options, modern finance (ATM, Brokerage)
+- [ ] **M8a: Forwards.** → `docs/milestones/M8.md`
+- [ ] **M8b: Clearing House and futures.** → `docs/milestones/M8.md`
+- [ ] M9–M10: options, modern finance (ATM, Brokerage)
 - [ ] M11: multiplayer
 
 ## Known gaps / ideas parked
