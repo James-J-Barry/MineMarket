@@ -509,6 +509,8 @@ All of these live in datapack JSON, and difficulty presets (Relaxed, Standard, R
 
 **Bonds (`sim equities`, M7):** vault +0.29% a day (the moving central rate), a ladder of 4-quarter Treasuries +0.30%, company bonds +0.36% with defaults (worst 4 quarters -9%), shares +0.55%.
 
+**Hedging (`sim hedge`, M8):** a farmer selling 512 wheat a week sees the week-ahead surprise in each harvest's income shrink from ±$20 unhedged to ±$7 hedged with one futures lot and to nothing with a forward; a 20% crash in wheat three days before harvest costs the unhedged farmer $21 of $110 and the hedged ones nothing. Hedge by value: 512 wheat sold into the Dealer fetches about 43% of its fair value, so two lots would double the risk. A speculator at 4x leverage goes bust in most worlds within 20 weeks.
+
 **Measured so far (`sim progression`, assumed gathering profiles):** Tier 1 complete at 2.0 h (target ~2 h). Tier 3 (Trading Floor, Newsstand and Ticker Tape built) at 22-23 h against ~10 h; all of Tier 4 at 57-61 h against ~15 h for a player who only gathers and saves (the sim doesn't yet model trading or investing income). Tier 2 complete (Bank Vault, CD, Loan Note, vault built) at 9.7-10.3 h against a ~5 h target: Tier 2 costs about 7x Tier 1 while Tier 1's tools add only 11-35% income. Current prices are kept for now; halving Tier 2 prices and a 4-block vault recipe would bring it to about 5.3-6.3 h. Vault savings earn about $4-8 a day against $106-174 of income.
 
 ## Technical architecture
@@ -606,7 +608,7 @@ Build in tier order, and make each milestone a complete, playable loop before st
 
 - [x] **Time scale:** (M7: kept at 1 in-game day; bonds run 14-56 days, about 5-19 hours of play.) one in-game day is 20 real minutes, so a 7-day bond lasts 2h 20m. Is that fast enough to feel rewarding without making interest trivial? A “market day = N game days” setting may be needed.
 - [x] **Live values on papers:** (M6: papers show no value; the Portfolio Binder shows the live total.) should a security's tooltip always show its live value, or only the value from the last time it was marked at an exchange or Price Board? Live is friendlier; last-marked is more grounded.
-- [ ] **Delivery vs cash settlement:** should futures and forwards require physical delivery of the items (more grounded, more logistics) or allow cash settlement at a fee?
+- [x] **Delivery vs cash settlement:** (M8: forwards are delivered at the Basic Exchange; futures are cash-settled at the Dealer's fair value on expiry.) should futures and forwards require physical delivery of the items (more grounded, more logistics) or allow cash settlement at a fee?
 - [ ] **Modded items:** should the Dealer eventually price items from other mods, for example by inferring value from their recipes, or stay vanilla-only?
 - [ ] **Death penalty:** do dropped dollars and papers feel like a good lesson or just frustrating? A config toggle may be the answer.
 - [ ] **Names:** Almanac Lectern, Trade Route Crate and the six company names are placeholders.

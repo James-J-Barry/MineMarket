@@ -363,9 +363,9 @@ You never hand over wheat. At expiry the future is settled in cash at the Dealer
 
 You don't pay for a future either. You put up margin: 10% of its value. At $0.50 wheat a lot is worth $128, so $12.80 of margin controls $128 of wheat. That's leverage. If wheat rises 2%, your lot gains $2.56, a 20% return on your margin. If it falls 2%, you lose the same.
 
-Every dawn the Clearing House marks every position to market: the day's gain or loss moves into or out of your margin account in cash. There's no waiting to find out whether you won. Nobody can walk away owing a fortune, because the losses are collected a day at a time.
+Every dawn the Clearing House marks every position to market: the day's gain or loss moves into or out of your margin account in cash. Nobody can walk away owing a fortune, because losses are collected a day at a time.
 
-A farmer can sell wheat futures to lock in a price and still sell the harvest to the Dealer: if wheat falls, the futures gain what the harvest loses.
+A farmer can sell wheat futures and still sell the harvest to the Dealer: if wheat falls, the futures gain what the harvest loses. Hedge what the harvest will fetch, not how much of it there is.
 
 Real world: the Chicago Board of Trade began trading standard grain contracts in the 1860s, and clearing houses have stood between buyers and sellers ever since.
 

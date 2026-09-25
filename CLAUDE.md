@@ -23,6 +23,7 @@ those dollars → use it to earn more. Single player first; multiplayer later.
 | `sim floor` | Trading Floor: liquidity, spreads, fair-value tracking, sale impact vs the Dealer, no-arbitrage loops | ~10 s |
 | `sim trader [free] [visits=N] [capital=C] [size=D] [cap=C] [seeds=N]` | Does the Floor make a player money? Gatherer uplift + payback; five trading strategies vs the vault | ~40 s |
 | `sim equities` | Six companies over 20 quarters: returns vs the vault, volatility, worst weeks, the even portfolio | ~10 s |
+| `sim hedge` | A wheat farmer unhedged vs forwards vs futures; a 20% crash; a leveraged speculator | ~5 s |
 | `sim progression [profile]` | Tier 1-4 play time, Trade Route Crate uplift, vault interest, from gathering profiles in `sim/src/main/resources/profiles/` | ~15 s |
 | `build` | compile everything **and run the GameTests** (Loom's `check` includes them) | ~15 s |
 | `gametest` | server GameTests only, in a headless Minecraft server | ~10 s |
@@ -52,6 +53,8 @@ mod/             Fabric layer. Thin: translate Minecraft events <-> core calls.
   client/                   BasicExchangeScreen, RealisticMarketsClient (client entrypoint)
   dealer/                   DealerService (owns Dealer, config, persistence), Wallet, DealerCommands
   floor/                  FloorService (Trading Floor: NPC books, auctions, tickets, receipts), TradeReceiptItem
+  forwards/               ForwardService (Forward Contracts with the Dealer, Fwd tab on the Basic Exchange)
+  futures/                FuturesService (Clearing House: margin accounts, dawn mark, margin calls)
   records/                RecordsService (income ledger, net worth of linked blocks, calendar), RecordLinkItem
   gametest/               DealerGameTests, FloorGameTests, ...
 scripts/         dev.sh, mcapi.py (jar inspector), rcon.py
@@ -182,6 +185,9 @@ attachments (check the real API with `api --find Attachment --fabric`) or the sa
 - Tier 4 balance: a gather-only player needs ~57-61 h for Tiers 1-4 vs ~15 h; `sim progression` doesn't yet model a
   player who sells on the Floor, trades or invests. Same deferred decision.
 - Tier 5 balance: the same gather-only player needs ~120-129 h for Tiers 1-5 vs ~22 h. Same deferred decision.
+- Tier 6 balance: ~235-252 h for Tiers 1-6 vs ~30 h (gather only). Same deferred decision.
+- Wheat's fair value can move 50-75% in a week (drift + trends + events, M5c); futures at 4x leverage bust most
+  speculators in `sim hedge`. Intended as a lesson, but worth a look when balancing.
 - `capital_catalog.csv` loads from the jar only (not copied to `config/` like the Dealer's files yet).
 - Floating price above the Basic Exchange (design doc) skipped; the screen covers it.
 - Placeholder art: currency, block and GUI textures are generated; James may repaint.
