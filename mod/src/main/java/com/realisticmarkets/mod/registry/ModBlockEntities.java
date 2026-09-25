@@ -19,6 +19,8 @@ public final class ModBlockEntities {
     public static BlockEntityType<com.realisticmarkets.mod.block.RecordsTerminalBlockEntity> RECORDS_TERMINAL;
     public static BlockEntityType<com.realisticmarkets.mod.block.ClearingHouseBlockEntity> CLEARING_HOUSE;
     public static BlockEntityType<com.realisticmarkets.mod.block.BrokerageTerminalBlockEntity> BROKERAGE_TERMINAL;
+    public static BlockEntityType<com.realisticmarkets.mod.block.MarketBoardBlockEntity> MARKET_BOARD;
+    public static BlockEntityType<com.realisticmarkets.mod.block.LedgerDisplayBlockEntity> LEDGER_DISPLAY;
 
     public static void init() {
         PRICE_BOARD = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, RealisticMarkets.id("price_board"),
@@ -39,5 +41,9 @@ public final class ModBlockEntities {
         BROKERAGE_TERMINAL = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, RealisticMarkets.id("brokerage_terminal"),
                 FabricBlockEntityTypeBuilder.create(com.realisticmarkets.mod.block.BrokerageTerminalBlockEntity::new,
                         ModBlocks.BROKERAGE_TERMINAL).build());
+        MARKET_BOARD = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, RealisticMarkets.id("market_board"),
+                FabricBlockEntityTypeBuilder.create(com.realisticmarkets.mod.block.MarketBoardBlockEntity::new, ModBlocks.MARKET_BOARD).build());
+        LEDGER_DISPLAY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, RealisticMarkets.id("ledger_display"),
+                FabricBlockEntityTypeBuilder.create(com.realisticmarkets.mod.block.LedgerDisplayBlockEntity::new, ModBlocks.LEDGER_DISPLAY).build());
     }
 }

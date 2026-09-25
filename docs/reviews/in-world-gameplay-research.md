@@ -177,3 +177,21 @@ milestone the fun review suggested putting before multiplayer.
 4. Consignment Box selling at dawn automates income: good (Create-style factories feeding the economy) or too much
    of a grind-killer? Price impact still caps it either way.
 5. Do you want to repaint textures before or after real models? Models change what textures are needed.
+
+
+## Built (2026-09-25): items 1, 2 and 5
+- **1. Sounds and particles** (`fx/Feedback`): vanilla sounds and particles on sales, purchases, payouts (dividends,
+  coupons, fills, shipments arriving at the crate, brokerage income), contracts signed, dawn marks won or lost,
+  forfeits and close-outs, margin calls (the bell), Almanac unlocks and quests. Played at the block when a screen knows
+  where it is, else at the player.
+- **2. Quick-sell** (`dealer/QuickSell`): sneak and right-click a Basic Exchange holding goods to sell the stack (bills
+  into the Bill Clip or inventory; it counts as a sale for quests and the ledger); sneak-click again within half a
+  second to sell every stack of that item you carry. Looking at an Exchange with goods in hand shows "64 Wheat: the
+  Dealer pays $25.40 (sneak-click to sell)" on the action bar.
+- **5. Wall displays** (`block/MarketBoardBlock`, `block/LedgerDisplayBlock`, `client/WallDisplayRenderer`):
+  - **Market Board** (blueprint with the Ticker Tape node): right-click to cycle the Trading Floor's books, the six
+    shares (each with its move since this morning, ▲ green / ▼ red) and the news (the central rate, and the owner's
+    Newsstand stories once they own it). Pages turn every few seconds when there are more lines than fit.
+  - **Ledger Display** (blueprint with Digital Record Keeping): link it to a Records Terminal with the Record Link
+    (terminal first, then the display): net worth, debts, income today and over 7 days, and what's due next.
+  GameTests: quick-sell (single and all), the Market Board's three pages, the Ledger Display's link and numbers.

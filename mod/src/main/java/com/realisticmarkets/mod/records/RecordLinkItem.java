@@ -37,7 +37,8 @@ public class RecordLinkItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         if (!stack.is(ModItems.RECORD_LINK) || player.isSpectator()) return InteractionResult.PASS;
         BlockEntity be = level.getBlockEntity(hit.getBlockPos());
-        if (!(be instanceof RecordsTerminalBlockEntity) && !RecordsTerminalBlockEntity.linkable(be)) return InteractionResult.PASS;
+        if (!(be instanceof RecordsTerminalBlockEntity) && !RecordsTerminalBlockEntity.linkable(be)
+                && !(be instanceof com.realisticmarkets.mod.block.LedgerDisplayBlockEntity)) return InteractionResult.PASS;
         if (level.isClientSide()) return InteractionResult.SUCCESS;
         String msg = use(player, level, hit.getBlockPos(), stack);
         com.realisticmarkets.mod.fx.Feedback.at(level, hit.getBlockPos(), com.realisticmarkets.mod.fx.Feedback.Cue.CLICK);
@@ -54,6 +55,18 @@ public class RecordLinkItem extends Item {
             select(stack, level, pos);
             return "Record Link set to this terminal (" + terminal.linkedBlocks().size() + " of "
                     + RecordsTerminalBlockEntity.MAX_LINKS + " links). Now right-click a vault, box or crate.";
+        }
+        if (be instanceof com.realisticmarkets.mod.block.LedgerDisplayBlockEntity display) {
+            Optional<BlockPos> sel = selected(stack, level);
+            if (sel.isEmpty() || !(level.getBlockEntity(sel.get()) instanceof RecordsTerminalBlockEntity terminal)) {
+                return "Right-click a Records Terminal first";
+            }
+            if (!terminal.isOwner(player)) return "That terminal belongs to " + terminal.ownerName();
+            if (display.owner() != null && !display.isOwner(player)) return "This display belongs to " + display.ownerName();
+            if (display.owner() == null) display.setOwner(player);
+            if (!terminal.inRange(pos)) return "Too far from the terminal (" + RecordsTerminalBlockEntity.RANGE + " blocks at most)";
+            display.link(sel.get());
+            return "Ledger Display shows this terminal";
         }
         if (!(be instanceof OwnedBlockEntity target) || !RecordsTerminalBlockEntity.linkable(be)) return "Nothing to link here";
         Optional<BlockPos> selected = selected(stack, level);

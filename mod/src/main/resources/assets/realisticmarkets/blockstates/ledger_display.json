@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "realisticmarkets:block/ledger_display"
+    },
+    "facing=east": {
+      "model": "realisticmarkets:block/ledger_display",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "realisticmarkets:block/ledger_display",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "realisticmarkets:block/ledger_display",
+      "y": 270
+    }
+  }
+}

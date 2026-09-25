@@ -44,6 +44,43 @@ public class InWorldGameTests {
         helper.succeed();
     }
 
+    @GameTest
+    public void theMarketBoardShowsPricesSharesAndNews(GameTestHelper helper) {
+        ServerPlayer p = helper.makeMockServerPlayerInLevel();
+        BlockPos pos = new BlockPos(1, 2, 1);
+        helper.setBlock(new BlockPos(1, 1, 2), net.minecraft.world.level.block.Blocks.STONE);
+        helper.setBlock(pos, ModBlocks.MARKET_BOARD);
+        var board = helper.getBlockEntity(pos, com.realisticmarkets.mod.block.MarketBoardBlockEntity.class);
+        board.setOwner(p);
+        board.nextPage(); // shares
+        check(board.title().startsWith("Shares") && board.lines().size() == 6, "six companies: " + board.lines());
+        check(board.lines().get(0).contains("\t$"), "each with a price: " + board.lines().get(0));
+        board.nextPage(); // news
+        check(board.title().startsWith("News") && !board.lines().isEmpty(), "the rate and the news: " + board.lines());
+        board.nextPage(); // back to the Floor
+        check(board.title().startsWith("Trading Floor") && board.lines().size() >= 10, "the Floor's books: " + board.lines().size());
+        helper.succeed();
+    }
+
+    @GameTest
+    public void theLedgerDisplayShowsItsTerminalsNetWorth(GameTestHelper helper) {
+        ServerPlayer p = helper.makeMockServerPlayerInLevel();
+        ForwardGameTests.unlock(p, ProgressionService.get(), 4, "digital_record_keeping"); // the live service: the display asks it
+        BlockPos tPos = new BlockPos(1, 1, 1), dPos = new BlockPos(3, 2, 1);
+        helper.setBlock(tPos, ModBlocks.RECORDS_TERMINAL);
+        helper.setBlock(dPos, ModBlocks.LEDGER_DISPLAY);
+        var terminal = helper.getBlockEntity(tPos, com.realisticmarkets.mod.block.RecordsTerminalBlockEntity.class);
+        terminal.setOwner(p);
+        var display = helper.getBlockEntity(dPos, com.realisticmarkets.mod.block.LedgerDisplayBlockEntity.class);
+        ItemStack tool = new ItemStack(com.realisticmarkets.mod.registry.ModItems.RECORD_LINK);
+        com.realisticmarkets.mod.records.RecordLinkItem.use(p, helper.getLevel(), helper.absolutePos(tPos), tool);
+        String msg = com.realisticmarkets.mod.records.RecordLinkItem.use(p, helper.getLevel(), helper.absolutePos(dPos), tool);
+        check(msg.startsWith("Ledger Display shows"), msg);
+        check(display.terminal().equals(helper.absolutePos(tPos)), "linked to the terminal");
+        check(display.title().startsWith("Ledger, day") && display.lines().get(0).startsWith("Net worth"), display.title() + " " + display.lines());
+        helper.succeed();
+    }
+
     static void check(boolean condition, String message) {
         if (!condition) throw new IllegalStateException(message);
     }

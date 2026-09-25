@@ -12,13 +12,13 @@ certificate_of_deposit,2,120000,bank_vault,,perk:certificate_of_deposit;componen
 loan_note,2,200000,bank_vault,,perk:loans;component:realisticmarkets:security_paper;guide:leverage_and_collateral,Loan Note
 trading_floor,3,300000,,,blueprint:realisticmarkets:trading_floor;blueprint:realisticmarkets:order_slip;guide:order_books;guide:limit_and_market_orders,Trading Floor
 newsstand,3,100000,,,blueprint:realisticmarkets:newsstand;guide:news_and_markets,Newsstand
-ticker_tape,3,150000,trading_floor,,blueprint:realisticmarkets:ticker_tape;guide:reading_a_chart,Ticker Tape
+ticker_tape,3,150000,trading_floor,,blueprint:realisticmarkets:ticker_tape;blueprint:realisticmarkets:market_board;guide:reading_a_chart,Ticker Tape
 stock_exchange,4,1000000,,,blueprint:realisticmarkets:stock_exchange;component:realisticmarkets:engraved_plate;guide:owning_a_share;guide:valuing_a_company,Stock Exchange
 electronic_newsfeed,4,200000,stock_exchange,,blueprint:realisticmarkets:electronic_newsfeed,Electronic Newsfeed
 portfolio_binder,4,500000,stock_exchange,,blueprint:realisticmarkets:portfolio_binder;guide:custody,Portfolio Binder
 safe_deposit_box,4,400000,,,blueprint:realisticmarkets:safe_deposit_box;guide:custody,Safe Deposit Box
 bond_desk,5,2500000,,,blueprint:realisticmarkets:bond_desk;guide:bonds_and_yield;guide:interest_rate_risk,Bond Desk
-digital_record_keeping,5,2000000,bank_vault;safe_deposit_box,,blueprint:realisticmarkets:records_terminal;blueprint:realisticmarkets:record_link;component:realisticmarkets:display_screen;component:realisticmarkets:circuit_board;guide:net_worth,Digital Record Keeping
+digital_record_keeping,5,2000000,bank_vault;safe_deposit_box,,blueprint:realisticmarkets:records_terminal;blueprint:realisticmarkets:record_link;blueprint:realisticmarkets:ledger_display;component:realisticmarkets:display_screen;component:realisticmarkets:circuit_board;guide:net_worth,Digital Record Keeping
 forward_contract,6,4000000,,,perk:forwards;component:realisticmarkets:security_paper;guide:hedging,Forward Contract
 clearing_house,6,8000000,forward_contract,,blueprint:realisticmarkets:clearing_house;guide:futures_and_margin,Clearing House
 options_desk,7,15000000,,,blueprint:realisticmarkets:options_desk;guide:options,Options Desk

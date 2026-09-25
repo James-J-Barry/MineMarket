@@ -70,5 +70,7 @@
   "item.realisticmarkets.bank_card": "Bank Card",
   "item.realisticmarkets.computer_chip": "Computer Chip",
   "block.realisticmarkets.brokerage_terminal": "Brokerage Terminal",
-  "container.realisticmarkets.brokerage_terminal": "Brokerage Terminal"
+  "container.realisticmarkets.brokerage_terminal": "Brokerage Terminal",
+  "block.realisticmarkets.market_board": "Market Board",
+  "block.realisticmarkets.ledger_display": "Ledger Display"
 }

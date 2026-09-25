@@ -37,12 +37,13 @@ public class ForwardGameTests {
         long bills = Math.min(cost, 10_000_000);
         var bank = com.realisticmarkets.mod.bank.BankService.forTest(null);
         if (cost > bills) bank.account(p.getUUID(), 0).deposit(cost - bills, 0, com.realisticmarkets.contracts.BankAccount.Kind.DEPOSIT);
+        var before = prog.bank();
         prog.useBank(bank.funds(() -> 0));
         Wallet.takeAll(p);
         Wallet.give(p, bills);
         var why = prog.buyNode(p, node);
         Wallet.takeAll(p);
-        prog.useBank(null);
+        prog.useBank(before);
         return why;
     }
 
