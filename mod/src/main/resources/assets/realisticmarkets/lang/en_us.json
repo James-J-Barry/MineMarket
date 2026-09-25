@@ -49,5 +49,10 @@
   "container.realisticmarkets.portfolio_binder": "Portfolio Binder",
   "block.realisticmarkets.bond_desk": "Bond Desk",
   "container.realisticmarkets.bond_desk": "Bond Desk",
-  "item.realisticmarkets.bond": "Bond"
+  "item.realisticmarkets.bond": "Bond",
+  "block.realisticmarkets.records_terminal": "Records Terminal",
+  "container.realisticmarkets.records_terminal": "Records Terminal",
+  "item.realisticmarkets.record_link": "Record Link",
+  "item.realisticmarkets.display_screen": "Display Screen",
+  "item.realisticmarkets.circuit_board": "Circuit Board"
 }

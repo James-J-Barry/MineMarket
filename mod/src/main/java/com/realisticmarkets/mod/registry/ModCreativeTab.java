@@ -55,6 +55,10 @@ public final class ModCreativeTab {
                             output.accept(ModBlocks.SAFE_DEPOSIT_BOX);
                             output.accept(ModBlocks.BOND_DESK);
                             output.accept(ModItems.ENGRAVED_PLATE);
+                            output.accept(ModBlocks.RECORDS_TERMINAL);
+                            output.accept(ModItems.RECORD_LINK);
+                            output.accept(ModItems.DISPLAY_SCREEN);
+                            output.accept(ModItems.CIRCUIT_BOARD);
                         })
                         .build());
     }

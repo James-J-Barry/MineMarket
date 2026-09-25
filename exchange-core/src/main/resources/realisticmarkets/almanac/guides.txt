@@ -329,3 +329,16 @@ The spread moves. When a company's earnings fall, lenders get nervous and want m
 So check the Company tab at the Stock Exchange before you lend. A high yield is often a warning, not a gift. Spreading your bonds across several issuers keeps one default from hurting much, and the Treasury never defaults.
 
 Real world: agencies grade company bonds, and junk bonds pay high yields because some of them fail. In a bankruptcy, bondholders are paid before shareholders, which is why they often get something back.
+
+@net_worth Net Worth
+You set up a Records Terminal. For the first time you can see everything you own in one place, and what you owe.
+
+Net worth is simple: everything you own at today's prices, minus your debts. Cash counts at face. Shares count at their last trade, bonds at what the Bond Desk would pay, goods at what the Dealer would pay. A loan counts against you until it's repaid.
+
+The terminal only sees what's linked to it: your Bank Vault and the Safe Deposit Boxes and Trade Route Crates you connect with a Record Link. Papers stuffed in an ordinary chest are off the books. Organize your storage and your records get better.
+
+The Holdings tab shows a gain or loss next to each paper, but only where the purchase is on record. Shares bought at the Stock Exchange and bonds bought at the Bond Desk have a known cost. Papers you picked up elsewhere show a question mark, because without a cost you can't tell a gain from a loss.
+
+The Income tab adds up where your money came from each week: selling goods, interest, dividends, coupons, and gains on what you sold. Watch which line grows.
+
+Real world: every company publishes a balance sheet (what it owns and owes) and an income statement (what it earned). Investors read both, and so do banks before they lend.

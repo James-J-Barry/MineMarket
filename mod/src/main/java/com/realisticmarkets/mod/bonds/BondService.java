@@ -225,6 +225,12 @@ public final class BondService {
         return Optional.empty();
     }
 
+    /** Average cost (cents) of one bond of {@code series} this account bought at the desk, or -1 if unknown. */
+    public double averageCost(String account, String series) {
+        double[] e = book.get(account + "|" + series);
+        return e == null || e[0] <= 0 ? -1 : e[1] / e[0];
+    }
+
     // ------------------------------------------------------------------ persistence
 
     private void load() {

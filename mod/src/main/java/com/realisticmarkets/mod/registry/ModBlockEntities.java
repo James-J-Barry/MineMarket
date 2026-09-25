@@ -16,6 +16,7 @@ public final class ModBlockEntities {
     public static BlockEntityType<TradeRouteCrateBlockEntity> TRADE_ROUTE_CRATE;
     public static BlockEntityType<BankVaultBlockEntity> BANK_VAULT;
     public static BlockEntityType<com.realisticmarkets.mod.block.SafeDepositBoxBlockEntity> SAFE_DEPOSIT_BOX;
+    public static BlockEntityType<com.realisticmarkets.mod.block.RecordsTerminalBlockEntity> RECORDS_TERMINAL;
 
     public static void init() {
         PRICE_BOARD = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, RealisticMarkets.id("price_board"),
@@ -27,5 +28,8 @@ public final class ModBlockEntities {
         SAFE_DEPOSIT_BOX = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, RealisticMarkets.id("safe_deposit_box"),
                 FabricBlockEntityTypeBuilder.create(com.realisticmarkets.mod.block.SafeDepositBoxBlockEntity::new,
                         ModBlocks.SAFE_DEPOSIT_BOX).build());
+        RECORDS_TERMINAL = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, RealisticMarkets.id("records_terminal"),
+                FabricBlockEntityTypeBuilder.create(com.realisticmarkets.mod.block.RecordsTerminalBlockEntity::new,
+                        ModBlocks.RECORDS_TERMINAL).build());
     }
 }

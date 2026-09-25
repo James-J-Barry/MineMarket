@@ -241,6 +241,13 @@ public final class BankService {
         return Optional.empty();
     }
 
+    /** The terms of a genuine, outstanding CD. */
+    public Optional<Cd> cd(ItemStack stack) {
+        return CdItem.serial(stack).flatMap(registry::lookup)
+                .filter(s -> s.status() == SecurityRegistry.Status.ISSUED && "CD".equals(s.type()))
+                .map(s -> Cd.fromTerms(s.terms()));
+    }
+
     /** Current redemption value of a genuine, outstanding CD, or -1. */
     public long cdValue(ItemStack stack, long day) {
         return CdItem.serial(stack).flatMap(registry::lookup)

@@ -45,6 +45,12 @@ public final class CostBasis {
         return cost;
     }
 
+    /** Average cost (cents) of one share the account bought here, or -1 if it holds none bought here. */
+    public double averageCents(String account, String ticker) {
+        long[] b = byKey.get(key(account, ticker));
+        return b == null || b[0] <= 0 ? -1 : b[1] / (double) b[0];
+    }
+
     public long shares(String account, String ticker) {
         long[] b = byKey.get(key(account, ticker));
         return b == null ? 0 : b[0];

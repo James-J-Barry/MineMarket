@@ -1,5 +1,6 @@
 package com.realisticmarkets.records;
 
+import com.realisticmarkets.progression.ProgressionEvent;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -73,6 +74,29 @@ public final class Ledger {
         if (b == null || d < b.opened || cents == 0) return;
         b.income.computeIfAbsent(d, k -> new long[Source.values().length])[source.ordinal()] += cents;
         b.prune(d);
+    }
+
+    /**
+     * Records whatever income a progression event carries: sales to the Dealer or the Capital, Floor sales, interest
+     * (vault interest and a matured CD's gain), dividends, coupons, and gains or losses on shares and bonds sold where
+     * their cost is known. Other events carry no income.
+     */
+    public void record(String account, ProgressionEvent event) {
+        switch (event) {
+            case ProgressionEvent.Sale s -> record(account, Source.DEALER_SALES, s.day(), s.proceedsCents());
+            case ProgressionEvent.Shipment s -> record(account, Source.DEALER_SALES, s.day(), s.payoutCents());
+            case ProgressionEvent.FloorOrderDone f when !f.buy() -> record(account, Source.FLOOR_SALES, f.day(), f.filledCents());
+            case ProgressionEvent.Interest i -> record(account, Source.INTEREST, i.day(), i.creditedCents());
+            case ProgressionEvent.CdRedeemed c when c.matured() ->
+                    record(account, Source.INTEREST, c.day(), Math.max(0, c.payoutCents() - c.principalCents()));
+            case ProgressionEvent.DividendCollected d -> record(account, Source.DIVIDENDS, d.day(), d.cents());
+            case ProgressionEvent.CouponCollected c -> record(account, Source.COUPONS, c.day(), c.cents());
+            case ProgressionEvent.StockSold s when s.costCents() >= 0 ->
+                    record(account, Source.TRADING_GAINS, s.day(), s.proceedsCents() - s.costCents());
+            case ProgressionEvent.BondSold b when b.costCents() >= 0 ->
+                    record(account, Source.TRADING_GAINS, b.day(), b.proceedsCents() - b.costCents());
+            default -> { }
+        }
     }
 
     /** Income from {@code source} over the {@code days} days ending with {@code today} (today included). */

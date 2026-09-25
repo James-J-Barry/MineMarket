@@ -43,6 +43,7 @@ public final class ModBlocks {
     public static Block NEWSFEED;
     public static Block SAFE_DEPOSIT_BOX;
     public static Block BOND_DESK;
+    public static Block RECORDS_TERMINAL;
 
     public static void init() {
         ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("basic_exchange"));
@@ -113,6 +114,14 @@ public final class ModBlocks {
         ModItems.register("safe_deposit_box", props -> new BlockItem(SAFE_DEPOSIT_BOX, props), new Item.Properties().useBlockDescriptionPrefix());
         BOND_DESK = registerMenuBlock("bond_desk", (id, inv, access) -> new com.realisticmarkets.mod.menu.BondDeskMenu(id, inv, access,
                 com.realisticmarkets.mod.bonds.BondService.get(), ProgressionService.get(), DealerService.get()));
+        ResourceKey<Block> terminalKey = ResourceKey.create(Registries.BLOCK, RealisticMarkets.id("records_terminal"));
+        RECORDS_TERMINAL = Registry.register(BuiltInRegistries.BLOCK, terminalKey,
+                new com.realisticmarkets.mod.block.RecordsTerminalBlock(BlockBehaviour.Properties.of()
+                        .setId(terminalKey)
+                        .mapColor(MapColor.WOOD)
+                        .strength(2.5f)
+                        .sound(SoundType.WOOD)));
+        ModItems.register("records_terminal", props -> new BlockItem(RECORDS_TERMINAL, props), new Item.Properties().useBlockDescriptionPrefix());
         NEWSFEED = registerMenuBlock("electronic_newsfeed", (id, inv, access) -> new com.realisticmarkets.mod.menu.NewsfeedMenu(id, inv,
                 access, com.realisticmarkets.mod.stocks.StockService.get(), ProgressionService.get(), DealerService.get()));
     }

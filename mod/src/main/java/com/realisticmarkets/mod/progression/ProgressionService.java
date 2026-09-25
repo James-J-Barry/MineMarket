@@ -123,8 +123,16 @@ public final class ProgressionService {
         return Optional.empty();
     }
 
+    private final List<java.util.function.BiConsumer<Player, ProgressionEvent>> listeners = new java.util.ArrayList<>();
+
+    /** Also hands every event to {@code listener} (the Records Terminal's income ledger). */
+    public void listen(java.util.function.BiConsumer<Player, ProgressionEvent> listener) {
+        listeners.add(listener);
+    }
+
     /** Feeds an event to the player's quests, paying cash rewards into their inventory. */
     public List<Quest> emit(Player player, ProgressionEvent event) {
+        for (var l : listeners) l.accept(player, event);
         List<Quest> done = progress(player).apply(event, quests);
         for (Quest q : done) {
             if (q.rewardCents() > 0) Wallet.give(player, q.rewardCents());

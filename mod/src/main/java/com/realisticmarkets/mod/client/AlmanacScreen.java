@@ -312,6 +312,8 @@ public class AlmanacScreen extends AbstractContainerScreen<AlmanacMenu> {
             case QuestGoal.CouponCollected() -> "Collect a bond coupon at the Bond Desk.";
             case QuestGoal.HeldToMaturity() -> "Hold a bond until it matures and redeem it at the Bond Desk.";
             case QuestGoal.RateWatcher() -> "Sell a bond for more than you paid after the central bank cuts its rate.";
+            case QuestGoal.BalanceSheet g -> "See a net worth of " + com.realisticmarkets.money.Money.format(g.cents())
+                    + " on a Records Terminal.";
         };
     }
 }

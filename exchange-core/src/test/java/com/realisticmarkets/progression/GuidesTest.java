@@ -19,7 +19,7 @@ class GuidesTest {
                         "cash_on_hand", "reading_a_quote", "transaction_costs", "two_markets",
                         "interest_and_compounding", "term_and_liquidity", "leverage_and_collateral",
                         "order_books", "limit_and_market_orders", "liquidity_and_market_makers", "news_and_markets", "reading_a_chart", "owning_a_share", "valuing_a_company",
-                        "risk_and_return", "custody", "bonds_and_yield", "interest_rate_risk", "credit_risk"),
+                        "risk_and_return", "custody", "bonds_and_yield", "interest_rate_risk", "credit_risk", "net_worth"),
                 guides.all().stream().map(Guides.Guide::id).toList());
         for (Guides.Guide g : guides.all()) {
             int words = g.wordCount();

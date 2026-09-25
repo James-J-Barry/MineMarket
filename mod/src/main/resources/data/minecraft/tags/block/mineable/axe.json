@@ -10,6 +10,7 @@
     "realisticmarkets:newsstand",
     "realisticmarkets:ticker_tape",
     "realisticmarkets:stock_exchange",
-    "realisticmarkets:bond_desk"
+    "realisticmarkets:bond_desk",
+    "realisticmarkets:records_terminal"
   ]
 }

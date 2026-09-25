@@ -14,3 +14,5 @@ realisticmarkets:electronic_newsfeed,electronic_newsfeed,realisticmarkets:clockw
 realisticmarkets:portfolio_binder,portfolio_binder,minecraft:leather*4,realisticmarkets:security_paper*2,realisticmarkets:brass_fittings*1
 realisticmarkets:safe_deposit_box,safe_deposit_box,minecraft:iron_block*4,realisticmarkets:lock_mechanism*1
 realisticmarkets:bond_desk,bond_desk,realisticmarkets:engraved_plate*2,realisticmarkets:lock_mechanism*1,minecraft:gold_ingot*4,#minecraft:planks*8
+realisticmarkets:records_terminal,digital_record_keeping,realisticmarkets:display_screen*1,realisticmarkets:circuit_board*1,minecraft:iron_ingot*4,realisticmarkets:ledger_paper*2
+realisticmarkets:record_link,digital_record_keeping,realisticmarkets:circuit_board*1,minecraft:copper_ingot*2

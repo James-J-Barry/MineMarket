@@ -44,6 +44,8 @@ public final class RealisticMarkets implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(BankService::tick);
         ServerTickEvents.END_SERVER_TICK.register(FloorService::tick);
         ServerTickEvents.END_SERVER_TICK.register(StockService::tick);
+        ServerTickEvents.END_SERVER_TICK.register(com.realisticmarkets.mod.records.RecordsService::tick);
+        net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register(com.realisticmarkets.mod.records.RecordLinkItem::onUseBlock);
         ServerLifecycleEvents.SERVER_STARTED.register(DealerService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(ProgressionService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(CapitalService::start);
@@ -51,6 +53,7 @@ public final class RealisticMarkets implements ModInitializer {
         ServerLifecycleEvents.SERVER_STARTED.register(FloorService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(StockService::start);
         ServerLifecycleEvents.SERVER_STARTED.register(com.realisticmarkets.mod.bonds.BondService::start);
+        ServerLifecycleEvents.SERVER_STARTED.register(com.realisticmarkets.mod.records.RecordsService::start);
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> DealerService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> ProgressionService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> CapitalService.stop());
@@ -58,6 +61,7 @@ public final class RealisticMarkets implements ModInitializer {
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> FloorService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> StockService.stop());
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> com.realisticmarkets.mod.bonds.BondService.stop());
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> com.realisticmarkets.mod.records.RecordsService.stop());
 
         LOGGER.info("Realistic Markets loaded");
     }

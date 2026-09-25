@@ -2,6 +2,8 @@ package com.realisticmarkets.progression;
 
 /** Something a player did that quests react to. Emitted by the mod layer; replayable in tests. */
 public sealed interface ProgressionEvent {
+    /** The in-game day it happened. */
+    long day();
 
     /**
      * A sale to the Dealer. Ratios are the Dealer's market (mid) price ÷ fair value, the "Market" and "Normal"
@@ -70,4 +72,7 @@ public sealed interface ProgressionEvent {
 
     /** Bonds sold back to the desk. {@code costCents} is what the account paid, -1 if unknown. */
     record BondSold(long bonds, long proceedsCents, long costCents, boolean rateCutSince, long day) implements ProgressionEvent {}
+
+    /** Net worth as shown on a Records Terminal (linked blocks only). */
+    record RecordsViewed(long netWorthCents, long day) implements ProgressionEvent {}
 }
